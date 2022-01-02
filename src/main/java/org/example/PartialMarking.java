@@ -80,22 +80,26 @@ public class PartialMarking {
     }
 
     public static void main(String[] args) {
-        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
-                "from users u left join\n" +
-                "  (select buyer_id, count(*) num\n" +
-                "  from orders\n" +
-                "  where year(order_date)=2019\n" +
-                "  group by buyer_id) as o\n" +
-                "on u.user_id=o.buyer_id\n" +
-                "order by u.user_id asc";
-        String studentSql = "select u.user_id, u.join_date, num orders_in_2019\n" +
-                "from users u left join\n" +
-                "  (select buyer_id, count(*) num\n" +
-                "  from orders\n" +
-                "  where year(order_date)=2019\n" +
-                "  group by buyer_id) as o\n" +
-                "on u.user_id=o.buyer_id and u.user_id>2\n" +
-                "order by u.user_id asc";
+//        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
+//                "from users u left join\n" +
+//                "  (select buyer_id, count(*) num\n" +
+//                "  from orders\n" +
+//                "  where year(order_date)=2019\n" +
+//                "  group by buyer_id) as o\n" +
+//                "on u.user_id=o.buyer_id\n" +
+//                "order by u.user_id asc";
+//        String studentSql = "select u.user_id, u.join_date, num orders_in_2019\n" +
+//                "from users u left join\n" +
+//                "  (select buyer_id, count(*) num\n" +
+//                "  from orders\n" +
+//                "  where year(order_date)=2019\n" +
+//                "  group by buyer_id) as o\n" +
+//                "on u.user_id=o.buyer_id and u.user_id>2\n" +
+//                "order by u.user_id asc";
+        String instrSql = "select s.id from student s, user u, lesson l\n" +
+                "where u.uid=s.id and u.uid=l.sid";
+        String studentSql = "select s.id from student s, user u, lesson l\n" +
+                "where u.uid=s.id and s.id=l.sid";
         PartialMarking marking = new PartialMarking(JdbcConstants.MYSQL, new ArrayList<>());
         System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
     }

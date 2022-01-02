@@ -184,7 +184,7 @@ public class CalculateScore {
                 logger.log(Level.SEVERE,"Exception when calculating eidtScore:\n"+e.getMessage());
                 return 0.0f;
             }
-            // 如果没有可进行的编辑，说明学生sql和正确sql已经完全一致，直接发返回总分
+            // 如果没有可进行的编辑，说明学生sql和正确sql已经完全一致，直接返回总分
             if (singleEdits.size()==0) {
                 return totalScore;
             }

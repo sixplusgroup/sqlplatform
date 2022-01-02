@@ -38,8 +38,8 @@ public class Condition implements Node {
             SQLExpr left = conditions.getLeft();
             SQLExpr right = conditions.getRight();
             if (operator == SQLBinaryOperator.BooleanAnd || operator == SQLBinaryOperator.BooleanOr) {
-                res.addAll(processCond(conds,repository));
-                res.addAll(processCond(conds,repository));
+                res.addAll(processCond(left,repository));
+                res.addAll(processCond(right,repository));
             } else {// 表达式
                 if (CommutativeCond.isCommutativeCond(operator.name)){
                     addCommutativeCond(res,operator.name,left.toString(),right.toString());
