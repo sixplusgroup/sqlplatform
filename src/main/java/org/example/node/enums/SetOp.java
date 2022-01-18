@@ -10,5 +10,5 @@ public enum SetOp {
     MINUS,
     EXCEPT,
     INTERSECT,
-    DISTINCT
+    UNION_DISTINCT
 }

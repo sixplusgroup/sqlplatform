@@ -1,12 +1,10 @@
 package org.example;
 
-import com.alibaba.druid.sql.repository.SchemaRepository;
 import org.example.node.*;
+import org.example.node.expr.Expr;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * @author shenyichen
@@ -14,13 +12,23 @@ import java.util.List;
  **/
 public class Canonicalizer {
 
-    public static void canonicalize(Node ast) {
+    public static void canonicalize(Expr ast) {
         if (ast instanceof SetOpSelect) {
             canonicalize(((SetOpSelect) ast).left);
             canonicalize(((SetOpSelect) ast).right);
         } else if (ast instanceof PlainSelect) {
             PlainSelect select = (PlainSelect) ast;
-            Collections.sort(select.selections);
+//            Collections.sort(select.selections);
         }
+    }
+
+    public static Select existNormalize(Select subQ){
+        if (subQ instanceof SetOpSelect) {
+            existNormalize(((SetOpSelect) subQ).left);
+            existNormalize(((SetOpSelect) subQ).right);
+        } else if (subQ instanceof PlainSelect) {
+            ((PlainSelect) subQ).selections = new ArrayList<>();
+        }
+        return subQ;
     }
 }

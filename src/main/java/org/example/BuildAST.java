@@ -2,7 +2,6 @@ package org.example;
 
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
@@ -10,8 +9,7 @@ import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 import org.example.node.*;
-import org.example.node.enums.SetOp;
-import sun.rmi.runtime.Log;
+import org.example.node.expr.Expr;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -26,37 +24,37 @@ public class BuildAST {
 
     private static Logger logger = Logger.getLogger(BuildAST.class.getName());
 
-    public static Node buildAST(String sql, String dbType, SchemaRepository repository) {
+    public static Select buildSelect(String sql, Env env) {
         try {
-            List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, dbType);
+            List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, env.dbType);
             SQLSelectStatement stmt = (SQLSelectStatement) stmtList.get(0);
             SQLSelectQuery query = stmt.getSelect().getQuery();
-            return buildSelect(query,repository);
+            return buildSelect(query,env);
         } catch (Exception e){
             logger.log(Level.WARNING,"SQL parse error:\n" + e.getMessage());
             throw e;
         }
     }
 
-    public static Select buildSelect(SQLSelectQuery query, SchemaRepository repository) {
+    public static Select buildSelect(SQLSelectQuery query, Env env) {
         if (query instanceof SQLUnionQuery){
-            return buildSetOpSelect((SQLUnionQuery) query, repository);
+            return buildSetOpSelect((SQLUnionQuery) query, env);
         } else if (query instanceof SQLSelectQueryBlock) {
-            return buildPlainSelect((SQLSelectQueryBlock) query, repository);
+            return buildPlainSelect((SQLSelectQueryBlock) query, env);
         } else {
             logger.log(Level.WARNING,"SQL is PGValuesQuery");
             return null;
         }
     }
 
-    public static Select buildSetOpSelect(SQLUnionQuery query, SchemaRepository repository) {
-        Select left = buildSelect(query.getLeft(),repository);
-        Select right = buildSelect(query.getRight(),repository);
-        return new SetOpSelect(left,right,query.getOperator(),query.getOrderBy(),repository);
+    public static Select buildSetOpSelect(SQLUnionQuery query, Env env) {
+        Select left = buildSelect(query.getLeft(),env);
+        Select right = buildSelect(query.getRight(),env);
+        return new SetOpSelect(left,right,query.getOperator(),query.getOrderBy(),env);
     }
 
-    public static Select buildPlainSelect(SQLSelectQueryBlock query, SchemaRepository repository) {
-        return new PlainSelect(query,repository);
+    public static Select buildPlainSelect(SQLSelectQueryBlock query, Env env) {
+        return new PlainSelect(query,env);
     }
 
 
@@ -113,6 +111,6 @@ public class BuildAST {
 //                "  count(l.user_id) * 1.0 / (select count(distinct user_id) from logins) rate," +
 //                "  round(sum(if(s.s_score<60,1,0)) / count(*), 2) \n" +
 //                "  from orders o";
-        buildAST(sql,dbType,null);
+        buildSelect(sql,new Env(dbType,null));
     }
 }

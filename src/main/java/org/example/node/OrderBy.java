@@ -1,6 +1,7 @@
 package org.example.node;
 
 import com.alibaba.druid.sql.ast.SQLOrderBy;
+import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.stream.Collectors;
  * @author shenyichen
  * @date 2021/12/8
  **/
-public class OrderBy implements Node {
+public class OrderBy implements Expr {
     public List<OrderByItem> items;
 
     public OrderBy() {

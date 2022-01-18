@@ -6,6 +6,7 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLUnionOperator;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
 import com.alibaba.druid.sql.repository.SchemaRepository;
+import org.example.Env;
 import org.example.node.enums.SetOp;
 
 /**
@@ -21,7 +22,7 @@ public class SetOpSelect extends Select {
 
     public SetOpSelect(){}
 
-    public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, SchemaRepository repository) {
+    public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, Env env) {
         this.name = operator.name + "-" + left.name + "-" + right.name;
         this.left = left;
         this.right = right;

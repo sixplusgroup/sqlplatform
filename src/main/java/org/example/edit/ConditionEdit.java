@@ -1,8 +1,8 @@
 package org.example.edit;
 
 import javafx.util.Pair;
-import org.example.node.CommutativeCond;
-import org.example.node.Condition;
+import org.example.node.condition.CommutativeCond;
+import org.example.node.condition.Condition;
 import org.example.node.PlainSelect;
 
 import java.util.ArrayList;
@@ -115,13 +115,13 @@ public class ConditionEdit implements Edit {
                 if (!(t instanceof CommutativeCond))
                     continue;
                 CommutativeCond st1 = (CommutativeCond) st;
-                int cost = st1.costOfEqualCond((CommutativeCond)t);
-                if (cost!=0){
-                    PlainSelect edited = stu.clone();
-                    edited.from.joinConditions.remove(st);
-                    edited.from.joinConditions.add(t);
-                    res.add(new Pair<>(edited, cost*1.0f));
-                }
+//                int cost = st1.costOfEqualCond((CommutativeCond)t);
+//                if (cost!=0){
+//                    PlainSelect edited = stu.clone();
+//                    edited.from.joinConditions.remove(st);
+//                    edited.from.joinConditions.add(t);
+//                    res.add(new Pair<>(edited, cost*1.0f));
+//                }
             }
         }
 
@@ -165,13 +165,13 @@ public class ConditionEdit implements Edit {
                 if (!(t instanceof CommutativeCond))
                     continue;
                 CommutativeCond st1 = (CommutativeCond) st;
-                int cost = st1.costOfEqualCond((CommutativeCond)t);
-                if (cost!=0){
-                    PlainSelect edited = stu.clone();
-                    edited.where.conds.remove(st);
-                    edited.where.conds.add(t);
-                    res.add(new Pair<>(edited, cost*1.0f));
-                }
+//                int cost = st1.costOfEqualCond((CommutativeCond)t);
+//                if (cost!=0){
+//                    PlainSelect edited = stu.clone();
+//                    edited.where.conds.remove(st);
+//                    edited.where.conds.add(t);
+//                    res.add(new Pair<>(edited, cost*1.0f));
+//                }
             }
         }
 

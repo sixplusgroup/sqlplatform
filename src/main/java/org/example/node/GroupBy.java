@@ -2,6 +2,9 @@ package org.example.node;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
 import com.alibaba.druid.sql.repository.SchemaRepository;
+import org.example.Env;
+import org.example.node.condition.Condition;
+import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +14,7 @@ import java.util.stream.Collectors;
  * @author shenyichen
  * @date 2021/12/8
  **/
-public class GroupBy implements Node {
+public class GroupBy implements Expr {
     public List<GroupByItem> items;
     public List<Condition> having;
 
@@ -20,7 +23,7 @@ public class GroupBy implements Node {
         having = new ArrayList<>();
     }
 
-    public GroupBy(SQLSelectGroupByClause clause, SchemaRepository repository){
+    public GroupBy(SQLSelectGroupByClause clause, Env env){
         if (clause==null || clause.getItems()==null || clause.getItems().size()==0){
             items = new ArrayList<>();
             having = new ArrayList<>();
@@ -30,7 +33,7 @@ public class GroupBy implements Node {
         if (clause.getHaving()==null){
             having = new ArrayList<>();
         } else {
-            having = Condition.processCond(clause.getHaving(),repository);
+//            having = Condition.processCond(clause.getHaving(),repository);
         }
     }
 
@@ -41,7 +44,7 @@ public class GroupBy implements Node {
             groupBy.items.add(item.clone());
         }
         for (Condition c: having){
-            groupBy.having.add(c.clone());
+//            groupBy.having.add(c.clone());
         }
         return groupBy;
     }

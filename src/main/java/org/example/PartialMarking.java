@@ -2,8 +2,7 @@ package org.example;
 
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
-import org.example.node.Node;
-import org.example.node.enums.JoinType;
+import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,22 +12,15 @@ import java.util.List;
  * @date 2021/12/4
  **/
 public class PartialMarking {
-    /**
-     * 数据库类型
-     */
-    final String dbType;
-    /**
-     * 缓存SQL Schema信息，用于SQL语义解析中的ColumnResolve等操作
-     */
-    SchemaRepository repository;
+    Env env;
 
     public PartialMarking(String dbType, List<String> sqls){
-        this.dbType = dbType;
-        this.repository = new SchemaRepository(dbType);
+        SchemaRepository repository = new SchemaRepository(dbType);
         repository.console("use sc00;");
         for (String sql: sqls) {
             repository.console(sql);
         }
+        env = new Env(dbType,repository);
     }
 
     /**
@@ -54,9 +46,9 @@ public class PartialMarking {
      * @return
      */
     public float partialMark(String instrSql, String studentSql, float maxScore) {
-        Node instrAST = BuildAST.buildAST(instrSql,dbType,repository);
+        Expr instrAST = BuildAST.buildSelect(instrSql,env);
         Canonicalizer.canonicalize(instrAST);
-        Node studentAST = BuildAST.buildAST(studentSql,dbType,repository);
+        Expr studentAST = BuildAST.buildSelect(studentSql,env);
         Canonicalizer.canonicalize(studentAST);
         // TODO: 写一个有意义的规范化，删掉student的规范化
         float totalScore = CalculateScore.totalScore(instrAST);
@@ -96,8 +88,61 @@ public class PartialMarking {
 //                "  group by buyer_id) as o\n" +
 //                "on u.user_id=o.buyer_id and u.user_id>2\n" +
 //                "order by u.user_id asc";
-        String instrSql = "select s.id from student s, user u, lesson l\n" +
-                "where u.uid=s.id and u.uid=l.sid";
+//        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
+//                "from orders o\n" +
+//                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
+//                "GROUP BY o.customer_id\n" +
+//                "order by order_num DESC, customer_id asc\n" +
+//                "limit 1;";
+        // select round(
+        //    ifnull(
+        //    (select count(distinct requester_id ,accepter_id) from accepted_requests) /
+        //    (select count(distinct sender_id ,send_to_id) from friend_requests)
+        //    ,0)
+        //    ,2) as accept_rate ;
+//        String instrSql = "select group_id,min(player_id) as player_id\n" +
+//                "from\n" +
+//                "    (select player,sum(score) as score\n" +
+//                "    from\n" +
+//                "        ((select first_player player,first_score score from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player player,second_score score from matches)) t\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.player=p.player_id\n" +
+//                "where (group_id,score) in\n" +
+//                "(select group_id,max(score) as mx\n" +
+//                "from \n" +
+//                "    (select player,sum(score) as score\n" +
+//                "    from\n" +
+//                "        ((select first_player player,first_score score from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player player,second_score score from matches)) t\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.player=p.player_id\n" +
+//                "group by group_id)\n" +
+//                "group by group_id\n" +
+//                "order by group_id;";
+//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where u.uid=s.id and u.uid=l.sid";
+//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
+//        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
+//                "from employees e1\n" +
+//                "where e1.salary not in (\n" +
+//                "\tselect MAX(salary)\n" +
+//                "\tfrom employees e2\n" +
+//                "\twhere e1.dno = e2.dno\n" +
+//                "\tgroup by dno\n" +
+//                ")\n" +
+//                "order by dno;";
+        String instrSql = "select activity\n" +
+                "from friends\n" +
+                "group by activity\n" +
+                "having count(*)>any(\n" +
+                "    select count(*) from friends group by activity\n" +
+                ") and count(*)<any(\n" +
+                "    select count(*) from friends group by activity\n" +
+                ")";
         String studentSql = "select s.id from student s, user u, lesson l\n" +
                 "where u.uid=s.id and s.id=l.sid";
         PartialMarking marking = new PartialMarking(JdbcConstants.MYSQL, new ArrayList<>());

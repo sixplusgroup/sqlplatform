@@ -9,7 +9,12 @@ import com.alibaba.druid.sql.ast.statement.SQLSubqueryTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import org.example.BuildAST;
+import org.example.Env;
+import org.example.node.condition.CommutativeCond;
+import org.example.node.condition.Condition;
+import org.example.node.condition.UncommutativeCond;
 import org.example.node.enums.JoinType;
+import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +23,7 @@ import java.util.List;
  * @author shenyichen
  * @date 2021/12/8
  **/
-public class From implements Node {
+public class From implements Expr {
     public List<Table> tables;
     public List<JoinPattern> joinPatterns;
     public List<Condition> joinConditions;
@@ -31,19 +36,19 @@ public class From implements Node {
         subqueries = new ArrayList<>();
     }
 
-    public void init(SQLTableSource tableSource, SQLExpr conds, SchemaRepository repository) {
-        handleTableSource(tableSource,repository);
+    public void init(SQLTableSource tableSource, SQLExpr conds, Env env) {
+        handleTableSource(tableSource,env);
         handleConditions(conds);
     }
 
-    public void handleTableSource(SQLTableSource tableSource, SchemaRepository repository){
+    public void handleTableSource(SQLTableSource tableSource, Env env){
         if (tableSource instanceof SQLSubqueryTableSource) {
-            Select subquery = BuildAST.buildSelect(((SQLSubqueryTableSource) tableSource).getSelect().getQuery(),repository);
+            Select subquery = BuildAST.buildSelect(((SQLSubqueryTableSource) tableSource).getSelect().getQuery(),env);
             subquery.name = tableSource.getAlias();
             subqueries.add(subquery);
         } else if (tableSource instanceof SQLJoinTableSource) {
-            handleTableSource(((SQLJoinTableSource) tableSource).getLeft(),repository);
-            handleTableSource(((SQLJoinTableSource) tableSource).getRight(),repository);
+            handleTableSource(((SQLJoinTableSource) tableSource).getLeft(),env);
+            handleTableSource(((SQLJoinTableSource) tableSource).getRight(),env);
             handleJoinPattern(((SQLJoinTableSource) tableSource).getJoinType());
             handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition());
         } else if (tableSource instanceof SQLExprTableSource) {
@@ -90,36 +95,36 @@ public class From implements Node {
                 handleCondsFromSQLExpr(left);
                 handleCondsFromSQLExpr(right);
             } else {// 表达式
-                if (CommutativeCond.isCommutativeCond(operator.name)){
-                    addCommutativeCond(operator.name,left.toString(),right.toString());
-                } else {
-                    UncommutativeCond cond = new UncommutativeCond(operator.name,left.toString(),right.toString());
-                    joinConditions.add(cond);
-                }
+//                if (isCommutative(operator.name)){
+//                    addCommutativeCond(operator.name,left.toString(),right.toString());
+//                } else {
+//                    UncommutativeCond cond = new UncommutativeCond(operator.name,left.toString(),right.toString());
+//                    joinConditions.add(cond);
+//                }
             }
         }
     }
 
-    private void addCommutativeCond(String operator, String left, String right) {
-        for(Condition con: joinConditions) {
-            if (con instanceof CommutativeCond) {
-                CommutativeCond c = (CommutativeCond) con;
-                if (c.operator.equals(operator)){
-                    if (c.operands.contains(left)) {
-                        c.operands.add(right);
-                        return;
-                    } else if (c.operands.contains(right)) {
-                        c.operands.add(left);
-                        return;
-                    }
-                }
-            }
-        }
-        CommutativeCond c = new CommutativeCond(operator);
-        c.operands.add(left);
-        c.operands.add(right);
-        joinConditions.add(c);
-    }
+//    private void addCommutativeCond(String operator, String left, String right) {
+//        for(Condition con: joinConditions) {
+//            if (con instanceof CommutativeCond) {
+//                CommutativeCond c = (CommutativeCond) con;
+//                if (c.operator.equals(operator)){
+//                    if (c.operands.contains(left)) {
+//                        c.operands.add(right);
+//                        return;
+//                    } else if (c.operands.contains(right)) {
+//                        c.operands.add(left);
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+//        CommutativeCond c = new CommutativeCond(operator);
+//        c.operands.add(left);
+//        c.operands.add(right);
+//        joinConditions.add(c);
+//    }
 
     @Override
     protected From clone() throws CloneNotSupportedException {
@@ -130,9 +135,9 @@ public class From implements Node {
         for (JoinPattern p: joinPatterns){
             from.joinPatterns.add(p.clone());
         }
-        for (Condition c: joinConditions){
-            from.joinConditions.add(c.clone());
-        }
+//        for (Condition c: joinConditions){
+//            from.joinConditions.add(c.clone());
+//        }
         for (Select s: subqueries){
             from.subqueries.add((Select) s.clone());
         }

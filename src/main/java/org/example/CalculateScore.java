@@ -2,11 +2,13 @@ package org.example;
 
 import javafx.util.Pair;
 import org.example.node.*;
+import org.example.node.condition.CommutativeCond;
+import org.example.node.condition.Condition;
+import org.example.node.condition.UncommutativeCond;
 import org.example.node.enums.SetOp;
+import org.example.node.expr.Expr;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +24,7 @@ public class CalculateScore {
      * @param instrAST
      * @return
      */
-    public static float totalScore(Node instrAST) {
+    public static float totalScore(Expr instrAST) {
         if (instrAST instanceof SetOpSelect) {
             SetOpSelect instr = (SetOpSelect) instrAST;
             return totalScore(instr.left) + totalScore(instr.right) + 1;
@@ -119,7 +121,7 @@ public class CalculateScore {
      * @param totalScore 总分
      * @return
      */
-    public static float editScore(Node instrAST, Node studentAST, float totalScore) {
+    public static float editScore(Expr instrAST, Expr studentAST, float totalScore) {
         boolean instrIsSetOp = instrAST instanceof SetOpSelect;
         boolean studentIsSetOp = studentAST instanceof SetOpSelect;
         if (instrIsSetOp || studentIsSetOp) {
@@ -272,32 +274,32 @@ public class CalculateScore {
     }
 
     public static boolean compareCond(Condition instr, Condition stu){
-        if ((instr instanceof CommutativeCond && (!(stu instanceof CommutativeCond)))
-        || (instr instanceof UncommutativeCond && (!(stu instanceof UncommutativeCond))))
-            return false;
-        if (instr instanceof CommutativeCond){
-            if (!(((CommutativeCond) instr).operator.equals(((CommutativeCond) stu).operator)))
-                return false;
-            List<String> opI = ((CommutativeCond) instr).operands;
-            List<String> opS = ((CommutativeCond) instr).operands;
-            boolean flag = true;
-            for (int i=0;i<opI.size();i++){
-                if (i>=opS.size())
-                    break;
-                if (!opI.get(i).equals(opS.get(i)))
-                    flag = false;
-            }
-            return flag;
-        }else if (instr instanceof UncommutativeCond){
-            if (!((UncommutativeCond) instr).operator.equals(((UncommutativeCond) stu).operator))
-                return false;
-            if (!(((UncommutativeCond) instr).left.equals(((UncommutativeCond) stu))))
-                return false;
-            if (!(((UncommutativeCond) instr).right.equals(((UncommutativeCond) stu))))
-                return false;
-        } else {
-            return instr.value.equals(stu.value);
-        }
+//        if ((instr instanceof CommutativeCond && (!(stu instanceof CommutativeCond)))
+//        || (instr instanceof UncommutativeCond && (!(stu instanceof UncommutativeCond))))
+//            return false;
+//        if (instr instanceof CommutativeCond){
+//            if (!(((CommutativeCond) instr).operator.equals(((CommutativeCond) stu).operator)))
+//                return false;
+//            List<String> opI = ((CommutativeCond) instr).operands;
+//            List<String> opS = ((CommutativeCond) instr).operands;
+//            boolean flag = true;
+//            for (int i=0;i<opI.size();i++){
+//                if (i>=opS.size())
+//                    break;
+//                if (!opI.get(i).equals(opS.get(i)))
+//                    flag = false;
+//            }
+//            return flag;
+//        }else if (instr instanceof UncommutativeCond){
+//            if (!((UncommutativeCond) instr).operator.equals(((UncommutativeCond) stu).operator))
+//                return false;
+//            if (!(((UncommutativeCond) instr).left.equals(((UncommutativeCond) stu))))
+//                return false;
+//            if (!(((UncommutativeCond) instr).right.equals(((UncommutativeCond) stu))))
+//                return false;
+//        } else {
+//            return instr.value.equals(stu.value);
+//        }
         return false;
     }
 
