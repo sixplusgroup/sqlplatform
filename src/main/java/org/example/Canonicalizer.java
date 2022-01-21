@@ -22,13 +22,5 @@ public class Canonicalizer {
         }
     }
 
-    public static Select existNormalize(Select subQ){
-        if (subQ instanceof SetOpSelect) {
-            existNormalize(((SetOpSelect) subQ).left);
-            existNormalize(((SetOpSelect) subQ).right);
-        } else if (subQ instanceof PlainSelect) {
-            ((PlainSelect) subQ).selections = new ArrayList<>();
-        }
-        return subQ;
-    }
+
 }

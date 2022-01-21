@@ -1,11 +1,5 @@
 package org.example.node.condition;
 
-import com.alibaba.druid.sql.ast.expr.SQLExistsExpr;
-import com.alibaba.druid.sql.ast.statement.SQLSelect;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
-import com.alibaba.druid.sql.repository.SchemaRepository;
-import org.example.BuildAST;
-import org.example.Env;
 import org.example.node.Select;
 
 /**
@@ -16,8 +10,8 @@ public class Exist extends Condition {
     public Select subQuery;
 
     @Override
-    public void flatten() {
-
+    public Condition rearrange() {
+        return this;
     }
 
     public Exist(){

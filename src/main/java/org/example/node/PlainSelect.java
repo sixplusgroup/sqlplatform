@@ -1,18 +1,13 @@
 package org.example.node;
 
-import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
-import com.alibaba.druid.sql.repository.SchemaRepository;
 import org.example.BuildAST;
 import org.example.Env;
 import org.example.node.condition.Condition;
 import org.example.node.expr.Expr;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * @author shenyichen
@@ -44,8 +39,6 @@ public class PlainSelect extends Select {
     // round(sum(if(s.s_score<60,1,0)) / count(*), 2)
     public List<Expr> selections;
     public From from;
-    // Where: SQLBinaryOpExpr,  SQLPropertyExpr
-    // where: year(order_date)=2019, date_add(l1.login_date,interval 1 day)
     public Condition where;
     public GroupBy groupBy;
     public OrderBy orderBy;
@@ -61,7 +54,7 @@ public class PlainSelect extends Select {
         from.init(query.getFrom(),query.getWhere(),env);
 //        where = new Where(Condition.processCond(query.getWhere(),repository));
         where = Condition.build(query.getWhere(),env);
-        where.flatten();
+        where.rearrange();
         groupBy = new GroupBy(query.getGroupBy(),env);
         orderBy = new OrderBy(query.getOrderBy());
         limit = new Limit(query.getLimit());

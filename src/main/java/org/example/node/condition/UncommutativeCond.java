@@ -1,6 +1,5 @@
 package org.example.node.condition;
 
-import com.alibaba.druid.sql.ast.SQLExpr;
 import org.example.node.expr.Expr;
 
 /**
@@ -13,14 +12,15 @@ public class UncommutativeCond extends AtomCond {
     public Expr right;
 
     public UncommutativeCond(String operator, Expr left, Expr right){
+        super();
         this.operator = operator;
         this.left = left;
         this.right = right;
     }
 
     @Override
-    public void flatten() {
-
+    public Condition rearrange() {
+        return this;
     }
 
 //    @Override

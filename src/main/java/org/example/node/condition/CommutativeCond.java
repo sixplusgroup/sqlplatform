@@ -1,6 +1,5 @@
 package org.example.node.condition;
 
-import com.alibaba.druid.sql.ast.SQLExpr;
 import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ public class CommutativeCond extends AtomCond {
     public List<Expr> operands;
 
     public CommutativeCond(String operator, Expr left, Expr right){
+        super();
         this.operator = operator;
         operands = new ArrayList<>();
         operands.add(left);
@@ -21,8 +21,8 @@ public class CommutativeCond extends AtomCond {
     }
 
     @Override
-    public void flatten() {
-
+    public Condition rearrange() {
+        return this;
     }
 
 //    @Override
