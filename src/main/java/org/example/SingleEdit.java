@@ -3,10 +3,9 @@ package org.example;
 import javafx.util.Pair;
 import org.example.edit.ConditionEdit;
 import org.example.edit.SelectionEdit;
-import org.example.edit.SubQEdit;
 import org.example.edit.TableEdit;
-import org.example.node.OrderByItem;
-import org.example.node.PlainSelect;
+import org.example.node.orderby.OrderByItem;
+import org.example.node.select.PlainSelect;
 
 import java.util.ArrayList;
 import java.util.List;

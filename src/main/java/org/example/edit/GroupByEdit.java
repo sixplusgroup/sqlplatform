@@ -1,10 +1,7 @@
 package org.example.edit;
 
 import javafx.util.Pair;
-import org.example.node.GroupBy;
-import org.example.node.GroupByItem;
-import org.example.node.PlainSelect;
-import org.example.node.Select;
+import org.example.node.select.PlainSelect;
 
 import java.util.ArrayList;
 import java.util.List;

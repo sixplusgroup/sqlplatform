@@ -1,4 +1,4 @@
-package org.example.node.enums;
+package org.example.enums;
 
 /**
  * @author shenyichen

@@ -4,6 +4,7 @@ import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author shenyichen
@@ -12,12 +13,22 @@ import java.util.List;
 public class CommutativeCond extends AtomCond {
     public List<Expr> operands;
 
-    public CommutativeCond(String operator, Expr left, Expr right){
+    public CommutativeCond(String operator, List<Expr> operands){
         super();
         this.operator = operator;
-        operands = new ArrayList<>();
-        operands.add(left);
-        operands.add(right);
+        this.operands = new ArrayList<>();
+        if (operands!=null){
+            this.operands.addAll(operands);
+        }
+    }
+
+    public CommutativeCond(boolean not, String operator, List<Expr> operands){
+        this.not = not;
+        this.operator = operator;
+        this.operands = new ArrayList<>();
+        if (operands!=null){
+            this.operands.addAll(operands);
+        }
     }
 
     @Override
@@ -25,43 +36,52 @@ public class CommutativeCond extends AtomCond {
         return this;
     }
 
-//    @Override
-//    protected CommutativeCond clone() throws CloneNotSupportedException {
-//        CommutativeCond cond = new CommutativeCond(operator);
-//        for (String s: operands){
-//            cond.operands.add(s);
-//        }
-//        return cond;
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        int hashCode = 1;
-//        hashCode = 31 * hashCode + (operator==null?0:operator.hashCode());
-//        return hashCode;
-//    }
-//
-//    /**
-//     * 被contains方法调用，operands只判断是否有重合
-//     * @param obj
-//     * @return
-//     */
-//    @Override
-//    public boolean equals(Object obj) {
-//        if (obj instanceof CommutativeCond){
-//            CommutativeCond cond = (CommutativeCond) obj;
-//            if (!(cond.operator.equals(operator)))
-//                return false;
-//            for (String s1: operands){
-//                for (String s2: cond.operands){
-//                    if (s1.equals(s2))
-//                        return true;
-//                }
-//            }
-//            return false;
-//        }
-//        return false;
-//    }
+    @Override
+    public float score() {
+        return 0;
+    }
+
+    @Override
+    public float score(Condition c) {
+        return 0;
+    }
+
+    @Override
+    public Condition clone() {
+        List<Expr> exprs = operands.stream()
+                .map(Expr::clone)
+                .collect(Collectors.toList());
+        return new CommutativeCond(not,operator,exprs);
+    }
+
+    @Override
+    public int hashCode() {
+        return operator.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof CommutativeCond))
+            return false;
+        CommutativeCond c = (CommutativeCond) obj;
+        if (c.not!=not)
+            return false;
+        if (!(c.operator.equals(operator)))
+            return false;
+        if (c.operands.size()!=operands.size())
+            return false;
+        for (Expr tmp: operands) {
+            if (!Expr.isStrictlyIn(tmp,c.operands))
+                return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return null;
+    }
+
 //
 //    /**
 //     * 计算equal的两个cond之间的编辑距离，用operands的差集算

@@ -50,7 +50,33 @@ public class Limit {
     }
 
     @Override
-    protected Limit clone() throws CloneNotSupportedException {
+    public Limit clone() {
         return new Limit(rowCount,offset);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        if (rowCount!=null)
+            hash += rowCount.hashCode()*31;
+        if (offset!=null)
+            hash += offset.hashCode();
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Limit))
+            return false;
+        Limit limit = (Limit) obj;
+        if (limit.offset==null){
+            if (offset!=null)
+                return false;
+            if (limit.rowCount==null)
+                return rowCount==null;
+            else
+                return limit.rowCount.equals(rowCount);
+        }
+        return limit.rowCount.equals(rowCount) && limit.offset.equals(offset);
     }
 }

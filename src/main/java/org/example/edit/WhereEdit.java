@@ -1,7 +1,7 @@
 package org.example.edit;
 
 import javafx.util.Pair;
-import org.example.node.PlainSelect;
+import org.example.node.select.PlainSelect;
 
 import java.util.List;
 

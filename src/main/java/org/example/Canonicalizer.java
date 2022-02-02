@@ -1,10 +1,8 @@
 package org.example;
 
-import org.example.node.*;
-import org.example.node.expr.Expr;
-
-import java.util.ArrayList;
-import java.util.Collections;
+import org.example.node.select.PlainSelect;
+import org.example.node.select.Select;
+import org.example.node.select.SetOpSelect;
 
 /**
  * @author shenyichen
@@ -12,7 +10,7 @@ import java.util.Collections;
  **/
 public class Canonicalizer {
 
-    public static void canonicalize(Expr ast) {
+    public static void canonicalize(Select ast) {
         if (ast instanceof SetOpSelect) {
             canonicalize(((SetOpSelect) ast).left);
             canonicalize(((SetOpSelect) ast).right);

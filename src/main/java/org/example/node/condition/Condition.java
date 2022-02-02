@@ -5,10 +5,11 @@ import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import org.example.BuildAST;
 import org.example.Env;
-import org.example.node.PlainSelect;
-import org.example.node.Select;
-import org.example.node.SetOpSelect;
+import org.example.node.select.PlainSelect;
+import org.example.node.select.Select;
+import org.example.node.select.SetOpSelect;
 import org.example.node.expr.Expr;
+import org.example.node.expr.ListExpr;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,12 +21,10 @@ import java.util.logging.Logger;
  * @author shenyichen
  * @date 2021/12/8
  **/
-public abstract class Condition implements Expr {
+public abstract class Condition {
     private static Logger logger = Logger.getLogger(Condition.class.getName());
     public String operator;
     public boolean not;
-    /* 分数 */
-    public float score;
 
     public Condition(){
         this.not = false;
@@ -68,7 +67,7 @@ public abstract class Condition implements Expr {
                         selectQuery = ((SQLAnyExpr) right).subQuery.getQuery();
                     Expr expr_some = Expr.build(left);
                     Select subQ = BuildAST.buildSelect(selectQuery,env);
-                    some2Exist(expr_some,subQ,op);
+                    toExist(expr_some,subQ,op);
                     return new Exist(false,subQ);
                 }
                 // all转not exist
@@ -82,15 +81,15 @@ public abstract class Condition implements Expr {
                     Expr expr_all = Expr.build(left);
                     SQLSelectQuery selectQuery = ((SQLAllExpr)right).subQuery.getQuery();
                     Select subQ = BuildAST.buildSelect(selectQuery,env);
-                    all2Exist(expr_all,subQ,op);
+                    toExist(expr_all,subQ,op);
                     return new Exist(true,subQ);
                 }
                 // 普通运算符的情况
                 else if (isCommutative(op)){
-                    return new CommutativeCond(op,Expr.build(left),Expr.build(right));
+                    return new CommutativeCond(op,Arrays.asList(Expr.build(left), Expr.build(right)));
                 }
                 else {
-                    return new UncommutativeCond(op,Expr.build(left),Expr.build(right));
+                    return new UncommutativeCond(op, Expr.build(left), Expr.build(right));
                 }
             }
         }
@@ -111,7 +110,7 @@ public abstract class Condition implements Expr {
             SQLInSubQueryExpr inExpr = (SQLInSubQueryExpr) expr;
             Expr expr_in = Expr.build(inExpr.getExpr());
             Select subQ = BuildAST.buildSelect(inExpr.subQuery.getQuery(),env);
-            in2Exist(expr_in, subQ);
+            toExist(expr_in, subQ, "=");
             return new Exist(inExpr.isNot(),subQ);
         }
         // between转CompoundCond
@@ -146,48 +145,42 @@ public abstract class Condition implements Expr {
      */
     public abstract Condition rearrange();
 
-    public static void in2Exist(Expr expr, Select subQ){
+    public static void toExist(Expr expr, Select subQ, String operator){
         if (subQ instanceof SetOpSelect){
-            in2Exist(expr,((SetOpSelect) subQ).left);
-            in2Exist(expr,((SetOpSelect) subQ).right);
+            toExist(expr,((SetOpSelect) subQ).left,operator);
+            toExist(expr,((SetOpSelect) subQ).right,operator);
         } else if (subQ instanceof PlainSelect) {
-            // todo: (a,b) in (select x,y ...)
-            Condition c = new CommutativeCond("=",expr,((PlainSelect) subQ).selections.get(0));
-            ((PlainSelect) subQ).where = new CompoundCond("AND", Arrays.asList(((PlainSelect) subQ).where,c));
-        }
-    }
-
-    public static void some2Exist(Expr expr, Select subQ, String operator){
-        if (subQ instanceof SetOpSelect){
-            some2Exist(expr,((SetOpSelect) subQ).left,operator);
-            some2Exist(expr,((SetOpSelect) subQ).right,operator);
-        } else if (subQ instanceof PlainSelect) {
-            // todo: (a,b) in (select x,y ...)
             Condition c = null;
-            if (isCommutative(operator)){
-                c = new CommutativeCond(operator,expr,((PlainSelect) subQ).selections.get(0));
-            }else {
-                c = new UncommutativeCond(operator,expr,((PlainSelect) subQ).selections.get(0));
+            List<Expr> selections = ((PlainSelect) subQ).selections;
+            if (selections==null || selections.size()==0) {
+                return;
+            }
+            if (expr instanceof ListExpr) {
+                List<Expr> exprs = ((ListExpr) expr).exprs;
+                int size = Math.min(exprs.size(),selections.size());
+                CompoundCond cc = new CompoundCond("AND",new ArrayList<>());
+                for (int i=0;i<size;i++) {
+                    if (isCommutative(operator)){
+                        cc.add(new CommutativeCond(operator,Arrays.asList(exprs.get(i),selections.get(i))));
+                    }else {
+                        cc.add(new UncommutativeCond(operator,exprs.get(i),selections.get(i)));
+                    }
+                }
+                c = cc;
+            } else {
+                if (isCommutative(operator)){
+                    c = new CommutativeCond(operator,Arrays.asList(expr,selections.get(0)));
+                }else {
+                    c = new UncommutativeCond(operator,expr,selections.get(0));
+                }
             }
             ((PlainSelect) subQ).where = new CompoundCond("AND",Arrays.asList(((PlainSelect) subQ).where,c));
         }
     }
 
-    public static void all2Exist(Expr expr, Select subQ, String operator){
-        if (subQ instanceof SetOpSelect){
-            all2Exist(expr,((SetOpSelect) subQ).left,operator);
-            all2Exist(expr,((SetOpSelect) subQ).right,operator);
-        } else if (subQ instanceof PlainSelect) {
-            // todo: (a,b) in (select x,y ...)
-            Condition c = null;
-            if (isCommutative(operator)){
-                c = new CommutativeCond(operator,expr,((PlainSelect) subQ).selections.get(0));
-            }else {
-                c = new UncommutativeCond(operator,expr,((PlainSelect) subQ).selections.get(0));
-            }
-            ((PlainSelect) subQ).where = new CompoundCond("AND",Arrays.asList(((PlainSelect) subQ).where,c));
-        }
-    }
+    public abstract float score();
+
+    public abstract float score(Condition c);
 
     /**
      * exist子句中selections没有比较意义，设为空
@@ -321,47 +314,21 @@ public abstract class Condition implements Expr {
         return false;
     }
 
-//    private static void addCommutativeCond(List<Condition> conditions, String operator, String left, String right) {
-//        for(Condition con: conditions) {
-//            if (con instanceof CommutativeCond) {
-//                CommutativeCond c = (CommutativeCond) con;
-//                if (c.operator.equals(operator)){
-//                    if (c.operands.contains(left)) {
-//                        c.operands.add(right);
-//                        return;
-//                    } else if (c.operands.contains(right)) {
-//                        c.operands.add(left);
-//                        return;
-//                    }
-//                }
-//            }
-//        }
-//        CommutativeCond c = new CommutativeCond(operator);
-//        c.operands.add(left);
-//        c.operands.add(right);
-//        conditions.add(c);
-//    }
-//
-//    @Override
-//    protected Condition clone() throws CloneNotSupportedException {
-//        return new Condition(value);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return value.hashCode();
-//    }
-//
-//    @Override
-//    public boolean equals(Object obj) {
-//        if (obj instanceof CommutativeCond || obj instanceof UncommutativeCond || obj instanceof ExistCond){
-//            return false;
-//        }
-//        return value.equals(((Condition)obj).value);
-//    }
+    @Override
+    public abstract Condition clone();
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public abstract boolean equals(Object obj);
+
+    @Override
+    public abstract String toString();
 
     public static void main(String[] args) {
         System.out.println(SQLBinaryOperator.BooleanAnd);
         System.out.println(SQLBinaryOperator.BooleanAnd.name);
     }
+
 }

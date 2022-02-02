@@ -2,12 +2,16 @@ package org.example;
 
 import javafx.util.Pair;
 import org.example.node.*;
-import org.example.node.condition.CommutativeCond;
 import org.example.node.condition.Condition;
-import org.example.node.condition.UncommutativeCond;
-import org.example.node.enums.SetOp;
+import org.example.enums.SetOp;
 import org.example.node.expr.Expr;
+import org.example.node.orderby.OrderBy;
+import org.example.node.select.PlainSelect;
+import org.example.node.select.Select;
+import org.example.node.select.SetOpSelect;
+import org.example.node.table.Table;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,38 +25,11 @@ public class CalculateScore {
     private static Logger logger = Logger.getLogger(CalculateScore.class.getName());
     /**
      * 根据 instrAST 的组件数，计算总分
-     * @param instrAST
+     * @param s
      * @return
      */
-    public static float totalScore(Expr instrAST) {
-        if (instrAST instanceof SetOpSelect) {
-            SetOpSelect instr = (SetOpSelect) instrAST;
-            return totalScore(instr.left) + totalScore(instr.right) + 1;
-        } else if (instrAST instanceof PlainSelect) {
-            PlainSelect instr = (PlainSelect) instrAST;
-            float res = 0.0f;
-            res += instr.distinct?1:0;
-            res += instr.selections.size();
-            res += instr.from.tables.size();
-            res += instr.from.joinPatterns.size()*3;
-            res += instr.from.joinConditions.size()*3;
-            res += instr.where.conds.size()*3;
-            res += instr.groupBy.items.size();
-            res += instr.groupBy.having.size();
-            res += instr.orderBy.items.size()*2;
-            res += instr.limit.rowCount==null?0:1;
-            res += instr.limit.offset==null?0:1;
-            for (Select s: instr.from.subqueries) {
-                res += totalScore(s);
-            }
-            for (Select s: instr.where.subqueries){
-                res += totalScore(s);
-            }
-            return res;
-        } else {
-            logger.log(Level.WARNING,"TotalScore node is not of Select type.");
-        }
-        return 0.0f;
+    public static float totalScore(Select s) {
+        return s.score();
     }
 
     /**
@@ -63,7 +40,7 @@ public class CalculateScore {
      */
     public static float calculateScore(Select instrSql, Select studentSql) {
         if (instrSql instanceof SetOpSelect || studentSql instanceof SetOpSelect){
-            if (!(instrSql instanceof SetOpSelect)){
+            if (!(instrSql instanceof SetOpSelect)) {
                 PlainSelect instr = (PlainSelect) instrSql;
                 SetOpSelect student = (SetOpSelect) studentSql;
                 if (student.operator == SetOp.EXCEPT) {
@@ -73,7 +50,8 @@ public class CalculateScore {
                     float right = calculateScore(instr,student.right) - totalScore(student.left) - 1;
                     return Math.max(left,right);
                 }
-            }else if (!(studentSql instanceof SetOpSelect)){
+            }
+            else if (!(studentSql instanceof SetOpSelect)) {
                 SetOpSelect instr = (SetOpSelect) instrSql;
                 PlainSelect student = (PlainSelect) studentSql;
                 if (instr.operator == SetOp.EXCEPT) {
@@ -83,7 +61,8 @@ public class CalculateScore {
                     float right = calculateScore(instr.right,student);
                     return Math.max(left,right);
                 }
-            }else {
+            }
+            else {
                 SetOpSelect instr = (SetOpSelect) instrSql;
                 SetOpSelect student = (SetOpSelect) studentSql;
                 float score = 0.0f;
@@ -99,18 +78,11 @@ public class CalculateScore {
                 }
                 return score;
             }
-        } else {
+        }
+        else {
             PlainSelect instr = (PlainSelect) instrSql;
             PlainSelect student = (PlainSelect) studentSql;
-            float res = totalScore(instr);
-            res -= calculateDistinctCost(instr.distinct,student.distinct);
-            res -= calculateSelectionsCost(instr.selections,student.selections);
-            res -= calculateFromCost(instr.from,student.from);
-            res -= calculateWhereCost(instr.where,student.where);
-            res -= calculateGroupByCost(instr.groupBy,student.groupBy);
-            res -= calculateOrderByCost(instr.orderBy,student.orderBy);
-            res -= calculateLimitCost(instr.limit,student.limit);
-            return res;
+            return instr.score(student);
         }
     }
 
@@ -121,7 +93,7 @@ public class CalculateScore {
      * @param totalScore 总分
      * @return
      */
-    public static float editScore(Expr instrAST, Expr studentAST, float totalScore) {
+    public static float editScore(Select instrAST, Select studentAST, float totalScore) {
         boolean instrIsSetOp = instrAST instanceof SetOpSelect;
         boolean studentIsSetOp = studentAST instanceof SetOpSelect;
         if (instrIsSetOp || studentIsSetOp) {
@@ -213,31 +185,21 @@ public class CalculateScore {
         }
     }
 
-    public static float calculateDistinctCost(boolean instr, boolean student){
-        if (instr != student){
-            return 1;
-        }
-        return 0;
+    public static float fromScore(From from){
+        float score = 0.0f;
+        return score;
     }
 
-    public static float calculateSelectionsCost(List<String> instr, List<String> student){
-        float res = 0.0f;
-        for (int i=0;i<instr.size();i++){
-            if (i>=student.size()){
-                break;
-            }
-            if (! (instr.get(i).equals(student.get(i)))){
-                res += 1;
-            }
-        }
-        return res;
+    public static float whereScore(Condition where){
+        float score = 0.0f;
+        return score;
     }
 
     public static float calculateFromCost(From instr, From student){
         float res = 0.0f;
         res += calculateTableCost(instr.tables,student.tables);
-        res += calculateConditionCost(instr.joinConditions,student.joinConditions);
-        res += calculateSubQCost(instr.subqueries,student.subqueries);
+//        res += calculateConditionCost(instr.joinConditions,student.joinConditions);
+//        res += calculateSubQCost(instr.subqueries,student.subqueries);
         return res;
     }
 
@@ -247,9 +209,9 @@ public class CalculateScore {
             if (i>=student.size()){
                 break;
             }
-            if (! (instr.get(i).name.equals(student.get(i).name))){
-                res += 1;
-            }
+//            if (! (instr.get(i).name.equals(student.get(i).name))){
+//                res += 1;
+//            }
         }
         return res;
 
@@ -324,31 +286,31 @@ public class CalculateScore {
         return res;
     }
 
-    public static float calculateWhereCost(Where instr, Where student){
-        float res = 0.0f;
-        res += calculateConditionCost(instr.conds,student.conds);
-        res += calculateSubQCost(instr.subqueries,student.subqueries);
-        return res;
-    }
+//    public static float calculateWhereCost(Where instr, Where student){
+//        float res = 0.0f;
+////        res += calculateConditionCost(instr.conds,student.conds);
+//        res += calculateSubQCost(instr.subqueries,student.subqueries);
+//        return res;
+//    }
 
     public static float calculateGroupByCost(GroupBy instr, GroupBy student){
         float res = 0.0f;
-        for (int i=0;i<instr.items.size();i++){
-            if (i>=student.items.size()){
-                break;
-            }
-            if (! (instr.items.get(i).column.equals(student.items.get(i).column))){
-                res += 1;
-            }
-        }
-        for (int i=0;i<instr.having.size();i++){
-            if (i>=student.having.size()){
-                break;
-            }
-            if (! (instr.having.get(i).value.equals(student.having.get(i).value))){
-                res += 1;
-            }
-        }
+//        for (int i=0;i<instr.items.size();i++){
+//            if (i>=student.items.size()){
+//                break;
+//            }
+//            if (! (instr.items.get(i).column.equals(student.items.get(i).column))){
+//                res += 1;
+//            }
+//        }
+//        for (int i=0;i<instr.having.size();i++){
+//            if (i>=student.having.size()){
+//                break;
+//            }
+//            if (! (instr.having.get(i).value.equals(student.having.get(i).value))){
+//                res += 1;
+//            }
+//        }
         return res;
     }
 
@@ -384,7 +346,7 @@ public class CalculateScore {
      * @param B
      * @return
      */
-    private static int findLCS(String A, String B) {
+    public static int lcs(String A, String B) {
         int n = A.length();
         int m = B.length();
         char[] a = A.toCharArray();

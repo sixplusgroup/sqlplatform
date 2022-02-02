@@ -1,8 +1,8 @@
 package org.example.edit;
 
 import javafx.util.Pair;
-import org.example.node.PlainSelect;
-import org.example.node.Table;
+import org.example.node.select.PlainSelect;
+import org.example.node.table.Table;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ public class TableEdit implements Edit {
             {
                 PlainSelect edited = stu.clone();
                 edited.from.tables.add(t);
-                res.add(new Pair<>(edited,EditCostConfig.tables));
+                res.add(new Pair<>(edited, CostConfig.table));
             }
         }
         return res;
@@ -36,7 +36,7 @@ public class TableEdit implements Edit {
             {
                 PlainSelect edited = stu.clone();
                 edited.from.tables.remove(s);
-                res.add(new Pair<>(edited,EditCostConfig.tables/2));
+                res.add(new Pair<>(edited, CostConfig.table /2));
             }
         }
         return res;
@@ -73,7 +73,7 @@ public class TableEdit implements Edit {
                 PlainSelect edited = stu.clone();
                 edited.from.tables.remove(st);
                 edited.from.tables.add(t);
-                res.add(new Pair<>(edited,EditCostConfig.tables));
+                res.add(new Pair<>(edited, CostConfig.table));
             }
         }
         return res;

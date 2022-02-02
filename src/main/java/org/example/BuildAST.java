@@ -6,10 +6,10 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
-import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
-import org.example.node.*;
-import org.example.node.expr.Expr;
+import org.example.node.select.PlainSelect;
+import org.example.node.select.Select;
+import org.example.node.select.SetOpSelect;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -68,14 +68,63 @@ public class BuildAST {
 //        String sql = "select e.dno, eno, salary from employees e\n" +
 //                "where eno>1 and salary >= min (select e1.salary from employees e1 where e1.dno=e.dno)\n" +
 //                "order by dno asc";
-        String sql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
-                "from users u left join\n" +
-                "  (select buyer_id, count(*) num\n" +
-                "  from orders\n" +
-                "  where year(order_date)=2019\n" +
-                "  group by buyer_id) as o\n" +
-                "on u.user_id=o.buyer_id\n" +
-                "order by u.user_id asc";
+//        String sql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
+//                "from users u left join\n" +
+//                "  (select buyer_id, count(*) num\n" +
+//                "  from orders\n" +
+//                "  where year(order_date)=2019\n" +
+//                "  group by buyer_id) as o\n" +
+//                "on u.user_id=o.buyer_id\n" +
+//                "order by u.user_id asc";
+//        String sql = "SELECT\n" +
+//                "\tp.product_name AS product_name,\n" +
+//                "\to.order_id,\n" +
+//                "\to.order_date\n" +
+//                "FROM\n" +
+//                "\torders o,\n" +
+//                "\tcustomers c,\n" +
+//                "\tproducts p\n" +
+//                "WHERE\n" +
+//                "\to.customer_id = c.customer_id\n" +
+//                "AND o.product_id = p.product_id\n" +
+//                "AND (o.product_id, o.order_date) IN (\n" +
+//                "\tSELECT\n" +
+//                "\t\tproduct_id,\n" +
+//                "\t\tMAX(order_date)\n" +
+//                "\tFROM\n" +
+//                "\t\torders\n" +
+//                "\tGROUP BY\n" +
+//                "\t\tproduct_id\n" +
+//                ")\n" +
+//                "ORDER BY product_name;\n";
+//        String sql = "select round(\n" +
+//                "    ifnull(\n" +
+//                "    (select count(distinct requester_id ,accepter_id) from accepted_requests) / \n" +
+//                "    (select count(distinct sender_id ,send_to_id) from friend_requests)\n" +
+//                "    ,0)\n" +
+//                "    ,2) as accept_rate ;";
+        String sql = "select group_id,min(player_id) as player_id\n" +
+                "from\n" +
+                "    (select player,sum(score) as score\n" +
+                "    from\n" +
+                "        ((select first_player player,first_score score from matches)\n" +
+                "        union all\n" +
+                "        (select second_player player,second_score score from matches)) t\n" +
+                "    group by player) a\n" +
+                "    right join players p on a.player=p.player_id\n" +
+                "where (group_id,score) in\n" +
+                "(select group_id,max(score) as mx\n" +
+                "from \n" +
+                "    (select player,sum(score) as score\n" +
+                "    from\n" +
+                "        ((select first_player player,first_score score from matches)\n" +
+                "        union all\n" +
+                "        (select second_player player,second_score score from matches)) t\n" +
+                "    group by player) a\n" +
+                "    right join players p on a.player=p.player_id\n" +
+                "group by group_id)\n" +
+                "group by group_id\n" +
+                "order by group_id;";
 //        String sql = "select date, round(count(l.user_id)/count(nu.user_id), 3) rate from\n" +
 //                "  (select user_id, min(login_date) date from logins group by user_id) nu\n" +
 //                "  left join logins l\n" +

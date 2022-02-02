@@ -18,39 +18,49 @@ public class UncommutativeCond extends AtomCond {
         this.right = right;
     }
 
+    public UncommutativeCond(boolean not, String operator, Expr left, Expr right){
+        this.not = not;
+        this.operator = operator;
+        this.left = left;
+        this.right = right;
+    }
+
     @Override
     public Condition rearrange() {
         return this;
     }
 
-//    @Override
-//    protected UncommutativeCond clone() throws CloneNotSupportedException {
-//        return new UncommutativeCond(operator,left,right);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        int hashCode = 1;
-//        hashCode = 31*hashCode + (operator==null?0:operator.hashCode());
-//        hashCode = 31*hashCode + (left==null?0:left.hashCode());
-//        hashCode = 31*hashCode + (right==null?0:right.hashCode());
-//        return hashCode;
-//    }
-//
-//    @Override
-//    public boolean equals(Object obj) {
-//        if (obj instanceof UncommutativeCond){
-//            UncommutativeCond cond = (UncommutativeCond) obj;
-//            if (!(operator.equals(cond.operator)))
-//                return false;
-//            if (!(left.equals(cond.left)))
-//                return false;
-//            if (!(right.equals(cond.right)))
-//                return false;
-//            return true;
-//        }
-//        return false;
-//    }
+    @Override
+    public float score() {
+        return 0;
+    }
 
+    @Override
+    public float score(Condition c) {
+        return 0;
+    }
+
+    @Override
+    public Condition clone() {
+        return new UncommutativeCond(not,operator,left.clone(),right.clone());
+    }
+
+    @Override
+    public int hashCode() {
+        return operator.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof UncommutativeCond))
+            return false;
+        UncommutativeCond c = (UncommutativeCond) obj;
+        return c.not==not && c.operator.equals(operator) && c.left.equals(left) && c.right.equals(right);
+    }
+
+    @Override
+    public String toString() {
+        return null;
+    }
 
 }

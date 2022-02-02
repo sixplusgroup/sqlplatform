@@ -2,7 +2,7 @@ package org.example;
 
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
-import org.example.node.expr.Expr;
+import org.example.node.select.Select;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,9 +46,9 @@ public class PartialMarking {
      * @return
      */
     public float partialMark(String instrSql, String studentSql, float maxScore) {
-        Expr instrAST = BuildAST.buildSelect(instrSql,env);
+        Select instrAST = BuildAST.buildSelect(instrSql,env);
         Canonicalizer.canonicalize(instrAST);
-        Expr studentAST = BuildAST.buildSelect(studentSql,env);
+        Select studentAST = BuildAST.buildSelect(studentSql,env);
         Canonicalizer.canonicalize(studentAST);
         // TODO: 写一个有意义的规范化，删掉student的规范化
         float totalScore = CalculateScore.totalScore(instrAST);
@@ -100,28 +100,28 @@ public class PartialMarking {
         //    (select count(distinct sender_id ,send_to_id) from friend_requests)
         //    ,0)
         //    ,2) as accept_rate ;
-//        String instrSql = "select group_id,min(player_id) as player_id\n" +
-//                "from\n" +
-//                "    (select player,sum(score) as score\n" +
-//                "    from\n" +
-//                "        ((select first_player player,first_score score from matches)\n" +
-//                "        union all\n" +
-//                "        (select second_player player,second_score score from matches)) t\n" +
-//                "    group by player) a\n" +
-//                "    right join players p on a.player=p.player_id\n" +
-//                "where (group_id,score) in\n" +
-//                "(select group_id,max(score) as mx\n" +
-//                "from \n" +
-//                "    (select player,sum(score) as score\n" +
-//                "    from\n" +
-//                "        ((select first_player player,first_score score from matches)\n" +
-//                "        union all\n" +
-//                "        (select second_player player,second_score score from matches)) t\n" +
-//                "    group by player) a\n" +
-//                "    right join players p on a.player=p.player_id\n" +
-//                "group by group_id)\n" +
-//                "group by group_id\n" +
-//                "order by group_id;";
+        String instrSql = "select group_id,min(player_id) as player_id\n" +
+                "from\n" +
+                "    (select player,sum(score) as score\n" +
+                "    from\n" +
+                "        ((select first_player player,first_score score from matches)\n" +
+                "        union all\n" +
+                "        (select second_player player,second_score score from matches)) t\n" +
+                "    group by player) a\n" +
+                "    right join players p on a.player=p.player_id\n" +
+                "where (group_id,score) in\n" +
+                "(select group_id,max(score) as mx\n" +
+                "from \n" +
+                "    (select player,sum(score) as score\n" +
+                "    from\n" +
+                "        ((select first_player player,first_score score from matches)\n" +
+                "        union all\n" +
+                "        (select second_player player,second_score score from matches)) t\n" +
+                "    group by player) a\n" +
+                "    right join players p on a.player=p.player_id\n" +
+                "group by group_id)\n" +
+                "group by group_id\n" +
+                "order by group_id;";
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where u.uid=s.id and u.uid=l.sid";
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
@@ -135,14 +135,14 @@ public class PartialMarking {
 //                "\tgroup by dno\n" +
 //                ")\n" +
 //                "order by dno;";
-        String instrSql = "select activity\n" +
-                "from friends\n" +
-                "group by activity\n" +
-                "having count(*)>any(\n" +
-                "    select count(*) from friends group by activity\n" +
-                ") and count(*)<any(\n" +
-                "    select count(*) from friends group by activity\n" +
-                ")";
+//        String instrSql = "select activity\n" +
+//                "from friends\n" +
+//                "group by activity\n" +
+//                "having count(*)>any(\n" +
+//                "    select count(*) from friends group by activity\n" +
+//                ") and count(*)<any(\n" +
+//                "    select count(*) from friends group by activity\n" +
+//                ")";
         String studentSql = "select s.id from student s, user u, lesson l\n" +
                 "where u.uid=s.id and s.id=l.sid";
         PartialMarking marking = new PartialMarking(JdbcConstants.MYSQL, new ArrayList<>());
