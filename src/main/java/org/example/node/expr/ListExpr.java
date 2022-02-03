@@ -1,5 +1,7 @@
 package org.example.node.expr;
 
+import org.example.edit.CostConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +36,7 @@ public class ListExpr extends Expr {
             if (match != null) {
                 return match.score(e);
             } else {
-                return -e.score();
+                return 0;
             }
         }
         // case 2: this equals e
@@ -49,7 +51,7 @@ public class ListExpr extends Expr {
             }
         }
         for (Expr item: le_clone) {
-            score -= item.score();
+            score -= item.score() * CostConfig.delete_cost_rate;
         }
         return score;
     }

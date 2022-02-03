@@ -11,7 +11,6 @@ public class JoinTable extends Table {
     Table left;
     Table right;
     JoinType joinType;
-    // todo sort
 
     public JoinTable(Table left, Table right, JoinType joinType) {
         this.left = left;
@@ -21,7 +20,7 @@ public class JoinTable extends Table {
 
     @Override
     public float score() {
-        return CostConfig.join_pattern;
+        return CostConfig.join_type + left.score() + right.score();
     }
 
     @Override
@@ -32,14 +31,16 @@ public class JoinTable extends Table {
             JoinTable jt = (JoinTable) t;
             // case 2: this equals t
             score = Math.max(score,
-                    left.score(jt.left) * (1/3 * score())
-                            + right.score(jt.right) * (1/3 * score())
-                            + (joinType.equals(jt.joinType) ? score()*1/3 : 0));
+                    left.score(jt.left) + right.score(jt.right)
+                            + (joinType.equals(jt.joinType) ? CostConfig.join_type : 0));
+            score = Math.max(score,
+                    left.score(jt.right) + right.score(jt.left)
+                            + (joinType.equals(jt.joinType) ? CostConfig.join_type : 0));
             // case 3: e includes this
             score = Math.max(score,
-                    score(jt.left) - CostConfig.join_pattern*1/3*(jt.score()-jt.left.score()));
+                    score(jt.left) - (jt.score() - jt.left.score()) * CostConfig.delete_cost_rate);
             score = Math.max(score,
-                    score(jt.right) - CostConfig.join_pattern*1/3*(1+jt.left.score()));
+                    score(jt.right) - (jt.score() - jt.right.score()) * CostConfig.delete_cost_rate);
         }
         return score;
     }
@@ -59,11 +60,18 @@ public class JoinTable extends Table {
         if (!(obj instanceof JoinTable))
             return false;
         JoinTable jt = (JoinTable) obj;
-        return jt.left.equals(left) && jt.right.equals(right) && jt.joinType.equals(joinType);
+        return (jt.left.equals(left) && jt.right.equals(right) && jt.joinType.equals(joinType))
+                || (jt.left.equals(right) && jt.right.equals(left) && jt.joinType.equals(joinType));
     }
 
     @Override
     public String toString() {
-        return left + " " + joinType.toString() + " " + right;
+        String left_s = left.toString();
+        String right_s = right.toString();
+        int res = left_s.compareTo(right_s);
+        if (res >= 0)
+            return left_s + " " + joinType.toString() + " " + right_s;
+        else
+            return right_s + " " + joinType.toString() + " " + left_s;
     }
 }

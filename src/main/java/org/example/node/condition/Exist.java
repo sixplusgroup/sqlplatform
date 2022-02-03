@@ -1,5 +1,7 @@
 package org.example.node.condition;
 
+import org.example.CalculateScore;
+import org.example.edit.CostConfig;
 import org.example.node.select.Select;
 
 /**
@@ -26,12 +28,30 @@ public class Exist extends Condition {
 
     @Override
     public float score() {
-        return 0;
+        return subQuery.score() + (not ? CostConfig.not : 0);
     }
 
     @Override
     public float score(Condition c) {
-        return 0;
+        float score = 0;
+        if (c instanceof Exist) {
+            if (not) {
+                if (c.not)
+                    score += CostConfig.not;
+            } else {
+                if (c.not)
+                    score -= CostConfig.not;
+            }
+            score += subQuery.score(((Exist) c).subQuery);
+        }
+        else if (c instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) c;
+            Condition match = Condition.isIn(this,cc.subConds);
+            if (match != null) {
+                score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
+            }
+        }
+        return score;
     }
 
     @Override
@@ -54,7 +74,11 @@ public class Exist extends Condition {
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        if (not)
+            sb.append("not exist ");
+        sb.append(subQuery.toString());
+        return sb.toString();
     }
 
 }

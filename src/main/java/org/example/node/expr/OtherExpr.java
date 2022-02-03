@@ -1,5 +1,6 @@
 package org.example.node.expr;
 
+import org.example.CalculateScore;
 import org.example.edit.CostConfig;
 
 /**
@@ -25,16 +26,18 @@ public class OtherExpr extends Expr {
     public float score(Expr e) {
         // case 1: this equals e
         if (e instanceof OtherExpr) {
-            return equals(e) ? score() : 0;
+            return score() * (1 -
+                    1.0f * CalculateScore.editDistance(e.toString(),this.toString())
+                            / Math.max(e.toString().length(),this.toString().length()));
         } else if (e instanceof FuncExpr) {
             // case 2: e includes this
             FuncExpr fe = (FuncExpr) e;
             Expr match = Expr.isIn(this,fe.parameters);
             if (match != null) {
-                return score(match) - (fe.score() - match.score());
+                return score(match) - (fe.score() - match.score()) * CostConfig.delete_cost_rate;
             }
         }
-        return -e.score();
+        return 0;
     }
 
     @Override

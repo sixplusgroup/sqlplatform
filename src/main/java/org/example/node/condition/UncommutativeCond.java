@@ -1,6 +1,10 @@
 package org.example.node.condition;
 
+import org.example.edit.CostConfig;
 import org.example.node.expr.Expr;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author shenyichen
@@ -32,12 +36,35 @@ public class UncommutativeCond extends AtomCond {
 
     @Override
     public float score() {
-        return 0;
+        float score = (not ? CostConfig.not : 0) + CostConfig.math_operator;
+        score += left.score();
+        score += right.score();
+        return score;
     }
 
     @Override
     public float score(Condition c) {
-        return 0;
+        float score = 0;
+        if (c instanceof UncommutativeCond) {
+            UncommutativeCond uc = (UncommutativeCond) c;
+            if (not) {
+                if (uc.not)
+                    score += CostConfig.not;
+            } else {
+                if (uc.not)
+                    score -= CostConfig.not;
+            }
+            score += operator.equals(uc.operator) ? CostConfig.math_operator : 0;
+            score += left.score(uc.left) + right.score(uc.right);
+        }
+        else if (c instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) c;
+            Condition match = Condition.isIn(this,cc.subConds);
+            if (match != null) {
+                score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
+            }
+        }
+        return score;
     }
 
     @Override
@@ -60,7 +87,13 @@ public class UncommutativeCond extends AtomCond {
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        if (not)
+            sb.append("not ");
+        sb.append(operator).append("(");
+        sb.append(left.toString()).append(",");
+        sb.append(right.toString()).append(")");
+        return sb.toString();
     }
 
 }

@@ -79,4 +79,9 @@ public class Limit {
         }
         return limit.rowCount.equals(rowCount) && limit.offset.equals(offset);
     }
+
+    @Override
+    public String toString() {
+        return "limit " + rowCount + "," + offset;
+    }
 }

@@ -4,6 +4,7 @@ import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import org.example.BuildAST;
+import org.example.CalculateScore;
 import org.example.Env;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
@@ -13,6 +14,7 @@ import org.example.node.expr.ListExpr;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -183,18 +185,23 @@ public abstract class Condition {
     public abstract float score(Condition c);
 
     /**
-     * exist子句中selections没有比较意义，设为空
-     * @param subQ
-     * @return
+     * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
      */
-    public static Select existNormalize(Select subQ){
-        if (subQ instanceof SetOpSelect) {
-            existNormalize(((SetOpSelect) subQ).left);
-            existNormalize(((SetOpSelect) subQ).right);
-        } else if (subQ instanceof PlainSelect) {
-            ((PlainSelect) subQ).selections = new ArrayList<>();
+    public static Condition isIn(Condition c, List<Condition> conditions) {
+        Condition res = null;
+        int score = 0;
+        List<Condition> l = new ArrayList<>(conditions);
+        l.sort(Comparator.comparingInt(o -> o.toString().length()));
+        String s = c.toString();
+        for (Condition item: l) {
+            String tmp = item.toString();
+            int lcs = CalculateScore.lcs(s,tmp);
+            if (lcs > score) {
+                score = lcs;
+                res = item;
+            }
         }
-        return subQ;
+        return res;
     }
 
     /**

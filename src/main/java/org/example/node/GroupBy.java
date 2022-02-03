@@ -76,4 +76,17 @@ public class GroupBy {
             return groupBy.having.equals(having);
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("groupBy ");
+        List<String> items_s = items.stream()
+                .map(Expr::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",items_s));
+        sb.append(" having ");
+        sb.append(having.toString());
+        return sb.toString();
+    }
 }

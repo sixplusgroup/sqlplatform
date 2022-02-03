@@ -73,28 +73,11 @@ public class PlainSelect extends Select {
         groupBy = new GroupBy(query.getGroupBy(),env);
         orderBy = new OrderBy(query.getOrderBy());
         limit = new Limit(query.getLimit());
-        // 统计量赋值：只从selections中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
-        subqueries.addAll(from.subqueries);
+        // 统计量赋值：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
         tableAliasMap.putAll(from.tableAliasMap);
         attrAliasMap.putAll(from.attrAliasMap);
-//        processWhereStats(where);
         processSelectionStats(query.getSelectList());
     }
-
-//    private void processWhereStats(Condition c){
-//        if (c == null)
-//            return;
-//        if (c instanceof CompoundCond){
-//            for (Condition subC: ((CompoundCond) c).subConds){
-//                processWhereStats(subC);
-//            }
-//        } else if (c instanceof Exist){
-//            Select subQ = ((Exist) c).subQuery;
-//            subqueries.addAll(subQ.subqueries);
-//            tableAliasMap.putAll(subQ.tableAliasMap);
-//            attrAliasMap.putAll(subQ.attrAliasMap);
-//        }
-//    }
 
     private void processSelectionStats(List<SQLSelectItem> original) {
         for (int i=0;i<selections.size();i++){
@@ -107,6 +90,7 @@ public class PlainSelect extends Select {
 
     @Override
     public float score() {
+        // todo null?
         float res = 0.0f;
         res += distinct?1:0;
         res += selections.stream()
@@ -131,14 +115,21 @@ public class PlainSelect extends Select {
     @Override
     public float score(Table t) {
         if (!(t instanceof PlainSelect))
-            return -t.score();
+            return 0;
         PlainSelect student = (PlainSelect) t;
         float score = 0;
-        score += ((distinct==student.distinct) ? 1 : 0);
+        if (distinct) {
+            if (student.distinct)
+                score += 1;
+        } else {
+            if (student.distinct)
+                score -= 1;
+        }
         score += scoreOfSelections(student.selections);
         score += from.score(student.from);
+        score += where.score(student.where);
 
-        return 0;
+        return score;
     }
 
     private float scoreOfSelections(List<Expr> student){
@@ -193,7 +184,31 @@ public class PlainSelect extends Select {
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append("select ");
+        if (distinct)
+            sb.append("distinct ");
+        List<String> selections_s = selections.stream()
+                .map(Expr::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",selections_s));
+        sb.append(" from ");
+        List<String> tables = from.tables.stream()
+                .map(Table::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",tables));
+        sb.append("(");
+        List<String> joinTypes = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry: from.joinTypes.entrySet()) {
+            joinTypes.add(entry.getValue() + " " + entry.getKey());
+        }
+        sb.append(String.join(",",joinTypes));
+        sb.append(") where ");
+        sb.append(where.toString());
+        sb.append(" ").append(groupBy.toString());
+        sb.append(" ").append(orderBy.toString());
+        sb.append(" ").append(limit.toString());
+        return sb.toString();
     }
 
 }

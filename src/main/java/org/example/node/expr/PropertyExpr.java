@@ -36,10 +36,10 @@ public class PropertyExpr extends Expr {
             FuncExpr fe = (FuncExpr) e;
             Expr match = Expr.isIn(this,fe.parameters);
             if (match != null) {
-                return score(match) - (fe.score() - match.score());
+                return score(match) - (fe.score() - match.score()) * CostConfig.delete_cost_rate;
             }
         }
-        return -e.score();
+        return 0;
     }
 
     @Override

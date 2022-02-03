@@ -43,4 +43,9 @@ public class OrderByItem {
         OrderByItem item = (OrderByItem) obj;
         return item.column.equals(column) && item.order.equals(order);
     }
+
+    @Override
+    public String toString() {
+        return column.toString() + " " + order.toString();
+    }
 }

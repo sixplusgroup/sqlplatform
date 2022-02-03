@@ -63,13 +63,13 @@ public class FuncExpr extends Expr {
                 }
             }
             for (Expr item: parameters_clone) {
-                matchScore -= item.score();
+                matchScore -= item.score() * CostConfig.delete_cost_rate;
             }
             score = Math.max(score, matchScore);
             // case 3: e includes this
             match = Expr.isIn(this,fe.parameters);
             if (match != null) {
-                matchScore = score(match) - (fe.score() - match.score());
+                matchScore = score(match) - (fe.score() - match.score()) * CostConfig.delete_cost_rate;
             }
             score = Math.max(score, matchScore);
         }

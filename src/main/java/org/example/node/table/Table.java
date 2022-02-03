@@ -2,6 +2,8 @@ package org.example.node.table;
 
 import org.example.CalculateScore;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -19,14 +21,16 @@ public abstract class Table {
     /**
      * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
      */
-    public static Table isIn(Table e, List<Table> l) {
+    public static Table isIn(Table e, List<Table> tables) {
         Table res = null;
-        float score = 0.0f;
+        int score = 0;
+        List<Table> l = new ArrayList<>(tables);
+        l.sort(Comparator.comparingInt(o -> o.toString().length()));
         String s = e.toString();
         for (Table item: l) {
             String tmp = item.toString();
             int lcs = CalculateScore.lcs(s,tmp);
-            if (lcs > score && lcs > 0.5) {
+            if (lcs > score && lcs > 0.5 * s.length()) {
                 score = lcs;
                 res = item;
             }

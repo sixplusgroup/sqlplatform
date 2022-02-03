@@ -1,6 +1,10 @@
 package org.example.node.condition;
 
 
+import org.example.CalculateScore;
+import org.example.edit.CostConfig;
+import org.example.node.expr.OtherExpr;
+
 /**
  * @author shenyichen
  * @date 2022/1/19
@@ -27,12 +31,33 @@ public class OtherCond extends Condition {
 
     @Override
     public float score() {
-        return 0;
+        int times = value.length() / CostConfig.other_digits;
+        return CostConfig.other * times + (not ? CostConfig.not : 0);
     }
 
     @Override
     public float score(Condition c) {
-        return 0;
+        float score = 0;
+        if (c instanceof OtherCond) {
+            if (not) {
+                if (c.not)
+                    score += CostConfig.not;
+            } else {
+                if (c.not)
+                    score -= CostConfig.not;
+            }
+            score += (score() - (not ? CostConfig.not : 0)) * (1 -
+                    1.0f * CalculateScore.editDistance(c.toString(),this.toString())
+                            / Math.max(c.toString().length(),this.toString().length()));
+        }
+        else if (c instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) c;
+            Condition match = Condition.isIn(this,cc.subConds);
+            if (match != null) {
+                score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
+            }
+        }
+        return score;
     }
 
     @Override
@@ -55,6 +80,10 @@ public class OtherCond extends Condition {
 
     @Override
     public String toString() {
-        return null;
+        String res = "";
+        if (not)
+            res += "not ";
+        res += value;
+        return res;
     }
 }

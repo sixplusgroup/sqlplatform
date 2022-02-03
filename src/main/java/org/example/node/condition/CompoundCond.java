@@ -1,5 +1,9 @@
 package org.example.node.condition;
 
+import org.example.edit.CostConfig;
+import org.example.node.expr.Expr;
+import org.example.node.expr.FuncExpr;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -56,12 +60,53 @@ public class CompoundCond extends Condition {
 
     @Override
     public float score() {
-        return 0;
+        float score = (not ? CostConfig.not : 0) + CostConfig.logic_operator;
+        for (Condition c: subConds) {
+            score += c.score();
+        }
+        return score;
     }
 
     @Override
     public float score(Condition c) {
-        return 0;
+        // case 1: this includes e
+        float score = 0.0f;
+        Condition match = Condition.isIn(c,subConds);
+        if (match != null) {
+            score = match.score(c);
+        }
+        if (c instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) c;
+            // case 2: this equals e
+            float matchScore = 0;
+            if (not) {
+                if (cc.not)
+                    matchScore += CostConfig.not;
+            } else {
+                if (cc.not)
+                    matchScore -= CostConfig.not;
+            }
+            matchScore += operator.equals(cc.operator) ? CostConfig.logic_operator : 0;
+            List<Condition> subConds_clone = new ArrayList<>(cc.subConds);
+            for (Condition item: subConds) {
+                match = Condition.isIn(item,cc.subConds);
+                if (match != null) {
+                    matchScore += item.score(match);
+                    subConds_clone.remove(item);
+                }
+            }
+            for (Condition item: subConds_clone) {
+                matchScore -= item.score() * CostConfig.delete_cost_rate;
+            }
+            score = Math.max(score, matchScore);
+            // case 3: e includes this
+            match = Condition.isIn(this,cc.subConds);
+            if (match != null) {
+                matchScore = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
+            }
+            score = Math.max(score, matchScore);
+        }
+        return score;
     }
 
     /**
@@ -105,7 +150,7 @@ public class CompoundCond extends Condition {
             List<Condition> sameConds = ((CompoundCond)subConds.get(0)).subConds;
             for (int i=1;i<subConds.size();i++){
                 List<Condition> tmpList =((CompoundCond)subConds.get(i)).subConds;
-                sameConds.removeIf(c -> !isIn(c, tmpList));
+                sameConds.removeIf(c -> !isStrictlyIn(c, tmpList));
             }
             // 2.3 合并
             Condition sameCond = null;
@@ -119,7 +164,7 @@ public class CompoundCond extends Condition {
             if (flag){
                 CompoundCond differentCond = new CompoundCond(operator,new ArrayList<>());
                 for (Condition tmp: subConds){
-                    ((CompoundCond)tmp).subConds.removeIf(c -> isIn(c,sameConds));
+                    ((CompoundCond)tmp).subConds.removeIf(c -> isStrictlyIn(c,sameConds));
                     if (((CompoundCond)tmp).subConds.size()==0){
                         if (op.equals("AND") && operator.equals("AND")
                         || (op.equals("OR") && operator.equals("OR"))){
@@ -155,7 +200,7 @@ public class CompoundCond extends Condition {
         }
     }
 
-    public boolean isIn(Condition c,List<Condition> l){
+    public boolean isStrictlyIn(Condition c, List<Condition> l){
         boolean flag = false;
         for (Condition tmp: l){
             if (c.equals(tmp)){
@@ -196,7 +241,11 @@ public class CompoundCond extends Condition {
         if (c.subConds.size()!=subConds.size())
             return false;
         for (Condition tmp: subConds) {
-            if (!isIn(tmp,c.subConds))
+            if (!isStrictlyIn(tmp,c.subConds))
+                return false;
+        }
+        for (Condition tmp: c.subConds) {
+            if (!isStrictlyIn(tmp,subConds))
                 return false;
         }
         return true;
@@ -204,7 +253,16 @@ public class CompoundCond extends Condition {
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        if (not)
+            sb.append("not ");
+        sb.append(operator).append("(");
+        List<String> subConds_s = subConds.stream()
+                .map(Condition::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",subConds_s));
+        sb.append(")");
+        return sb.toString();
     }
 
     public static void main(String[] args) {

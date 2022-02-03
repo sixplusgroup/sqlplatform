@@ -61,4 +61,15 @@ public class OrderBy {
         }
         return true;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("orderBy ");
+        List<String> items_s = items.stream()
+                .map(OrderByItem::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",items_s));
+        return sb.toString();
+    }
 }

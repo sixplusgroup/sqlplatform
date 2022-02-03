@@ -1,9 +1,6 @@
 package org.example.node.table;
 
 import org.example.edit.CostConfig;
-import org.example.node.select.Select;
-
-import java.util.Arrays;
 
 /**
  * @author shenyichen
@@ -25,18 +22,10 @@ public class PlainTable extends Table {
 
     @Override
     public float score(Table t) {
-        // case 1: this equals t
         if (t instanceof PlainTable) {
             return equals(t) ? score() : 0;
-        } else if (t instanceof JoinTable) {
-            // case 2: t includes this
-            JoinTable jt = (JoinTable) t;
-            Table match = Table.isIn(this, Arrays.asList(jt.left, jt.right));
-            if (match != null) {
-                return score(match) - (jt.score() - match.score());
-            }
         }
-        return -t.score();
+        return 0;
     }
 
     @Override

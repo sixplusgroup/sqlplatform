@@ -4,6 +4,8 @@ import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.*;
 import org.example.CalculateScore;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,14 +64,16 @@ public abstract class Expr {
     /**
      * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
      */
-    public static Expr isIn(Expr e, List<Expr> l) {
+    public static Expr isIn(Expr e, List<Expr> list) {
         Expr res = null;
-        float score = 0.0f;
+        int score = 0;
+        List<Expr> l = new ArrayList<>(list);
+        l.sort(Comparator.comparingInt(o -> o.toString().length()));
         String s = e.toString();
         for (Expr item: l) {
             String tmp = item.toString();
             int lcs = CalculateScore.lcs(s,tmp);
-            if (lcs > score && lcs > 0.5) {
+            if (lcs > score && lcs > 0.5 * s.length()) {
                 score = lcs;
                 res = item;
             }

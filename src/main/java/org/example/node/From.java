@@ -5,19 +5,16 @@ import com.alibaba.druid.sql.ast.statement.*;
 import org.example.BuildAST;
 import org.example.Env;
 import org.example.edit.CostConfig;
+import org.example.enums.JoinType;
 import org.example.node.condition.CompoundCond;
 import org.example.node.condition.Condition;
-import org.example.enums.JoinType;
 import org.example.node.expr.Expr;
 import org.example.node.select.Select;
 import org.example.node.table.JoinTable;
 import org.example.node.table.PlainTable;
 import org.example.node.table.Table;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -27,27 +24,25 @@ import java.util.stream.Collectors;
 public class From {
     // todo left/right + null判断 => inner join
     public List<Table> tables;
-    public List<JoinTable> joinTables;
+    public HashMap<String, Integer> joinTypes;
     // 下面这些仅用于传给Select
     public Condition joinCondition;
-    public List<Select> subqueries;
     public HashMap<String, Table> tableAliasMap;
     public HashMap<String, Expr> attrAliasMap;
 
 
     public From() {
         tables = new ArrayList<>();
-        joinTables = new ArrayList<>();
+        joinTypes = new HashMap<>();
         joinCondition = null;
-        subqueries = new ArrayList<>();
         tableAliasMap = new HashMap<>();
         attrAliasMap = new HashMap<>();
     }
 
-    public From(List<Table> tables, List<JoinTable> joinTables, Condition joinCondition) {
+    public From(List<Table> tables, HashMap<String, Integer> joinTypes, Condition joinCondition) {
         this();
         this.tables = tables;
-        this.joinTables = joinTables;
+        this.joinTypes = joinTypes;
         this.joinCondition = joinCondition;
     }
 
@@ -57,70 +52,74 @@ public class From {
     }
 
     public Table handleTableSource(SQLTableSource tableSource, Env env){
+        Table t = null;
         if (tableSource instanceof SQLJoinTableSource) {
+            // todo ,?
             Table left = handleTableSource(((SQLJoinTableSource) tableSource).getLeft(), env);
             Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env);
-            JoinTable table = handleJoinPattern(((SQLJoinTableSource) tableSource).getJoinType(),
-                    left, right);
+            JoinType type = handleJoinType(((SQLJoinTableSource) tableSource).getJoinType());
             handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition(),env);
-            return table;
+            t = new JoinTable(left,right,type);
         }
         else if (tableSource instanceof SQLUnionQueryTableSource) {
             SQLUnionQuery query = ((SQLUnionQueryTableSource) tableSource).getUnion();
-            return handleSQLSelectQuery(query);
+            Select subquery = BuildAST.buildSelect(query,env);
+            if (subquery == null){
+                return null;
+            }
+            tables.add(subquery);
+            tableAliasMap.putAll(subquery.tableAliasMap);
+            attrAliasMap.putAll(subquery.attrAliasMap);
+            t = subquery;
         }
         else if (tableSource instanceof SQLSubqueryTableSource) {
             Select subquery = BuildAST.buildSelect(
                     ((SQLSubqueryTableSource) tableSource).getSelect().getQuery(),env);
-            if (subquery==null){
+            if (subquery == null){
                 return null;
             }
-            subqueries.add(subquery);
             tables.add(subquery);
             tableAliasMap.putAll(subquery.tableAliasMap);
             attrAliasMap.putAll(subquery.attrAliasMap);
-            String alias = tableSource.getAlias();
-            if (alias != null){
-                tableAliasMap.put(alias,subquery);
-            }
-            return subquery;
+            t = subquery;
         }
         else if (tableSource instanceof SQLExprTableSource) {
             String tableName = ((SQLExprTableSource) tableSource).getExpr().toString();
-            String alias = tableSource.getAlias();
-            Table table = new PlainTable(tableName);
-            tables.add(table);
-            if (alias != null){
-                tableAliasMap.put(alias,table);
-            }
-            return table;
+            t = new PlainTable(tableName);
+            tables.add(t);
         }
         else {
-            Table table = new PlainTable(tableSource.getAlias());
-            tables.add(table);
-            return table;
+            t = new PlainTable(tableSource.getAlias());
+            tables.add(t);
         }
+        String alias = tableSource.getAlias();
+        if (alias != null){
+            tableAliasMap.put(alias,t);
+        }
+        return t;
     }
 
-    public Table handleSQLSelectQuery(SQLSelectQuery query) {
-        return null;
-    }
-
-    public JoinTable handleJoinPattern(SQLJoinTableSource.JoinType joinType,
-                                  Table left, Table right){
+    public JoinType handleJoinType(SQLJoinTableSource.JoinType joinType) {
+        String type = "";
         if (joinType == SQLJoinTableSource.JoinType.COMMA || joinType == SQLJoinTableSource.JoinType.JOIN
         || joinType == SQLJoinTableSource.JoinType.NATURAL_JOIN || joinType == SQLJoinTableSource.JoinType.NATURAL_INNER_JOIN
         || joinType == SQLJoinTableSource.JoinType.INNER_JOIN) {
-            return new JoinTable(left,right,JoinType.INNER_JOIN);
+            type = "INNER_JOIN";
         } else if (joinType == SQLJoinTableSource.JoinType.RIGHT_OUTER_JOIN) {
-            return new JoinTable(right,left,JoinType.LEFT_OUTER_JOIN);
+            type = "LEFT_OUTER_JOIN";
         } else if (joinType == SQLJoinTableSource.JoinType.LEFT_OUTER_JOIN) {
-            return new JoinTable(left,right,JoinType.LEFT_OUTER_JOIN);
+            type = "LEFT_OUTER_JOIN";
         } else if (joinType == SQLJoinTableSource.JoinType.FULL_OUTER_JOIN) {
-            return new JoinTable(left,right,JoinType.FULL_OUTER_JOIN);
+            type = "FULL_OUTER_JOIN";
         } else {
-            return new JoinTable(left,right,JoinType.OTHER_JOIN);
+            type = "OTHER_JOIN";
         }
+        if (this.joinTypes.containsKey(type)) {
+            this.joinTypes.put(type, this.joinTypes.get(type) + 1);
+        } else {
+            this.joinTypes.put(type,1);
+        }
+        return JoinType.valueOf(type);
     }
 
     public void handleCondsFromSQLExpr(SQLExpr conds, Env env){
@@ -140,16 +139,14 @@ public class From {
         score += tables.stream()
                 .mapToDouble(Table::score)
                 .sum();
-        score += joinTables.stream()
-                .mapToDouble(Table::score)
-                .sum();
+        for (Integer item: joinTypes.values()) {
+            score += item;
+        }
         return score;
     }
 
     public float score(From f) {
-        return scoreOfTables(f.tables)
-                + scoreOfJoinTables(f.joinTables)
-                + scoreOfSubQs(f.subqueries);
+        return scoreOfTables(f.tables) + scoreOfJoinTypes(f.joinTypes);
     }
 
     private float scoreOfTables(List<Table> t) {
@@ -158,21 +155,31 @@ public class From {
         float score = 0;
         List<Table> t_clone = new ArrayList<>(t);
         for (Table item: tables) {
-            if (Table.isStrictlyIn(item, t)) {
-                score += CostConfig.table;
+            Table match = Table.isIn(item,t_clone);
+            if (match != null) {
+                score += item.score(match);
                 t_clone.remove(item);
             }
         }
-        score -= t_clone.size();
+        for (Table item: t_clone) {
+            score -= item.score() * CostConfig.delete_cost_rate;
+        }
         return score;
     }
 
-    private float scoreOfJoinTables(List<JoinTable> joinTables) {
-        return 0;
-    }
-
-    private float scoreOfSubQs(List<Select> student) {
-        return 0;
+    private float scoreOfJoinTypes(HashMap<String, Integer> types) {
+        float score = 0;
+        for (Map.Entry<String, Integer> entry: joinTypes.entrySet()) {
+            String key = entry.getKey();
+            if (types.containsKey(key) && types.get(key).equals(entry.getValue()))
+                score += Math.min(entry.getValue(),types.get(key));
+        }
+        for (Map.Entry<String, Integer> entry: types.entrySet()) {
+            String key = entry.getKey();
+            if (!(joinTypes.containsKey(key)))
+                score -= entry.getValue() * CostConfig.delete_cost_rate;
+        }
+        return score;
     }
 
     @Override
@@ -180,10 +187,8 @@ public class From {
         List<Table> tables_clone = tables.stream()
                 .map(Table::clone)
                 .collect(Collectors.toList());
-        List<JoinTable> joinTables_clone = joinTables.stream()
-                .map(JoinTable::clone)
-                .collect(Collectors.toList());
-        return new From(tables_clone,joinTables_clone,null);
+        HashMap<String, Integer> types_clone = new HashMap<>(joinTypes);
+        return new From(tables_clone,types_clone,null);
     }
 
     @Override
@@ -200,8 +205,10 @@ public class From {
             if (!Table.isStrictlyIn(tmp,from.tables))
                 return false;
         }
-        for (JoinTable tmp: joinTables) {
-            if (!Table.isStrictlyIn(from.joinTables,tmp))
+        for (Map.Entry<String, Integer> entry: joinTypes.entrySet()) {
+            String key = entry.getKey();
+            if ((!(from.joinTypes.containsKey(key)))
+                    || (!from.joinTypes.get(key).equals(entry.getValue())))
                 return false;
         }
         return true;

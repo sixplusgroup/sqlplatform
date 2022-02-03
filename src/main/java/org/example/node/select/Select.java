@@ -26,6 +26,11 @@ public abstract class Select extends Table {
         attrAliasMap = new HashMap<>();
     }
 
+    /**
+     * exist子句中selections没有比较意义，设为空
+     * @param s
+     * @return
+     */
     public static void subQueryProcess(Select s) {
         if (s instanceof SetOpSelect){
             subQueryProcess(((SetOpSelect) s).left);

@@ -1,5 +1,6 @@
 package org.example.node.condition;
 
+import org.example.edit.CostConfig;
 import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
@@ -38,12 +39,46 @@ public class CommutativeCond extends AtomCond {
 
     @Override
     public float score() {
-        return 0;
+        float score = (not ? CostConfig.not : 0) + CostConfig.math_operator;
+        for (Expr e: operands) {
+            score += e.score();
+        }
+        return score;
     }
 
     @Override
     public float score(Condition c) {
-        return 0;
+        float score = 0;
+        if (c instanceof CommutativeCond) {
+            CommutativeCond cc = (CommutativeCond) c;
+            if (not) {
+                if (cc.not)
+                    score += CostConfig.not;
+            } else {
+                if (cc.not)
+                    score -= CostConfig.not;
+            }
+            score += operator.equals(cc.operator) ? CostConfig.math_operator : 0;
+            List<Expr> cc_clone = new ArrayList<>(cc.operands);
+            for (Expr item: operands) {
+                Expr match = Expr.isIn(item,cc.operands);
+                if (match != null) {
+                    score += item.score(match);
+                    cc_clone.remove(item);
+                }
+            }
+            for (Expr item: cc_clone) {
+                score -= item.score() * CostConfig.delete_cost_rate;
+            }
+        }
+        else if (c instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) c;
+            Condition match = Condition.isIn(this,cc.subConds);
+            if (match != null) {
+                score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
+            }
+        }
+        return score;
     }
 
     @Override
@@ -74,32 +109,25 @@ public class CommutativeCond extends AtomCond {
             if (!Expr.isStrictlyIn(tmp,c.operands))
                 return false;
         }
+        for (Expr tmp: c.operands) {
+            if (!Expr.isStrictlyIn(tmp,operands))
+                return false;
+        }
         return true;
     }
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder();
+        if (not)
+            sb.append("not ");
+        sb.append(operator).append("(");
+        List<String> operands_s = operands.stream()
+                .map(Expr::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",operands_s));
+        sb.append(")");
+        return sb.toString();
     }
-
-//
-//    /**
-//     * 计算equal的两个cond之间的编辑距离，用operands的差集算
-//     * @param cond
-//     * @return
-//     */
-//    public int costOfEqualCond(CommutativeCond cond){
-//        int plus = 0;
-//        int minus = 0;
-//        for (String s1: operands){
-//            if (!cond.operands.contains(s1))
-//                plus += 1;
-//        }
-//        for (String s1: cond.operands){
-//            if (!operands.contains(s1))
-//                minus += 1;
-//        }
-//        return Math.abs(plus-minus);
-//    }
 
 }
