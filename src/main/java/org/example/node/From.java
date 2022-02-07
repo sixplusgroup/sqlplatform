@@ -52,9 +52,8 @@ public class From {
     }
 
     public Table handleTableSource(SQLTableSource tableSource, Env env){
-        Table t = null;
+        Table t;
         if (tableSource instanceof SQLJoinTableSource) {
-            // todo ,?
             Table left = handleTableSource(((SQLJoinTableSource) tableSource).getLeft(), env);
             Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env);
             JoinType type = handleJoinType(((SQLJoinTableSource) tableSource).getJoinType());

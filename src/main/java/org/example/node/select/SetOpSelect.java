@@ -22,8 +22,7 @@ public class SetOpSelect extends Select {
     public OrderBy orderBy;
 
     public SetOpSelect(){}
-    // todo 类比CompoundCond，交换？多个？
-    // todo sort
+    // todo 类比CompoundCond，交换？多个？ sort?
 
     public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, Env env) {
         this.left = left;

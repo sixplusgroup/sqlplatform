@@ -1,12 +1,12 @@
 package org.example.node.orderby;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
-import org.example.CalculateScore;
 import org.example.edit.CostConfig;
 import org.example.enums.Order;
 import org.example.node.expr.Expr;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author shenyichen
@@ -42,11 +42,21 @@ public class OrderByItem {
      * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
      */
     public static OrderByItem isIn(OrderByItem o, List<OrderByItem> l) {
+        List<Expr> exprs = l.stream()
+                .map(OrderByItem::getColumn)
+                .collect(Collectors.toList());
+        Expr match = Expr.isIn(o.column, exprs);
+        if (match == null)
+            return null;
         for (OrderByItem item: l) {
-            if (o.column.equals(item))
+            if (item.column.equals(match))
                 return item;
         }
         return null;
+    }
+
+    public Expr getColumn() {
+        return column;
     }
 
     @Override

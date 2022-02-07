@@ -1,10 +1,7 @@
 package org.example;
 
 import javafx.util.Pair;
-import org.example.edit.ConditionEdit;
-import org.example.edit.JoinTypeEdit;
-import org.example.edit.SelectionEdit;
-import org.example.edit.TableEdit;
+import org.example.edit.*;
 import org.example.enums.JoinType;
 import org.example.node.orderby.OrderByItem;
 import org.example.node.select.PlainSelect;
@@ -77,37 +74,21 @@ public class SingleEdit {
     }
 
     public static List<Pair<PlainSelect,Float>> editGroupBy(PlainSelect instr, PlainSelect student) {
-        // TODO: 改成xdata那种
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
-
+        GroupByEdit edit = new GroupByEdit();
+        edits.addAll(edit.add(instr, student));
+        edits.addAll(edit.remove(instr, student));
+        edits.addAll(edit.edit(instr, student));
         return edits;
     }
 
     public static List<Pair<PlainSelect,Float>> editOrderBy(PlainSelect instr, PlainSelect student) {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
-        float cost = 0.0f;
-        for (OrderByItem item: instr.orderBy.items){
-            cost += getOrderByItemCost(item,student.orderBy.items);
-        }
-        if (cost>0){
-            PlainSelect edited = student.clone();
-            edited.orderBy = instr.orderBy;
-            edits.add(new Pair<>(edited,cost));
-        }
+        OrderByEdit edit = new OrderByEdit();
+        edits.addAll(edit.add(instr, student));
+        edits.addAll(edit.remove(instr, student));
+        edits.addAll(edit.edit(instr, student));
         return edits;
-    }
-
-    public static float getOrderByItemCost(OrderByItem instr, List<OrderByItem> items) {
-        float cost = 2; // 没找到
-        for (OrderByItem item: items){
-            if (instr.column.equals(item.column)){
-                cost = 0;
-                if (!(instr.order.equals(item.order)))
-                    cost += 1;
-                break;
-            }
-        }
-        return cost;
     }
 
     public static List<Pair<PlainSelect,Float>> editLimit(PlainSelect instr, PlainSelect student) {

@@ -60,6 +60,7 @@ public class BuildAST {
 
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;
+        String sql = "select * from student, lesson";
 //        String sql = "select student.id, (select 1 from lesson where lesson.id=1) from student";
 //        String sql = "select u.uid, u.name myname from user u, stu";
 //        String sql = "select * from  (select * from table_a left outer join table_b on table_a.aa=table_b.bb)";
@@ -103,28 +104,28 @@ public class BuildAST {
 //                "    (select count(distinct sender_id ,send_to_id) from friend_requests)\n" +
 //                "    ,0)\n" +
 //                "    ,2) as accept_rate ;";
-        String sql = "select group_id,min(player_id) as player_id\n" +
-                "from\n" +
-                "    (select player,sum(score) as score\n" +
-                "    from\n" +
-                "        ((select first_player player,first_score score from matches)\n" +
-                "        union all\n" +
-                "        (select second_player player,second_score score from matches)) t\n" +
-                "    group by player) a\n" +
-                "    right join players p on a.player=p.player_id\n" +
-                "where (group_id,score) in\n" +
-                "(select group_id,max(score) as mx\n" +
-                "from \n" +
-                "    (select player,sum(score) as score\n" +
-                "    from\n" +
-                "        ((select first_player player,first_score score from matches)\n" +
-                "        union all\n" +
-                "        (select second_player player,second_score score from matches)) t\n" +
-                "    group by player) a\n" +
-                "    right join players p on a.player=p.player_id\n" +
-                "group by group_id)\n" +
-                "group by group_id\n" +
-                "order by group_id;";
+//        String sql = "select group_id,min(player_id) as player_id\n" +
+//                "from\n" +
+//                "    (select player,sum(score) as score\n" +
+//                "    from\n" +
+//                "        ((select first_player player,first_score score from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player player,second_score score from matches)) t\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.player=p.player_id\n" +
+//                "where (group_id,score) in\n" +
+//                "(select group_id,max(score) as mx\n" +
+//                "from \n" +
+//                "    (select player,sum(score) as score\n" +
+//                "    from\n" +
+//                "        ((select first_player player,first_score score from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player player,second_score score from matches)) t\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.player=p.player_id\n" +
+//                "group by group_id)\n" +
+//                "group by group_id\n" +
+//                "order by group_id;";
 //        String sql = "select date, round(count(l.user_id)/count(nu.user_id), 3) rate from\n" +
 //                "  (select user_id, min(login_date) date from logins group by user_id) nu\n" +
 //                "  left join logins l\n" +

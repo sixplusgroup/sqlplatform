@@ -31,6 +31,9 @@ public abstract class Expr {
             // TODO 后续统一改为表名+属性之后，删这个情况
             SQLIdentifierExpr idExpr = (SQLIdentifierExpr) expr;
             return new PropertyExpr("null",idExpr.getName());
+        } else if (expr instanceof SQLAllColumnExpr) {
+            // todo *单独处理
+            return new OtherExpr("*");
         } else if (expr instanceof SQLNullExpr) {
             return new ConstantExpr("NULL");
         } else if (expr instanceof SQLIntegerExpr) {

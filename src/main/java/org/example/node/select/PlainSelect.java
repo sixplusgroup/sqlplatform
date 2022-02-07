@@ -29,8 +29,7 @@ public class PlainSelect extends Select {
     //      selections, group by， order by，having, from和where的subqueries里会有表和列的alias
     //  等价类替换：selections, UncommutativeCond, from
     //  规范化
-    // todo 顺序sort
-    // todo null ；重跑
+    // todo 顺序sort; null ；重跑
     /**
      * 现在的想法是：提谓词的话edit用不上，也不能体现max(...)这种edit，
      * 所以想的是把condition先按and和or构成条件树，然后每个真正的条件上再分left, right这种，
@@ -93,9 +92,8 @@ public class PlainSelect extends Select {
 
     @Override
     public float score() {
-        // todo null?
         float score = 0.0f;
-        score += distinct?1:0;
+        score += distinct ? 1 : 0;
         score += selections.stream()
                 .mapToDouble(Expr::score)
                 .sum();

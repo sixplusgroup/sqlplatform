@@ -32,12 +32,10 @@ public abstract class Condition {
      * 解决：对A>C往上回溯，遇到AND，找里面的=
      * 原理：and展平，or没用
      *
-     * not也算是单独操作！（因为涉及合并。。
-     *
-     * 3. 复杂Compound，因为做了merge导致cost增加
+     * 2. 复杂Compound，因为做了merge导致cost增加
      * 解决：建树后不做merge，merge放到规范化里去
      *
-     * 5. alias解决：
+     * 3. alias解决：
      * 对应替换（编辑距离），换为instr的alias
      * 如果出现instr是alias但student不是的情况，在aliasMap里替换（while，迭代替换）
      *

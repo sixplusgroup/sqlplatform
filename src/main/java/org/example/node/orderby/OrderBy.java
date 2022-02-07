@@ -2,7 +2,6 @@ package org.example.node.orderby;
 
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import org.example.edit.CostConfig;
-import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,8 @@ public class OrderBy {
     public float score(){
         return (float) items.stream()
                 .mapToDouble(OrderByItem::score)
-                .sum();
+                .sum()
+                + items.size() * CostConfig.sequence_penalty;
     }
 
     public float score(OrderBy o){
@@ -44,8 +44,8 @@ public class OrderBy {
                 score += item.score(tmp);
                 items_clone.remove(tmp);
                 int curIdx = o.items.indexOf(tmp);
-                if (curIdx < idx)
-                    score -= CostConfig.sequence_penalty;
+                if (curIdx > idx)
+                    score += CostConfig.sequence_penalty;
                 idx = curIdx;
             }
         }
@@ -74,9 +74,9 @@ public class OrderBy {
         if (!(obj instanceof OrderBy))
             return false;
         OrderBy orderBy = (OrderBy) obj;
-        if (orderBy.items.size()!=items.size())
+        if (orderBy.items.size() != items.size())
             return false;
-        for (int i=0;i<items.size();i++){
+        for (int i=0; i<items.size(); i++){
             if (!(orderBy.items.get(i).equals(items.get(i))))
                 return false;
         }

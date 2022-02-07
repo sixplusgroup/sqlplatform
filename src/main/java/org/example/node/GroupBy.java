@@ -4,7 +4,6 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
 import org.example.Env;
 import org.example.edit.CostConfig;
 import org.example.node.condition.Condition;
-import org.example.node.condition.Exist;
 import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
@@ -50,6 +49,7 @@ public class GroupBy {
         float score = (float) items.stream()
                 .mapToDouble(Expr::score)
                 .sum();
+        score += items.size() * CostConfig.sequence_penalty;
         if (having != null)
             score += having.score();
         return score;
@@ -66,8 +66,8 @@ public class GroupBy {
                 score += e.score(tmp);
                 items_clone.remove(tmp);
                 int curIdx = groupBy.items.indexOf(tmp);
-                if (curIdx < idx)
-                    score -= CostConfig.sequence_penalty;
+                if (curIdx > idx)
+                    score += CostConfig.sequence_penalty;
                 idx = curIdx;
             }
         }
@@ -102,14 +102,14 @@ public class GroupBy {
         if (!(obj instanceof GroupBy))
             return false;
         GroupBy groupBy = (GroupBy) obj;
-        if (groupBy.items.size()!=items.size())
+        if (groupBy.items.size() != items.size())
             return false;
-        for (int i=0;i<items.size();i++){
+        for (int i=0; i<items.size(); i++){
             if (!(groupBy.items.get(i).equals(items.get(i))))
                 return false;
         }
-        if (groupBy.having==null){
-            if (having==null)
+        if (groupBy.having == null){
+            if (having == null)
                 return true;
             return false;
         } else {
