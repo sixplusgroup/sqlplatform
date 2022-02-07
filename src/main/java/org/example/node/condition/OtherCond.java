@@ -37,6 +37,8 @@ public class OtherCond extends Condition {
 
     @Override
     public float score(Condition c) {
+        if (c == null)
+            return 0;
         float score = 0;
         if (c instanceof OtherCond) {
             if (not) {
@@ -52,7 +54,7 @@ public class OtherCond extends Condition {
         }
         else if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
-            Condition match = Condition.isIn(this,cc.subConds);
+            Condition match = Condition.isIn(this,cc.getSubConds());
             if (match != null) {
                 score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
             }
@@ -61,7 +63,7 @@ public class OtherCond extends Condition {
     }
 
     @Override
-    public Condition clone() {
+    public OtherCond clone() {
         return new OtherCond(not,value);
     }
 

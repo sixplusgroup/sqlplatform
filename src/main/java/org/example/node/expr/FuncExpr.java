@@ -56,7 +56,7 @@ public class FuncExpr extends Expr {
             float matchScore = fe.name.equals(name) ? CostConfig.func : 0;
             List<Expr> parameters_clone = new ArrayList<>(fe.parameters);
             for (Expr item: parameters) {
-                match = Expr.isIn(item,fe.parameters);
+                match = Expr.isIn(item,parameters_clone);
                 if (match != null) {
                     matchScore += item.score(match);
                     parameters_clone.remove(item);

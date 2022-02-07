@@ -3,9 +3,6 @@ package org.example.node.condition;
 import org.example.edit.CostConfig;
 import org.example.node.expr.Expr;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author shenyichen
  * @date 2021/12/8
@@ -44,6 +41,8 @@ public class UncommutativeCond extends AtomCond {
 
     @Override
     public float score(Condition c) {
+        if (c == null)
+            return 0;
         float score = 0;
         if (c instanceof UncommutativeCond) {
             UncommutativeCond uc = (UncommutativeCond) c;
@@ -59,7 +58,7 @@ public class UncommutativeCond extends AtomCond {
         }
         else if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
-            Condition match = Condition.isIn(this,cc.subConds);
+            Condition match = Condition.isIn(this,cc.getSubConds());
             if (match != null) {
                 score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
             }
@@ -68,7 +67,7 @@ public class UncommutativeCond extends AtomCond {
     }
 
     @Override
-    public Condition clone() {
+    public UncommutativeCond clone() {
         return new UncommutativeCond(not,operator,left.clone(),right.clone());
     }
 

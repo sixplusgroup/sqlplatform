@@ -1,8 +1,12 @@
 package org.example.node.orderby;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
+import org.example.CalculateScore;
+import org.example.edit.CostConfig;
 import org.example.enums.Order;
 import org.example.node.expr.Expr;
+
+import java.util.List;
 
 /**
  * @author shenyichen
@@ -19,11 +23,30 @@ public class OrderByItem {
 
     public OrderByItem(SQLSelectOrderByItem item){
         column = Expr.build(item.getExpr());
-        if (item.getType()==null){
+        if (item.getType() == null){
             order = Order.ASC;
         } else {
             order = Order.valueOf(item.getType().name);
         }
+    }
+
+    public float score(){
+        return column.score() + CostConfig.order;
+    }
+
+    public float score(OrderByItem o){
+        return column.score(o.column) + (order.equals(o.order) ? CostConfig.order : 0);
+    }
+
+    /**
+     * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
+     */
+    public static OrderByItem isIn(OrderByItem o, List<OrderByItem> l) {
+        for (OrderByItem item: l) {
+            if (o.column.equals(item))
+                return item;
+        }
+        return null;
     }
 
     @Override

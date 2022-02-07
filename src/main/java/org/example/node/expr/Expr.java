@@ -3,6 +3,7 @@ package org.example.node.expr;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.*;
 import org.example.CalculateScore;
+import org.example.edit.CostConfig;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -61,20 +62,34 @@ public abstract class Expr {
         return flag;
     }
 
+    public static float listScore(List<Expr> instr, List<Expr> student) {
+        float score = 0.0f;
+        List<Expr> exprs_clone = new ArrayList<>(student);
+        for (Expr item: instr) {
+            Expr match = Expr.isIn(item,exprs_clone);
+            if (match != null) {
+                score += item.score(match);
+                exprs_clone.remove(item);
+            }
+        }
+        for (Expr item: exprs_clone) {
+            score -= item.score() * CostConfig.delete_cost_rate;
+        }
+        return score;
+    }
+
     /**
      * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
      */
-    public static Expr isIn(Expr e, List<Expr> list) {
+    public static Expr isIn(Expr e, List<Expr> l) {
         Expr res = null;
-        int score = 0;
-        List<Expr> l = new ArrayList<>(list);
-        l.sort(Comparator.comparingInt(o -> o.toString().length()));
         String s = e.toString();
+        int distance = s.length();
         for (Expr item: l) {
             String tmp = item.toString();
-            int lcs = CalculateScore.lcs(s,tmp);
-            if (lcs > score && lcs > 0.5 * s.length()) {
-                score = lcs;
+            int d = CalculateScore.editDistance(s,tmp);
+            if (d < distance && d < 0.5 * s.length()) {
+                distance = d;
                 res = item;
             }
         }

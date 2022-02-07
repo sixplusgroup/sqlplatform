@@ -1,7 +1,13 @@
 package org.example.edit;
 
 import javafx.util.Pair;
+import org.example.CalculateScore;
+import org.example.SingleEdit;
+import org.example.enums.SetOp;
+import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
+import org.example.node.select.Select;
+import org.example.node.select.SetOpSelect;
 import org.example.node.table.Table;
 
 import java.util.ArrayList;
@@ -13,67 +19,64 @@ import java.util.List;
  **/
 public class TableEdit implements Edit {
     @Override
-    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) throws CloneNotSupportedException {
-        List<Pair<PlainSelect,Float>> res = new ArrayList<Pair<PlainSelect,Float>>();
-        for(Table t:instr.from.tables)
-        {
-            if(!stu.from.tables.contains(t))
-            {
-                PlainSelect edited = stu.clone();
-                edited.from.tables.add(t);
-                res.add(new Pair<>(edited, CostConfig.table));
-            }
-        }
-        return res;
-    }
-
-    @Override
-    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) throws CloneNotSupportedException {
+    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
-        for(Table s:stu.from.tables)
-        {
-            if(!instr.from.tables.contains(s))
-            {
+        List<Table> stu_clone = new ArrayList<>(stu.from.tables);
+        for (Table item: instr.from.tables) {
+            Table match = Table.isIn(item, stu_clone);
+            if (match == null) {
                 PlainSelect edited = stu.clone();
-                edited.from.tables.remove(s);
-                res.add(new Pair<>(edited, CostConfig.table /2));
+                edited.from.tables.add(item);
+                res.add(new Pair<>(edited, item.score()));
+            } else {
+                stu_clone.remove(match);
             }
         }
         return res;
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) throws CloneNotSupportedException {
+    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
+        List<Pair<PlainSelect,Float>> res = new ArrayList<>();
+        List<Table> stu_clone = new ArrayList<>(stu.from.tables);
+        for (Table item: instr.from.tables) {
+            Table match = Table.isIn(item, stu_clone);
+            if (match != null) {
+                stu_clone.remove(match);
+            }
+        }
+        for (Table item: stu_clone) {
+            PlainSelect edited = stu.clone();
+            edited.from.tables.remove(item);
+            res.add(new Pair<>(edited, item.score() * CostConfig.delete_cost_rate));
+        }
+        return res;
+    }
+
+    @Override
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList <>();
-        PlainSelect stu_not_matched = stu.clone();
-        PlainSelect stu_matched = stu.clone();
-        PlainSelect ins_not_matched = instr.clone();
-        for(Table s:instr.from.tables)
-        {
-            if(stu.from.tables.contains(s))
-            {
-                ins_not_matched.from.tables.remove(s);
-            }
-        }
-        for(Table s:stu.from.tables)
-        {
-            if(instr.from.tables.contains(s))
-            {
-                stu_not_matched.from.tables.remove(s);
-            }
-            else
-            {
-                stu_matched.from.tables.remove(s);
-            }
-        }
-        for(Table st:stu_not_matched.from.tables)
-        {
-            for(Table t: ins_not_matched.from.tables)
-            {
+        List<Table> stu_clone = new ArrayList<>(stu.from.tables);
+        for (Table item: instr.from.tables) {
+            Table match = Table.isIn(item, stu_clone);
+            if (match != null) {
+                stu_clone.remove(match);
+                float cost = 0;
+                // subQuery
+                if (item instanceof Select && match instanceof Select) {
+                    Select item_s = (Select) item;
+                    Select match_s = (Select) match;
+                    float totalScore = CalculateScore.totalScore(item_s);
+                    cost = totalScore - CalculateScore.editScore(item_s, match_s, totalScore);
+                }
+                // 普通table
+                else {
+                    cost = item.score() - item.score(match);
+                }
                 PlainSelect edited = stu.clone();
-                edited.from.tables.remove(st);
-                edited.from.tables.add(t);
-                res.add(new Pair<>(edited, CostConfig.table));
+                edited.from.tables.add(item);
+                edited.from.tables.remove(match);
+                res.add(new Pair<>(edited, cost));
             }
         }
         return res;

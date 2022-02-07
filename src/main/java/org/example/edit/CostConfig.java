@@ -15,8 +15,9 @@ public class CostConfig {
     public static float func = 1.0f;
     public static float constant = 1.0f;
     public static float property = 1.0f;
-    public static float order_by = 1.0f;
+    public static float order = 1.0f;
     public static float other = 1.0f;
     public static int other_digits = 5;
     public static float not = 1.0f;
+    public static float sequence_penalty = 0.5f;
 }

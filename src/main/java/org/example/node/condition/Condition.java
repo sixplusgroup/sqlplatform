@@ -12,10 +12,7 @@ import org.example.node.select.SetOpSelect;
 import org.example.node.expr.Expr;
 import org.example.node.expr.ListExpr;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,11 +22,31 @@ import java.util.logging.Logger;
  **/
 public abstract class Condition {
     private static Logger logger = Logger.getLogger(Condition.class.getName());
+    public Condition father;
     public String operator;
     public boolean not;
 
+    /**
+     * todo
+     * 1. A=B and A>C 规则化问题的处理：
+     * 解决：对A>C往上回溯，遇到AND，找里面的=
+     * 原理：and展平，or没用
+     *
+     * not也算是单独操作！（因为涉及合并。。
+     *
+     * 3. 复杂Compound，因为做了merge导致cost增加
+     * 解决：建树后不做merge，merge放到规范化里去
+     *
+     * 5. alias解决：
+     * 对应替换（编辑距离），换为instr的alias
+     * 如果出现instr是alias但student不是的情况，在aliasMap里替换（while，迭代替换）
+     *
+     */
+
+
     public Condition(){
-        this.not = false;
+        not = false;
+        father = null;
     }
 
     /**
@@ -115,7 +132,7 @@ public abstract class Condition {
             toExist(expr_in, subQ, "=");
             return new Exist(inExpr.isNot(),subQ);
         }
-        // between转CompoundCond
+        // between 转 CompoundCond
         else if (expr instanceof SQLBetweenExpr) {
             SQLBetweenExpr betweenExpr = (SQLBetweenExpr) expr;
             Expr testExpr = Expr.build(betweenExpr.testExpr);
@@ -125,12 +142,12 @@ public abstract class Condition {
                 List<Condition> subConds = new ArrayList<>();
                 subConds.add(new UncommutativeCond("<",testExpr,beginExpr));
                 subConds.add(new UncommutativeCond(">",testExpr,endExpr));
-                return new CompoundCond("OR",subConds);
+                return new CompoundCond("OR", subConds);
             }else {
                 List<Condition> subConds = new ArrayList<>();
                 subConds.add(new UncommutativeCond(">=",testExpr,beginExpr));
                 subConds.add(new UncommutativeCond("<=",testExpr,endExpr));
-                return new CompoundCond("AND",subConds);
+                return new CompoundCond("AND", subConds);
             }
         }
         // 其他情况
@@ -185,23 +202,115 @@ public abstract class Condition {
     public abstract float score(Condition c);
 
     /**
-     * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
+     * 在 list 本身或子 Condition 里有 similar 的（用于计算分数和 edit 步骤）
      */
-    public static Condition isIn(Condition c, List<Condition> conditions) {
+    public static Condition isIn(Condition c, List<Condition> l) {
         Condition res = null;
-        int score = 0;
-        List<Condition> l = new ArrayList<>(conditions);
-        l.sort(Comparator.comparingInt(o -> o.toString().length()));
         String s = c.toString();
+        int distance = s.length();
         for (Condition item: l) {
-            String tmp = item.toString();
-            int lcs = CalculateScore.lcs(s,tmp);
-            if (lcs > score) {
-                score = lcs;
-                res = item;
+            Condition match = findEqual(c,item);
+            if (match != null) {
+                int d = CalculateScore.editDistance(s,match.toString());
+                if (d < distance && d < 0.5 * s.length()) {
+                    distance = d;
+                    res = item;
+                }
             }
         }
         return res;
+    }
+
+    /**
+     * 在 list 本身里有一样的，用于 flateen instr或stu步骤
+     * @param c
+     * @param l
+     * @return
+     */
+    public static boolean isDirectlyIn(Condition c, List<Condition> l) {
+        for (Condition item: l) {
+            if (c.equals(item))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * 在 instr 的树结构中找到与 stu 对等的节点
+     * @param instr
+     * @param stu
+     * @return
+     */
+    public static Condition findEqual(Condition instr, Condition stu) {
+        Condition p = instr;
+        int distance = CalculateScore.editDistance(p.toString(), stu.toString());
+        while (p instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) p;
+            List<Condition> subConds = new ArrayList<>(cc.getSubConds());
+            subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), stu.toString())));
+            Condition tmp = subConds.get(0);
+            int d = CalculateScore.editDistance(tmp.toString(), stu.toString());
+            if (d < distance) {
+                distance = d;
+                p = tmp;
+            } else {
+                break;
+            }
+        }
+        int len = stu.toString().length();
+        if (distance > len / 2)
+            return null;
+        return p;
+    }
+
+    /**
+     * 在 stu 里找到对应的 c
+     * @param c
+     * @param stu
+     * @return
+     */
+    public static Condition find(Condition c, Condition stu) {
+        Condition p = stu;
+        if (p.equals(c))
+            return p;
+        while (p instanceof CompoundCond) {
+            CompoundCond cc = (CompoundCond) p;
+            List<Condition> subConds = new ArrayList<>(cc.getSubConds());
+            subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), stu.toString())));
+            Condition tmp = subConds.get(0);
+            if (tmp.equals(c)) {
+                return tmp;
+            }
+            p = tmp;
+        }
+        return null;
+    }
+
+    /**
+     * 在列表中找到最相似的
+     * @param c
+     * @param l
+     * @return
+     */
+    public static Condition findMostSimalrInList(Condition c, List<Condition> l) {
+        List<Condition> subConds = new ArrayList<>(l);
+        subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), c.toString())));
+        return subConds.get(0);
+    }
+
+    /**
+     * 两个 Condition 是否相似
+     * @param a
+     * @param b
+     * @return
+     */
+    public static boolean isSimilar(Condition a, Condition b) {
+        String a_s = a.toString();
+        String b_s = b.toString();
+        int d = CalculateScore.editDistance(a_s, b_s);
+        if (d < a_s.length() / 3 && d < b_s.length() / 3)
+            return true;
+        return false;
     }
 
     /**
@@ -231,7 +340,7 @@ public abstract class Condition {
             c.not = !c.not;
             if (c.not){
                 boolean flag = true;
-                for (Condition cdt:((CompoundCond) c).subConds){
+                for (Condition cdt:((CompoundCond) c).getSubConds()){
                     if (!(cdt instanceof AtomCond))
                         flag = false;
                 }
@@ -248,7 +357,7 @@ public abstract class Condition {
                         default:
                             break;
                     }
-                    for (Condition cdt:((CompoundCond) c).subConds){
+                    for (Condition cdt:((CompoundCond) c).getSubConds()){
                         setNot(cdt);
                     }
                 }

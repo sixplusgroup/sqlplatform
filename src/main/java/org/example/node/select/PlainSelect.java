@@ -4,6 +4,7 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import org.example.BuildAST;
 import org.example.Env;
+import org.example.edit.CostConfig;
 import org.example.node.From;
 import org.example.node.GroupBy;
 import org.example.node.Limit;
@@ -44,11 +45,11 @@ public class PlainSelect extends Select {
      * count(l.user_id) * 1.0 / (select count(distinct user_id) from logins) rate,
      * round(sum(if(s.s_score<60,1,0)) / count(*), 2)
      */
-    public List<Expr> selections;
-    public From from;
-    public Condition where;
-    public GroupBy groupBy;
-    public OrderBy orderBy;
+    public List<Expr> selections; // empty
+    public From from; // from.joinTypes empty
+    public Condition where; // null
+    public GroupBy groupBy; // items empty, having null
+    public OrderBy orderBy; //
     public Limit limit;
 
     public PlainSelect(){}
@@ -62,10 +63,12 @@ public class PlainSelect extends Select {
                 .collect(Collectors.toList());
         from = new From(query.getFrom(),env);
         where = Condition.build(query.getWhere(),env);
-        if (where != null){
-            where = new CompoundCond("AND", Arrays.asList(where,from.joinCondition));
-        } else {
-            where = from.joinCondition;
+        if (from.joinCondition != null) {
+            if (where != null){
+                where = new CompoundCond("AND", Arrays.asList(where,from.joinCondition));
+            } else {
+                where = from.joinCondition;
+            }
         }
         if (where != null) {
             where.rearrange();
@@ -91,25 +94,18 @@ public class PlainSelect extends Select {
     @Override
     public float score() {
         // todo null?
-        float res = 0.0f;
-        res += distinct?1:0;
-        res += selections.stream()
+        float score = 0.0f;
+        score += distinct?1:0;
+        score += selections.stream()
                 .mapToDouble(Expr::score)
                 .sum();
-        res += from.score();
-        res += where.score();
-        res += groupBy.items.size();
-//            res += groupBy.having.size();
-        res += orderBy.items.size()*2;
-        res += limit.rowCount==null?0:1;
-        res += limit.offset==null?0:1;
-//            for (Select s: instr.from.subqueries) {
-//                res += totalScore(s);
-//            }
-//            for (Select s: instr.where.subqueries){
-//                res += totalScore(s);
-//            }
-        return res;
+        score += from.score();
+        if (where != null)
+            score += where.score();
+        score += groupBy.score();
+        score += orderBy.score();
+        score += limit.score();
+        return score;
     }
 
     @Override
@@ -125,26 +121,13 @@ public class PlainSelect extends Select {
             if (student.distinct)
                 score -= 1;
         }
-        score += scoreOfSelections(student.selections);
+        score += Expr.listScore(selections, student.selections);
         score += from.score(student.from);
-        score += where.score(student.where);
-
-        return score;
-    }
-
-    private float scoreOfSelections(List<Expr> student){
-        float score = 0.0f;
-        List<Expr> exprs_clone = new ArrayList<>(student);
-        for (Expr item: selections) {
-            Expr match = Expr.isIn(item,student);
-            if (match != null) {
-                score += item.score(match);
-                exprs_clone.remove(item);
-            }
-        }
-        for (Expr item: exprs_clone) {
-            score -= item.score();
-        }
+        if (where != null)
+            score += where.score(student.where);
+        score += groupBy.score(student.groupBy);
+        score += orderBy.score(student.orderBy);
+        score += limit.score(student.limit);
         return score;
     }
 

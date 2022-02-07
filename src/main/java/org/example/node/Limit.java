@@ -4,6 +4,7 @@ import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import org.example.BuildAST;
+import org.example.edit.CostConfig;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +48,32 @@ public class Limit {
             logger.log(Level.WARNING,"Limit offset is not int value:" + offset.toString());
             this.offset = null;
         }
+    }
+
+    public float score() {
+        float score = 0;
+        if (rowCount != null)
+            score += 0.5;
+        if (offset != null)
+            score += 0.5;
+        return score;
+    }
+
+    public float score(Limit l) {
+        float score = 0;
+        if (rowCount == null) {
+            if (l.rowCount != null)
+                score -= 0.5 * CostConfig.delete_cost_rate;
+        } else {
+            score += (rowCount.equals(l.rowCount) ? 0.5 : 0);
+        }
+        if (offset == null) {
+            if (l.offset != null)
+                score -= 0.5 * CostConfig.delete_cost_rate;
+        } else {
+            score += (offset.equals(l.offset) ? 0.5 : 0);
+        }
+        return score;
     }
 
     @Override

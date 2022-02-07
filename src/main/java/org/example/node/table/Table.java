@@ -21,17 +21,15 @@ public abstract class Table {
     /**
      * 在 list 里有 similar 的（用于计算分数和 edit 步骤）
      */
-    public static Table isIn(Table e, List<Table> tables) {
+    public static Table isIn(Table e, List<Table> l) {
         Table res = null;
-        int score = 0;
-        List<Table> l = new ArrayList<>(tables);
-        l.sort(Comparator.comparingInt(o -> o.toString().length()));
         String s = e.toString();
+        int distance = s.length();
         for (Table item: l) {
             String tmp = item.toString();
-            int lcs = CalculateScore.lcs(s,tmp);
-            if (lcs > score && lcs > 0.5 * s.length()) {
-                score = lcs;
+            int d = CalculateScore.editDistance(s,tmp);
+            if (d < distance && d < 0.5 * s.length()) {
+                distance = d;
                 res = item;
             }
         }

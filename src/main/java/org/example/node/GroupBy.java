@@ -2,7 +2,9 @@ package org.example.node;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
 import org.example.Env;
+import org.example.edit.CostConfig;
 import org.example.node.condition.Condition;
+import org.example.node.condition.Exist;
 import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
@@ -42,6 +44,44 @@ public class GroupBy {
     public GroupBy(List<Expr> items, Condition having){
         this.items = items;
         this.having = having;
+    }
+
+    public float score() {
+        float score = (float) items.stream()
+                .mapToDouble(Expr::score)
+                .sum();
+        if (having != null)
+            score += having.score();
+        return score;
+    }
+
+    public float score(GroupBy groupBy) {
+        float score = 0;
+        // items
+        int idx = -1;
+        List<Expr> items_clone = new ArrayList<>(groupBy.items);
+        for (Expr e: items) {
+            Expr tmp = Expr.isIn(e,items_clone);
+            if (tmp != null) {
+                score += e.score(tmp);
+                items_clone.remove(tmp);
+                int curIdx = groupBy.items.indexOf(tmp);
+                if (curIdx < idx)
+                    score -= CostConfig.sequence_penalty;
+                idx = curIdx;
+            }
+        }
+        for (Expr e: items_clone) {
+            score -= e.score() * CostConfig.delete_cost_rate;
+        }
+        // having
+        if (having != null) {
+            score += having.score(groupBy.having);
+        } else {
+            if (groupBy.having != null)
+                score -= groupBy.having.score() * CostConfig.delete_cost_rate;
+        }
+        return score;
     }
 
     @Override

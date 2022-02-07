@@ -4,6 +4,7 @@ import org.example.edit.CostConfig;
 import org.example.node.expr.Expr;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,8 @@ public class CommutativeCond extends AtomCond {
 
     @Override
     public float score(Condition c) {
+        if (c == null)
+            return 0;
         float score = 0;
         if (c instanceof CommutativeCond) {
             CommutativeCond cc = (CommutativeCond) c;
@@ -59,21 +62,11 @@ public class CommutativeCond extends AtomCond {
                     score -= CostConfig.not;
             }
             score += operator.equals(cc.operator) ? CostConfig.math_operator : 0;
-            List<Expr> cc_clone = new ArrayList<>(cc.operands);
-            for (Expr item: operands) {
-                Expr match = Expr.isIn(item,cc.operands);
-                if (match != null) {
-                    score += item.score(match);
-                    cc_clone.remove(item);
-                }
-            }
-            for (Expr item: cc_clone) {
-                score -= item.score() * CostConfig.delete_cost_rate;
-            }
+            score += Expr.listScore(operands, cc.operands);
         }
         else if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
-            Condition match = Condition.isIn(this,cc.subConds);
+            Condition match = Condition.isIn(this,cc.getSubConds());
             if (match != null) {
                 score = score(match) - (cc.score() - match.score()) * CostConfig.delete_cost_rate;
             }
@@ -82,7 +75,7 @@ public class CommutativeCond extends AtomCond {
     }
 
     @Override
-    public Condition clone() {
+    public CommutativeCond clone() {
         List<Expr> exprs = operands.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
@@ -125,6 +118,7 @@ public class CommutativeCond extends AtomCond {
         List<String> operands_s = operands.stream()
                 .map(Expr::toString)
                 .collect(Collectors.toList());
+        Collections.sort(operands_s);
         sb.append(String.join(",",operands_s));
         sb.append(")");
         return sb.toString();

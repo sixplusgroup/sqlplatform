@@ -127,7 +127,7 @@ public class From {
             return;
         }
         Condition c = Condition.build(conds,env);
-        if (joinCondition!=null){
+        if (joinCondition != null){
             joinCondition = new CompoundCond("AND", Arrays.asList(joinCondition,c));
         }else {
             joinCondition = c;
@@ -150,6 +150,15 @@ public class From {
     }
 
     private float scoreOfTables(List<Table> t) {
+        if (tables == null || tables.size() == 0) {
+            if (t == null || t.size() == 0)
+                return 0;
+            else
+                return (float) (-1 * t.stream()
+                        .mapToDouble(Table::score)
+                        .sum()
+                        * CostConfig.delete_cost_rate);
+        }
         if (t == null || t.size() == 0)
             return 0;
         float score = 0;
@@ -168,6 +177,19 @@ public class From {
     }
 
     private float scoreOfJoinTypes(HashMap<String, Integer> types) {
+        if (joinTypes == null || joinTypes.size() == 0) {
+            if (types == null || types.size() == 0)
+                return 0;
+            else {
+                float score = 0;
+                for (Integer i: types.values()) {
+                    score -= i * CostConfig.delete_cost_rate;
+                }
+                return score;
+            }
+        }
+        if (types == null || types.size() == 0)
+            return 0;
         float score = 0;
         for (Map.Entry<String, Integer> entry: joinTypes.entrySet()) {
             String key = entry.getKey();

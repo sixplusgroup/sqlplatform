@@ -42,18 +42,7 @@ public class ListExpr extends Expr {
         // case 2: this equals e
         float score = 0.0f;
         ListExpr le = (ListExpr) e;
-        List<Expr> le_clone = new ArrayList<>(le.exprs);
-        for (Expr item: exprs) {
-            Expr match = Expr.isIn(item,le.exprs);
-            if (match != null) {
-                score += item.score(match);
-                le_clone.remove(item);
-            }
-        }
-        for (Expr item: le_clone) {
-            score -= item.score() * CostConfig.delete_cost_rate;
-        }
-        return score;
+        return Expr.listScore(exprs, le.exprs);
     }
 
     @Override

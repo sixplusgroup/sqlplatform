@@ -106,6 +106,8 @@ public class SetOpSelect extends Select {
 
     @Override
     public String toString() {
+        if (operator != SetOp.EXCEPT && left.toString().compareTo(right.toString()) > 0)
+            return right.toString() + " " + operator.toString() + " " + left.toString();
         return left.toString() + " " + operator.toString() + " " + right.toString();
     }
 

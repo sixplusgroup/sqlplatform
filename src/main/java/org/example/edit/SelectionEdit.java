@@ -1,6 +1,7 @@
 package org.example.edit;
 
 import javafx.util.Pair;
+import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
 
 import java.util.ArrayList;
@@ -12,69 +13,56 @@ import java.util.List;
  **/
 public class SelectionEdit implements Edit {
     @Override
-    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) throws CloneNotSupportedException {
-        List<Pair<PlainSelect,Float>> res = new ArrayList<Pair<PlainSelect,Float>>();
-//        for(String s:instr.selections)
-//        {
-//            if(!stu.selections.contains(s))
-//            {
-//                PlainSelect edited = stu.clone();
-//                edited.selections.add(s);
-//                res.add(new Pair<>(edited,EditCostConfig.selections));
-//            }
-//        }
-        return res;
-    }
-
-    @Override
-    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) throws CloneNotSupportedException {
+    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
-//        for(String s:stu.selections)
-//        {
-//            if(!instr.selections.contains(s))
-//            {
-//                PlainSelect edited = stu.clone();
-//                edited.selections.remove(s);
-//                res.add(new Pair<>(edited,EditCostConfig.selections/2));
-//            }
-//        }
+        List<Expr> stu_clone = new ArrayList<>(stu.selections);
+        for (Expr item: instr.selections) {
+            Expr match = Expr.isIn(item, stu_clone);
+            if (match == null) {
+                PlainSelect edited = stu.clone();
+                edited.selections.add(item);
+                res.add(new Pair<>(edited, item.score()));
+            } else {
+                stu_clone.remove(match);
+            }
+        }
         return res;
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) throws CloneNotSupportedException {
+    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
+        List<Pair<PlainSelect,Float>> res = new ArrayList<>();
+        List<Expr> stu_clone = new ArrayList<>(stu.selections);
+        for (Expr item: instr.selections) {
+            Expr match = Expr.isIn(item, stu_clone);
+            if (match != null) {
+                stu_clone.remove(match);
+            }
+        }
+        for (Expr item: stu_clone) {
+            PlainSelect edited = stu.clone();
+            edited.selections.remove(item);
+            res.add(new Pair<>(edited, item.score() * CostConfig.delete_cost_rate));
+        }
+        return res;
+    }
+
+    @Override
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList <>();
-        PlainSelect stu_not_matched = stu.clone();
-        PlainSelect stu_matched = stu.clone();
-        PlainSelect ins_not_matched = instr.clone();
-//        for(String s:instr.selections)
-//        {
-//            if(stu.selections.contains(s))
-//            {
-//                ins_not_matched.selections.remove(s);
-//            }
-//        }
-//        for(String s:stu.selections)
-//        {
-//            if(instr.selections.contains(s))
-//            {
-//                stu_not_matched.selections.remove(s);
-//            }
-//            else
-//            {
-//                stu_matched.selections.remove(s);
-//            }
-//        }
-//        for(String st:stu_not_matched.selections)
-//        {
-//            for(String t: ins_not_matched.selections)
-//            {
-//                PlainSelect edited = stu.clone();
-//                edited.selections.remove(st);
-//                edited.selections.add(t);
-//                res.add(new Pair<>(edited,EditCostConfig.selections));
-//            }
-//        }
+        List<Expr> stu_clone = new ArrayList<>(stu.selections);
+        for (Expr item: instr.selections) {
+            Expr match = Expr.isIn(item, stu_clone);
+            if (match != null) {
+                stu_clone.remove(match);
+                if (!(item.equals(match))) {
+                    PlainSelect edited = stu.clone();
+                    edited.selections.add(item);
+                    edited.selections.remove(match);
+                    res.add(new Pair<>(edited, item.score() - item.score(match)));
+                }
+            }
+        }
         return res;
     }
 }

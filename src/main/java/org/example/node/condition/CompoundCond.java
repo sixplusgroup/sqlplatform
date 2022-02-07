@@ -1,13 +1,8 @@
 package org.example.node.condition;
 
 import org.example.edit.CostConfig;
-import org.example.node.expr.Expr;
-import org.example.node.expr.FuncExpr;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -16,7 +11,7 @@ import java.util.stream.Collectors;
  **/
 public class CompoundCond extends Condition {
 
-    public List<Condition> subConds;
+    private List<Condition> subConds;
 
     public CompoundCond() {
         super();
@@ -25,22 +20,22 @@ public class CompoundCond extends Condition {
 
     public CompoundCond(String operator, List<Condition> conditions) {
         super();
+        this.father = null;
         this.operator = operator;
         this.subConds = new ArrayList<>();
-        this.subConds.addAll(conditions.stream()
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList()));
-    }
-
-    public CompoundCond(boolean not, String operator, List<Condition> conditions) {
-        this.not = not;
-        this.operator = operator;
-        this.subConds = new ArrayList<>();
-        if (conditions!=null){
+        if (conditions != null){
             this.subConds.addAll(conditions.stream()
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList()));
         }
+        for (Condition c: subConds) {
+            c.father = this;
+        }
+    }
+
+    public CompoundCond(boolean not, String operator, List<Condition> conditions) {
+        this(operator, conditions);
+        this.not = not;
     }
 
     @Override
@@ -69,6 +64,8 @@ public class CompoundCond extends Condition {
 
     @Override
     public float score(Condition c) {
+        if (c == null)
+            return 0;
         // case 1: this includes e
         float score = 0.0f;
         Condition match = Condition.isIn(c,subConds);
@@ -89,7 +86,7 @@ public class CompoundCond extends Condition {
             matchScore += operator.equals(cc.operator) ? CostConfig.logic_operator : 0;
             List<Condition> subConds_clone = new ArrayList<>(cc.subConds);
             for (Condition item: subConds) {
-                match = Condition.isIn(item,cc.subConds);
+                match = Condition.isIn(item,subConds_clone);
                 if (match != null) {
                     matchScore += item.score(match);
                     subConds_clone.remove(item);
@@ -186,13 +183,14 @@ public class CompoundCond extends Condition {
 
     /**
      * 展平：e.g. A and B and C 按 and 展平
+     * todo 6. =的展平！！！ 有交集 while循环写 直到完全无交集 或者类比 并查集；最好在and展平之后做，这样简单
      */
-    public void flatten(){
+    public void flatten() {
         List<Condition> subConds_clone = new ArrayList<>(subConds);
-        for (Condition tmp: subConds_clone){
-            if (tmp instanceof CompoundCond){
+        for (Condition tmp: subConds_clone) {
+            if (tmp instanceof CompoundCond) {
                 ((CompoundCond) tmp).flatten();
-                if (not==tmp.not && tmp.operator.equals(operator)){
+                if (not==tmp.not && tmp.operator.equals(operator)) {
                     subConds.addAll(((CompoundCond) tmp).subConds);
                     subConds.remove(tmp);
                 }
@@ -200,10 +198,10 @@ public class CompoundCond extends Condition {
         }
     }
 
-    public boolean isStrictlyIn(Condition c, List<Condition> l){
+    public boolean isStrictlyIn(Condition c, List<Condition> l) {
         boolean flag = false;
-        for (Condition tmp: l){
-            if (c.equals(tmp)){
+        for (Condition tmp: l) {
+            if (c.equals(tmp)) {
                 flag = true;
                 break;
             }
@@ -213,11 +211,30 @@ public class CompoundCond extends Condition {
 
     public void add(Condition c){
         subConds.add(c);
+        c.father = this;
+    }
+
+    public void remove(Condition c) {
+        subConds.remove(c);
+    }
+
+    public int size() {
+        return subConds.size();
+    }
+
+    public Condition get(int i) {
+        if (i < 0 || i >= size())
+            return null;
+        return subConds.get(i);
+    }
+
+    public List<Condition> getSubConds() {
+        return subConds;
     }
 
 
     @Override
-    public Condition clone() {
+    public CompoundCond clone() {
         List<Condition> subConds_clone = subConds.stream()
                 .map(Condition::clone)
                 .collect(Collectors.toList());
@@ -260,6 +277,7 @@ public class CompoundCond extends Condition {
         List<String> subConds_s = subConds.stream()
                 .map(Condition::toString)
                 .collect(Collectors.toList());
+        Collections.sort(subConds_s);
         sb.append(String.join(",",subConds_s));
         sb.append(")");
         return sb.toString();
