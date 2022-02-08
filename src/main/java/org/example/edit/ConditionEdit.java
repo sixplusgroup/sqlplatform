@@ -5,7 +5,6 @@ import org.example.CalculateScore;
 import org.example.node.condition.*;
 import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
-import org.example.node.select.Select;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -249,13 +248,13 @@ public class ConditionEdit {
     }
 
     private boolean canDoUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) {
-        return instrC.not == stuC.not
+        return instrC.getNot() == stuC.getNot()
                 && Expr.isStrictlyIn(stuC.left, instrC.operands)
                 && Expr.isStrictlyIn(stuC.right, instrC.operands);
     }
 
     private Pair<PlainSelect, Float> editUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) {
-        CommutativeCond new_stu = new CommutativeCond(instrC.not, instrC.operator,
+        CommutativeCond new_stu = new CommutativeCond(instrC.operator,
                 Arrays.asList(stuC.left.clone(), stuC.right.clone()));
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
@@ -263,7 +262,7 @@ public class ConditionEdit {
         if (stuC_edited.father == null) {
             edited.where = new_stu;
         } else {
-            CompoundCond father = (CompoundCond) (stuC_edited.father);
+            CompoundCond father = stuC_edited.father;
             father.remove(stuC_edited);
             father.add(new_stu);
         }
@@ -271,7 +270,7 @@ public class ConditionEdit {
     }
 
     private boolean canDoComm2Un(UncommutativeCond instrC, CommutativeCond stuC) {
-        if (instrC.not != stuC.not)
+        if (instrC.getNot() != stuC.getNot())
             return false;
         if (stuC.operands.size() != 2)
             return false;
@@ -287,7 +286,7 @@ public class ConditionEdit {
         if (stuC_edited.father == null) {
             edited.where = new_stu;
         } else {
-            CompoundCond father = (CompoundCond) (stuC_edited.father);
+            CompoundCond father = stuC_edited.father;
             father.remove(stuC_edited);
             father.add(new_stu);
         }
@@ -318,8 +317,6 @@ public class ConditionEdit {
         return res;
     }
 
-
-
     /**
      * 通用 edits，包括 not 和 operator 的 edit
      * Attention: 仅限同类型调用
@@ -329,7 +326,7 @@ public class ConditionEdit {
      */
     private List<Pair<PlainSelect, Float>> editNormal(Condition instrC, Condition stuC) {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>();
-        if (instrC.not != stuC.not) {
+        if ((!(instrC instanceof AtomCond)) && instrC.getNot() != stuC.getNot()) {
             PlainSelect edited = stu.clone();
             Condition match = Condition.find(stuC, edited.where);
             assert match != null;
@@ -383,7 +380,7 @@ public class ConditionEdit {
         if (stuC_edited.father == null) {
             edited.where = new CompoundCond("AND", Arrays.asList(stuC_edited, instrC.clone()));
         } else {
-            CompoundCond father = (CompoundCond) stuC_edited.father;
+            CompoundCond father = stuC_edited.father;
             father.add(instrC.clone());
         }
         return new Pair<>(edited, instrC.score());
@@ -396,11 +393,11 @@ public class ConditionEdit {
         if (stuC_edited.father == null) {
             edited.where = null;
         } else {
-            CompoundCond father = (CompoundCond) stuC_edited.father;
+            CompoundCond father = stuC_edited.father;
             father.remove(stuC_edited);
             while (father.size() == 1) {
                 if (father.father != null) {
-                    CompoundCond grandFather = (CompoundCond) father.father;
+                    CompoundCond grandFather = father.father;
                     grandFather.remove(father);
                     grandFather.add(father.get(0));
                     father = grandFather;
@@ -426,7 +423,7 @@ public class ConditionEdit {
         if (stuC_edited.father == null) {
             edited.where = instrC.clone();
         } else {
-            CompoundCond father = (CompoundCond) (stuC_edited.father);
+            CompoundCond father = stuC_edited.father;
             father.remove(stuC_edited);
             father.add(instrC.clone());
         }
@@ -444,7 +441,7 @@ public class ConditionEdit {
         Condition match = Condition.find(toDel, holder);
         assert match != null;
         assert match.father != null;
-        CompoundCond father = (CompoundCond) (match.father);
+        CompoundCond father = match.father;
         father.remove(match);
         father.add(toAdd.clone());
         return holder;
@@ -483,7 +480,7 @@ public class ConditionEdit {
         CompoundCond match_cc = (CompoundCond) match;
         if (!(match_cc.operator.equals(b.operator)))
             return false;
-        if (match_cc.not != b.not)
+        if (match_cc.getNot() != b.getNot())
             return false;
         aConds.remove(match);
         for (Condition item: aConds) {

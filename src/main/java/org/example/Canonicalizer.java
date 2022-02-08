@@ -10,13 +10,14 @@ import org.example.node.select.SetOpSelect;
  **/
 public class Canonicalizer {
 
+    // todo 规范化
     public static void canonicalize(Select ast) {
         if (ast instanceof SetOpSelect) {
             canonicalize(((SetOpSelect) ast).left);
             canonicalize(((SetOpSelect) ast).right);
         } else if (ast instanceof PlainSelect) {
             PlainSelect select = (PlainSelect) ast;
-//            Collections.sort(select.selections);
+
         }
     }
 

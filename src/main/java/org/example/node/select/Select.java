@@ -43,6 +43,8 @@ public abstract class Select extends Table {
         }
     }
 
+    public abstract void setOuterSelect(PlainSelect outerSelect);
+
     @Override
     public abstract Select clone();
 

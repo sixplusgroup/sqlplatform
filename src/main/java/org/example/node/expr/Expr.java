@@ -28,9 +28,9 @@ public abstract class Expr {
             SQLPropertyExpr propExpr = (SQLPropertyExpr) expr;
             return new PropertyExpr(propExpr.getOwner().toString(),propExpr.getName());
         } else if (expr instanceof SQLIdentifierExpr) {
-            // TODO 后续统一改为表名+属性之后，删这个情况
+            // TODO 能改的改为表名+属性，不能改的说明是 alias
             SQLIdentifierExpr idExpr = (SQLIdentifierExpr) expr;
-            return new PropertyExpr("null",idExpr.getName());
+            return new PropertyExpr(null,idExpr.getName());
         } else if (expr instanceof SQLAllColumnExpr) {
             // todo *单独处理
             return new OtherExpr("*");

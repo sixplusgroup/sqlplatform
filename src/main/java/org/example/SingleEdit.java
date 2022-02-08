@@ -2,8 +2,6 @@ package org.example;
 
 import javafx.util.Pair;
 import org.example.edit.*;
-import org.example.enums.JoinType;
-import org.example.node.orderby.OrderByItem;
 import org.example.node.select.PlainSelect;
 
 import java.util.ArrayList;

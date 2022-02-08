@@ -1,6 +1,7 @@
 package org.example.node.condition;
 
 import org.example.edit.CostConfig;
+import org.example.node.expr.Expr;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,6 +50,8 @@ public class CompoundCond extends Condition {
         Condition c = merge();
         if (c instanceof CompoundCond){
             ((CompoundCond)c).flatten();
+            ((CompoundCond)c).flattenEquals();
+            ((CompoundCond)c).flattemComparisons();
         }
         return c;
     }
@@ -182,8 +185,7 @@ public class CompoundCond extends Condition {
     }
 
     /**
-     * 展平：e.g. A and B and C 按 and 展平
-     * todo 6. =的展平！！！ 有交集 while循环写 直到完全无交集 或者类比 并查集；最好在and展平之后做，这样简单
+     * 展平： e.g. A and B and C 按 and 展平
      */
     public void flatten() {
         List<Condition> subConds_clone = new ArrayList<>(subConds);
@@ -196,6 +198,149 @@ public class CompoundCond extends Condition {
                 }
             }
         }
+    }
+
+    /**
+     *  = 的展平: A=B and B=C 展平为 =(A, B, C)
+     *  并查集解法
+     */
+    public void flattenEquals() {
+        List<CommutativeCond> toFlatten = new ArrayList<>();
+        List<Condition> subConds_clone = new ArrayList<>(subConds);
+        for (Condition c: subConds_clone) {
+            if (c instanceof CompoundCond) {
+                ((CompoundCond) c).flattenEquals();
+            }
+            else if (c instanceof CommutativeCond && c.operator.equals("=")) {
+                toFlatten.add((CommutativeCond) c);
+                subConds.remove(c);
+            }
+        }
+        subConds.addAll(flattenEquals(toFlatten));
+    }
+
+    /**
+     * 并查集解法
+     * @param l
+     * @return
+     */
+    private List<CommutativeCond> flattenEquals(List<CommutativeCond> l) {
+        // 内部类 UF
+        class QuickFindUF {
+            protected int[] id;
+
+            public QuickFindUF(int N) {
+                id = new int[N];
+                for (int i = 0; i < N; i++) {
+                    id[i] = i;
+                }
+            }
+
+            public boolean connected(int p, int q) {
+                return find(p) == find(q);
+            }
+
+            public int find(int p) {
+                return id[p];
+            }
+
+            public void union(int p, int q) {
+                int pID = find(p);
+                int qID = find(q);
+                if (pID == qID) {
+                    return;
+                }
+                for (int i = 0; i < id.length; i++) {
+                    if (id[i] == pID) {
+                        id[i] = qID;
+                    }
+                }
+            }
+
+            public List<List<Integer>> getConnectives() {
+                HashMap<Integer, List<Integer>> map = new HashMap<>();
+                for (int i=0; i<id.length; i++) {
+                    if (map.containsKey(id[i])) {
+                        map.get(id[i]).add(i);
+                    } else {
+                        List<Integer> l = new ArrayList<>();
+                        l.add(i);
+                        map.put(id[i], l);
+                    }
+                }
+                return new ArrayList<>(map.values());
+            }
+        }
+
+        // 方法体
+        // 罗列所有 operands
+        List<Expr> exprs = new ArrayList<>();
+        for (CommutativeCond cond: l) {
+            for (Expr e: cond.operands) {
+                if (! (exprs.contains(e))) {
+                    exprs.add(e);
+                }
+            }
+        }
+        // 按 = 进行 union
+        QuickFindUF uf = new QuickFindUF(exprs.size());
+        for (CommutativeCond cond: l) {
+            int p = exprs.indexOf(cond.operands.get(0));
+            for (int i=1; i<cond.operands.size(); i++) {
+                int q = exprs.indexOf(cond.operands.get(i));
+                uf.union(p, q);
+            }
+        }
+        // 按连通树划分得出结果
+        List<CommutativeCond> res = new ArrayList<>();
+        List<List<Integer>> connectives = uf.getConnectives();
+        for (List<Integer> item: connectives) {
+            List<Expr> operands = item.stream()
+                    .map(exprs::get)
+                    .collect(Collectors.toList());
+            res.add(new CommutativeCond("=", operands));
+        }
+        return res;
+    }
+
+    /**
+     * 处理 A=B and A>C 的规则化问题：
+     * 解决：对A>C往上回溯，遇到AND，找里面的= （因为and展平了，or没用）
+     */
+    public void flattemComparisons() {
+        for (Condition c: subConds) {
+            if (c instanceof CompoundCond) {
+                ((CompoundCond) c).flattemComparisons();
+            }
+            else if (c instanceof UncommutativeCond && isComparision(c.operator)) {
+                UncommutativeCond uc = (UncommutativeCond) c;
+                uc.left = findEqualExpr(uc.left, uc);
+                uc.right = findEqualExpr(uc.right, uc);
+            }
+        }
+    }
+
+    private Expr findEqualExpr(Expr e, Condition c) {
+        Condition p = c;
+        while (p.father != null) {
+            CompoundCond father = p.father;
+            if (father.operator.equals("AND")) {
+                for (Condition item: father.subConds) {
+                    if (item instanceof CommutativeCond && item.operator.equals("=")
+                            && Expr.isStrictlyIn(e, ((CommutativeCond) item).operands)) {
+                        List<Expr> operands_clone = new ArrayList<>(((CommutativeCond) item).operands);
+                        operands_clone.sort(Comparator.comparing(Expr::toString));
+                        return operands_clone.get(0).clone();
+                    }
+                }
+            }
+        }
+        return e;
+    }
+
+    private boolean isComparision(String operator) {
+        return operator.equals(">") || operator.equals(">=")
+                || operator.equals("<") || operator.equals("<=");
     }
 
     public boolean isStrictlyIn(Condition c, List<Condition> l) {

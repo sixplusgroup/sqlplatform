@@ -19,16 +19,7 @@ public class CommutativeCond extends AtomCond {
         super();
         this.operator = operator;
         this.operands = new ArrayList<>();
-        if (operands!=null){
-            this.operands.addAll(operands);
-        }
-    }
-
-    public CommutativeCond(boolean not, String operator, List<Expr> operands){
-        this.not = not;
-        this.operator = operator;
-        this.operands = new ArrayList<>();
-        if (operands!=null){
+        if (operands != null){
             this.operands.addAll(operands);
         }
     }
@@ -40,7 +31,7 @@ public class CommutativeCond extends AtomCond {
 
     @Override
     public float score() {
-        float score = (not ? CostConfig.not : 0) + CostConfig.math_operator;
+        float score = CostConfig.math_operator;
         for (Expr e: operands) {
             score += e.score();
         }
@@ -54,13 +45,6 @@ public class CommutativeCond extends AtomCond {
         float score = 0;
         if (c instanceof CommutativeCond) {
             CommutativeCond cc = (CommutativeCond) c;
-            if (not) {
-                if (cc.not)
-                    score += CostConfig.not;
-            } else {
-                if (cc.not)
-                    score -= CostConfig.not;
-            }
             score += operator.equals(cc.operator) ? CostConfig.math_operator : 0;
             score += Expr.listScore(operands, cc.operands);
         }
@@ -79,7 +63,7 @@ public class CommutativeCond extends AtomCond {
         List<Expr> exprs = operands.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
-        return new CommutativeCond(not,operator,exprs);
+        return new CommutativeCond(operator,exprs);
     }
 
     @Override
@@ -92,8 +76,6 @@ public class CommutativeCond extends AtomCond {
         if (!(obj instanceof CommutativeCond))
             return false;
         CommutativeCond c = (CommutativeCond) obj;
-        if (c.not!=not)
-            return false;
         if (!(c.operator.equals(operator)))
             return false;
         if (c.operands.size()!=operands.size())
@@ -112,8 +94,6 @@ public class CommutativeCond extends AtomCond {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        if (not)
-            sb.append("not ");
         sb.append(operator).append("(");
         List<String> operands_s = operands.stream()
                 .map(Expr::toString)

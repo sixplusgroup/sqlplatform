@@ -1,17 +1,11 @@
 package org.example;
 
 import javafx.util.Pair;
-import org.example.node.*;
-import org.example.node.condition.Condition;
 import org.example.enums.SetOp;
-import org.example.node.expr.Expr;
-import org.example.node.orderby.OrderBy;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
-import org.example.node.table.Table;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;

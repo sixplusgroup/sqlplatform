@@ -7,11 +7,22 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
 import com.alibaba.druid.util.JdbcConstants;
+import org.example.enums.SetOp;
+import org.example.node.condition.*;
+import org.example.node.expr.Expr;
+import org.example.node.expr.FuncExpr;
+import org.example.node.expr.ListExpr;
+import org.example.node.expr.PropertyExpr;
+import org.example.node.orderby.OrderByItem;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
+import org.example.node.table.Table;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,6 +68,223 @@ public class BuildAST {
         return new PlainSelect(query,env);
     }
 
+    public static void substituteAlias(Select instr, Select stu) {
+        boolean instrIsSetOp = instr instanceof SetOpSelect;
+        boolean studentIsSetOp = stu instanceof SetOpSelect;
+        // case 1: 学生sql和正确sql中至少有一个是set operator
+        if (instrIsSetOp || studentIsSetOp) {
+            // case 1.1: Only student has a set op
+            if (!instrIsSetOp) {
+                SetOpSelect stu_ss = (SetOpSelect) stu;
+                if (stu_ss.operator == SetOp.EXCEPT) {
+                    substituteAlias(instr, stu_ss.left);
+                } else {
+                    int disLeft = CalculateScore.editDistance(instr.toString(), stu_ss.left.toString());
+                    int disRight = CalculateScore.editDistance(instr.toString(), stu_ss.right.toString());
+                    if (disLeft < disRight) {
+                        substituteAlias(instr, stu_ss.left);
+                    } else {
+                        substituteAlias(instr, stu_ss.right);
+                    }
+                }
+            }
+            // case 1.2: Only instructor has a set op
+            else if (!studentIsSetOp) {
+                SetOpSelect instr_ss = (SetOpSelect) instr;
+                if (instr_ss.operator == SetOp.EXCEPT) {
+                    substituteAlias(((SetOpSelect) instr).left, stu);
+                } else {
+                    int disLeft = CalculateScore.editDistance(instr_ss.left.toString(), stu.toString());
+                    int disRight = CalculateScore.editDistance(instr_ss.right.toString(), stu.toString());
+                    if (disLeft < disRight) {
+                        substituteAlias(instr_ss.left, stu);
+                    } else {
+                        substituteAlias(instr_ss.right, stu);
+                    }
+                }
+            }
+            // case 1.3: 两个都是 set operator
+            else {
+                SetOpSelect instr_ss = (SetOpSelect) instr;
+                SetOpSelect stu_ss = (SetOpSelect) stu;
+                if (instr_ss.operator == SetOp.EXCEPT) {
+                    substituteAlias(instr_ss.left, stu_ss.left);
+                    substituteAlias(instr_ss.right, stu_ss.right);
+                } else {
+                    int disLeft = CalculateScore.editDistance(instr_ss.left.toString(), stu_ss.left.toString());
+                    int disRight = CalculateScore.editDistance(instr_ss.right.toString(), stu_ss.right.toString());
+                    if (disLeft < disRight) {
+                        substituteAlias(instr_ss.left, stu_ss.left);
+                        substituteAlias(instr_ss.right, stu_ss.right);
+                    } else {
+                        substituteAlias(instr_ss.left, stu_ss.right);
+                        substituteAlias(instr_ss.right, stu_ss.left);
+                    }
+                }
+            }
+        }
+        // case 2: 都是 plain select
+        else {
+            substituteAliasForPlainSelect((PlainSelect) instr, (PlainSelect) stu);
+        }
+    }
+
+    // 可能不需要 todo 如果出现instr是alias但student不是的情况，在aliasMap里替换（while，迭代替换）
+    private static void substituteAliasForPlainSelect(PlainSelect instr, PlainSelect stu) {
+        // step 1: 处理 from 里的 subQueries
+        List<Table> stuFromSubQs = new ArrayList<>();
+        for (Table t: stu.from.tables) {
+            if (t instanceof Select)
+                stuFromSubQs.add(t);
+        }
+        for (Table t: instr.from.tables) {
+            if (t instanceof Select) {
+                Table match = Table.isIn(t, stuFromSubQs);
+                if (match instanceof Select) {
+                    stuFromSubQs.remove(match);
+                    substituteAlias((Select) t, (Select) match);
+                }
+            }
+        }
+        // step 2: main body
+        HashMap<String, String> tableAliasMap = new HashMap<>();
+        HashMap<String, String> attrAliasMap = new HashMap<>();
+        // step 2.1: map stu alias to instr alias
+        HashMap<Table, String> stuTableMap = exchangeHashMap(stu.tableAliasMap);
+        List<Table> stuTables = new ArrayList<>(stuTableMap.keySet());
+        for (Map.Entry<String, Table> item: instr.tableAliasMap.entrySet()) {
+            Table instrTable = item.getValue();
+            Table match = Table.isIn(instrTable, stuTables);
+            if (match instanceof Select) {
+                stuTables.remove(match);
+                tableAliasMap.put(stuTableMap.get(match), item.getKey());
+            }
+        }
+        HashMap<Expr, String> stuAttrMap = exchangeHashMap(stu.attrAliasMap);
+        List<Expr> stuAttrs = new ArrayList<>(stuAttrMap.keySet());
+        for (Map.Entry<String, Expr> item: instr.attrAliasMap.entrySet()) {
+            Expr instrAttr = item.getValue();
+            Expr match = Expr.isIn(instrAttr, stuAttrs);
+            if (match != null) {
+                stuAttrs.remove(match);
+                attrAliasMap.put(stuAttrMap.get(match), item.getKey());
+            }
+        }
+        // step 2.2: substitute, 注意要传递给上一层Select（e.g. sql.csv 15）
+        substituteMainBody(stu, tableAliasMap, attrAliasMap);
+        PlainSelect p = stu;
+        while (p.getOuterSelect() != null) {
+            PlainSelect outerSelect = p.getOuterSelect();
+            substituteMainBody(outerSelect, tableAliasMap, attrAliasMap);
+            p = outerSelect;
+        }
+        // step 3: 处理 where 里的 subQueries
+        List<Table> stuWhereSubQs = getSubQsFromCondition(stu.where);
+        for (Table t: getSubQsFromCondition(instr.where)) {
+            if (t instanceof Select) {
+                Table match = Table.isIn(t, stuFromSubQs);
+                if (match instanceof Select) {
+                    stuWhereSubQs.remove(match);
+                    substituteAlias((Select) t, (Select) match);
+                }
+            }
+        }
+    }
+
+    private static List<Table> getSubQsFromCondition(Condition c) {
+        List<Table> res = new ArrayList<>();
+        if (c instanceof Exist) {
+            res.add(((Exist) c).subQuery);
+        }
+        else if (c instanceof CompoundCond) {
+            for (Condition item: ((CompoundCond) c).getSubConds()) {
+                res.addAll(getSubQsFromCondition(item));
+            }
+        }
+        return res;
+    }
+
+    private static <T1, T2> HashMap<T2, T1> exchangeHashMap(HashMap<T1, T2> oriMap) {
+        HashMap<T2, T1> newMap = new HashMap<>();
+        for (Map.Entry<T1, T2> e: oriMap.entrySet()) {
+            newMap.put(e.getValue(), e.getKey());
+        }
+        return newMap;
+    }
+
+    private static void substituteMainBody(PlainSelect stu,
+                                           HashMap<String, String> tableAliasMap,
+                                           HashMap<String, String> attrAliasMap) {
+        for (Expr e: stu.selections) {
+            substituteExpr(e, tableAliasMap, attrAliasMap);
+        }
+        substituteCondition(stu.where, tableAliasMap, attrAliasMap);
+        for (Expr e: stu.groupBy.items) {
+            substituteExpr(e, tableAliasMap, attrAliasMap);
+        }
+        substituteCondition(stu.groupBy.having, tableAliasMap, attrAliasMap);
+        for (OrderByItem o: stu.orderBy.items) {
+            substituteExpr(o.column, tableAliasMap, attrAliasMap);
+        }
+    }
+
+    private static void substituteCondition(Condition c,
+                                            HashMap<String, String> tableAliasMap,
+                                            HashMap<String, String> attrAliasMap) {
+        if (c instanceof CompoundCond) {
+            for (Condition item: ((CompoundCond) c).getSubConds()) {
+                substituteCondition(item, tableAliasMap, attrAliasMap);
+            }
+        }
+        else if (c instanceof CommutativeCond) {
+            for (Expr e: ((CommutativeCond) c).operands) {
+                substituteExpr(e, tableAliasMap, attrAliasMap);
+            }
+        }
+        else if (c instanceof UncommutativeCond) {
+            substituteExpr(((UncommutativeCond) c).left, tableAliasMap, attrAliasMap);
+            substituteExpr(((UncommutativeCond) c).right, tableAliasMap, attrAliasMap);
+        }
+        else if (c instanceof Exist) {
+            substituteSubQ(((Exist) c).subQuery, tableAliasMap, attrAliasMap);
+        }
+    }
+
+    private static void substituteSubQ(Select select,
+                                         HashMap<String, String> tableAliasMap,
+                                         HashMap<String, String> attrAliasMap) {
+        if (select instanceof SetOpSelect) {
+            substituteSubQ(((SetOpSelect) select).left, tableAliasMap, attrAliasMap);
+            substituteSubQ(((SetOpSelect) select).right, tableAliasMap, attrAliasMap);
+        }
+        else {
+            substituteMainBody((PlainSelect) select, tableAliasMap, attrAliasMap);
+        }
+    }
+
+    private static void substituteExpr(Expr e,
+                                       HashMap<String, String> tableAliasMap,
+                                       HashMap<String, String> attrAliasMap) {
+        if (e instanceof FuncExpr) {
+            for (Expr item: ((FuncExpr) e).parameters) {
+                substituteExpr(item, tableAliasMap, attrAliasMap);
+            }
+        }
+        else if (e instanceof ListExpr) {
+            for (Expr item: ((ListExpr) e).exprs) {
+                substituteExpr(item, tableAliasMap, attrAliasMap);
+            }
+        }
+        else if (e instanceof PropertyExpr) {
+            PropertyExpr pe = (PropertyExpr) e;
+            if (pe.table != null && tableAliasMap.containsKey(pe.table)) {
+                pe.table = tableAliasMap.get(pe.table);
+            }
+            if (attrAliasMap.containsKey(pe.attribute)) {
+                pe.attribute = attrAliasMap.get(pe.attribute);
+            }
+        }
+    }
 
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;

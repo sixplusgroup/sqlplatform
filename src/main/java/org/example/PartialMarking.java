@@ -49,8 +49,7 @@ public class PartialMarking {
         Select instrAST = BuildAST.buildSelect(instrSql,env);
         Canonicalizer.canonicalize(instrAST);
         Select studentAST = BuildAST.buildSelect(studentSql,env);
-        Canonicalizer.canonicalize(studentAST);
-        // TODO: 写一个有意义的规范化，删掉student的规范化
+        BuildAST.substituteAlias(instrAST, studentAST);
         float totalScore = CalculateScore.totalScore(instrAST);
         float score = CalculateScore.editScore(instrAST,studentAST,totalScore);
         return getScaledScore(score,totalScore,maxScore);

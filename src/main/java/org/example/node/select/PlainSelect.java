@@ -1,10 +1,8 @@
 package org.example.node.select;
 
-import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import org.example.BuildAST;
 import org.example.Env;
-import org.example.edit.CostConfig;
 import org.example.node.From;
 import org.example.node.GroupBy;
 import org.example.node.Limit;
@@ -29,7 +27,9 @@ public class PlainSelect extends Select {
     //      selections, group by， order by，having, from和where的subqueries里会有表和列的alias
     //  等价类替换：selections, UncommutativeCond, from
     //  规范化
-    // todo 顺序sort; null ；重跑
+    //  null ；重跑
+    // todo 复杂Compound，因为做了merge导致cost增加
+    //  解决：建树后不做merge，merge放到规范化里去
     /**
      * 现在的想法是：提谓词的话edit用不上，也不能体现max(...)这种edit，
      * 所以想的是把condition先按and和or构成条件树，然后每个真正的条件上再分left, right这种，
@@ -51,7 +51,18 @@ public class PlainSelect extends Select {
     public OrderBy orderBy; //
     public Limit limit;
 
+    private PlainSelect outerSelect;
+
     public PlainSelect(){}
+
+    public PlainSelect getOuterSelect() {
+        return outerSelect;
+    }
+
+    @Override
+    public void setOuterSelect(PlainSelect outerSelect) {
+        this.outerSelect = outerSelect;
+    }
 
     public PlainSelect(SQLSelectQueryBlock query, Env env){
         super();
@@ -60,7 +71,7 @@ public class PlainSelect extends Select {
                 .stream()
                 .map(x -> Expr.build(x.getExpr()))
                 .collect(Collectors.toList());
-        from = new From(query.getFrom(),env);
+        from = new From(query.getFrom(), env, this);
         where = Condition.build(query.getWhere(),env);
         if (from.joinCondition != null) {
             if (where != null){
@@ -75,19 +86,17 @@ public class PlainSelect extends Select {
         groupBy = new GroupBy(query.getGroupBy(),env);
         orderBy = new OrderBy(query.getOrderBy());
         limit = new Limit(query.getLimit());
-        // 统计量赋值：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
+        // alias：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
+        // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
         tableAliasMap.putAll(from.tableAliasMap);
         attrAliasMap.putAll(from.attrAliasMap);
-        processSelectionStats(query.getSelectList());
-    }
-
-    private void processSelectionStats(List<SQLSelectItem> original) {
         for (int i=0;i<selections.size();i++){
-            String alias = original.get(i).getAlias();
+            String alias = query.getSelectList().get(i).getAlias();
             if (alias != null){
                 attrAliasMap.put(alias,selections.get(i));
             }
         }
+        outerSelect = null;
     }
 
     @Override

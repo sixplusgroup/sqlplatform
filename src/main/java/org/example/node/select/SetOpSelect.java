@@ -22,6 +22,13 @@ public class SetOpSelect extends Select {
     public OrderBy orderBy;
 
     public SetOpSelect(){}
+
+    @Override
+    public void setOuterSelect(PlainSelect outerSelect) {
+        left.setOuterSelect(outerSelect);
+        right.setOuterSelect(outerSelect);
+    }
+
     // todo 类比CompoundCond，交换？多个？ sort?
 
     public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, Env env) {

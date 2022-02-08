@@ -2,8 +2,6 @@ package org.example.node.table;
 
 import org.example.CalculateScore;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -15,8 +13,6 @@ public abstract class Table {
     public abstract float score();
 
     public abstract float score(Table t);
-
-
 
     /**
      * 在 list 里有 similar 的（用于计算分数和 edit 步骤）

@@ -9,6 +9,7 @@ import org.example.enums.JoinType;
 import org.example.node.condition.CompoundCond;
 import org.example.node.condition.Condition;
 import org.example.node.expr.Expr;
+import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.table.JoinTable;
 import org.example.node.table.PlainTable;
@@ -46,16 +47,16 @@ public class From {
         this.joinCondition = joinCondition;
     }
 
-    public From(SQLTableSource tableSource, Env env){
+    public From(SQLTableSource tableSource, Env env, PlainSelect outerSelect){
         this();
-        handleTableSource(tableSource,env);
+        handleTableSource(tableSource, env, outerSelect);
     }
 
-    public Table handleTableSource(SQLTableSource tableSource, Env env){
+    public Table handleTableSource(SQLTableSource tableSource, Env env, PlainSelect outerSelect) {
         Table t;
         if (tableSource instanceof SQLJoinTableSource) {
-            Table left = handleTableSource(((SQLJoinTableSource) tableSource).getLeft(), env);
-            Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env);
+            Table left = handleTableSource(((SQLJoinTableSource) tableSource).getLeft(), env, outerSelect);
+            Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env, outerSelect);
             JoinType type = handleJoinType(((SQLJoinTableSource) tableSource).getJoinType());
             handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition(),env);
             t = new JoinTable(left,right,type);
@@ -66,6 +67,7 @@ public class From {
             if (subquery == null){
                 return null;
             }
+            subquery.setOuterSelect(outerSelect);
             tables.add(subquery);
             tableAliasMap.putAll(subquery.tableAliasMap);
             attrAliasMap.putAll(subquery.attrAliasMap);
@@ -77,6 +79,7 @@ public class From {
             if (subquery == null){
                 return null;
             }
+            subquery.setOuterSelect(outerSelect);
             tables.add(subquery);
             tableAliasMap.putAll(subquery.tableAliasMap);
             attrAliasMap.putAll(subquery.attrAliasMap);
