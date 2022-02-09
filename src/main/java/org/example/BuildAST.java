@@ -173,7 +173,7 @@ public class BuildAST {
         // step 2.2: substitute, 注意要传递给上一层Select（e.g. sql.csv 15）
         substituteMainBody(stu, tableAliasMap, attrAliasMap);
         PlainSelect p = stu;
-        while (p.getOuterSelect() != null) {
+        if (p.getOuterSelect() != null) {
             PlainSelect outerSelect = p.getOuterSelect();
             substituteMainBody(outerSelect, tableAliasMap, attrAliasMap);
             p = outerSelect;
