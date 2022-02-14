@@ -24,7 +24,7 @@ public class GroupBy {
     }
 
     public GroupBy(SQLSelectGroupByClause clause, Env env){
-        if (clause==null || clause.getItems()==null || clause.getItems().size()==0){
+        if (clause == null || clause.getItems() == null || clause.getItems().size() == 0){
             items = new ArrayList<>();
             having = null;
             return;
@@ -33,7 +33,7 @@ public class GroupBy {
                 .stream()
                 .map(Expr::build)
                 .collect(Collectors.toList());
-        if (clause.getHaving()==null){
+        if (clause.getHaving() == null){
             having = null;
         } else {
             having = Condition.build(clause.getHaving(),env);
@@ -89,11 +89,17 @@ public class GroupBy {
         List<Expr> items_clone = items.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
-        return new GroupBy(items_clone,having.clone());
+        if (having == null) {
+            return new GroupBy(items_clone, null);
+        } else {
+            return new GroupBy(items_clone, having.clone());
+        }
     }
 
     @Override
     public int hashCode() {
+        if (items.size() == 0)
+            return 1;
         return items.get(0).hashCode();
     }
 
@@ -104,11 +110,11 @@ public class GroupBy {
         GroupBy groupBy = (GroupBy) obj;
         if (groupBy.items.size() != items.size())
             return false;
-        for (int i=0; i<items.size(); i++){
+        for (int i=0; i<items.size(); i++) {
             if (!(groupBy.items.get(i).equals(items.get(i))))
                 return false;
         }
-        if (groupBy.having == null){
+        if (groupBy.having == null) {
             if (having == null)
                 return true;
             return false;
@@ -119,14 +125,18 @@ public class GroupBy {
 
     @Override
     public String toString() {
+        if (items.size() == 0 && having == null)
+            return "";
         StringBuilder sb = new StringBuilder();
         sb.append("groupBy ");
         List<String> items_s = items.stream()
                 .map(Expr::toString)
                 .collect(Collectors.toList());
         sb.append(String.join(",",items_s));
-        sb.append(" having ");
-        sb.append(having.toString());
+        if (having != null) {
+            sb.append(" having ");
+            sb.append(having.toString());
+        }
         return sb.toString();
     }
 }

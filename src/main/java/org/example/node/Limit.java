@@ -84,9 +84,9 @@ public class Limit {
     @Override
     public int hashCode() {
         int hash = 0;
-        if (rowCount!=null)
+        if (rowCount != null)
             hash += rowCount.hashCode()*31;
-        if (offset!=null)
+        if (offset != null)
             hash += offset.hashCode();
         return hash;
     }
@@ -96,11 +96,11 @@ public class Limit {
         if (!(obj instanceof Limit))
             return false;
         Limit limit = (Limit) obj;
-        if (limit.offset==null){
-            if (offset!=null)
+        if (limit.offset == null){
+            if (offset != null)
                 return false;
-            if (limit.rowCount==null)
-                return rowCount==null;
+            if (limit.rowCount == null)
+                return rowCount == null;
             else
                 return limit.rowCount.equals(rowCount);
         }
@@ -109,6 +109,10 @@ public class Limit {
 
     @Override
     public String toString() {
+        if (rowCount == null && offset == null)
+            return "";
+        if (offset == null)
+            return "limit " + rowCount ;
         return "limit " + rowCount + "," + offset;
     }
 }

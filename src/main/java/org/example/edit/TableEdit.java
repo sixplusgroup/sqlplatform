@@ -61,22 +61,24 @@ public class TableEdit implements Edit {
             Table match = Table.isIn(item, stu_clone);
             if (match != null) {
                 stu_clone.remove(match);
-                float cost = 0;
-                // subQuery
-                if (item instanceof Select && match instanceof Select) {
-                    Select item_s = (Select) item;
-                    Select match_s = (Select) match;
-                    float totalScore = CalculateScore.totalScore(item_s);
-                    cost = totalScore - CalculateScore.editScore(item_s, match_s, totalScore);
+                if (!(item.equals(match))) {
+                    float cost;
+                    // subQuery
+                    if (item instanceof Select && match instanceof Select) {
+                        Select item_s = (Select) item;
+                        Select match_s = (Select) match;
+                        float totalScore = CalculateScore.totalScore(item_s);
+                        cost = totalScore - CalculateScore.editScore(item_s, match_s, totalScore);
+                    }
+                    // 普通table
+                    else {
+                        cost = item.score() - item.score(match);
+                    }
+                    PlainSelect edited = stu.clone();
+                    edited.from.tables.add(item);
+                    edited.from.tables.remove(match);
+                    res.add(new Pair<>(edited, cost));
                 }
-                // 普通table
-                else {
-                    cost = item.score() - item.score(match);
-                }
-                PlainSelect edited = stu.clone();
-                edited.from.tables.add(item);
-                edited.from.tables.remove(match);
-                res.add(new Pair<>(edited, cost));
             }
         }
         return res;

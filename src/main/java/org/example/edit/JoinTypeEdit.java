@@ -32,12 +32,14 @@ public class JoinTypeEdit {
                 toAdd += -num;
             }
         }
+        if (toAdd == 0 && toDel == 0)
+            return null;
         int editNum = Math.min(toAdd, toDel);
         float cost = editNum;
         if (toAdd > editNum) {
-            cost += toAdd;
+            cost += toAdd - editNum;
         } else if (toDel > editNum) {
-            cost += toDel * CostConfig.delete_cost_rate;
+            cost += (toDel - editNum) * CostConfig.delete_cost_rate;
         }
         PlainSelect edited = stu.clone();
         edited.from.joinTypes = instr.from.joinTypes;

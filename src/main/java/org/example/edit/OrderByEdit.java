@@ -83,9 +83,11 @@ public class OrderByEdit implements Edit {
                     idx = curIdx;
                 }
             }
-            PlainSelect edited = stu.clone();
-            edited.orderBy = instr.orderBy.clone();
-            res.add(new Pair<>(edited, cost));
+            if (cost != 0) {
+                PlainSelect edited = stu.clone();
+                edited.orderBy = instr.orderBy.clone();
+                res.add(new Pair<>(edited, cost));
+            }
         }
         return res;
     }

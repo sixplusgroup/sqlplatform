@@ -56,7 +56,9 @@ public class SingleEdit {
         edits.addAll(tableEdit.edit(instr, student));
 
         JoinTypeEdit joinTypeEdit = new JoinTypeEdit();
-        edits.add(joinTypeEdit.typeEdit(instr, student));
+        Pair<PlainSelect,Float> typeEdit = joinTypeEdit.typeEdit(instr, student);
+        if (typeEdit != null)
+            edits.add(typeEdit);
 
         return edits;
     }
@@ -93,13 +95,23 @@ public class SingleEdit {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
         PlainSelect edited = student.clone();
         float cost = 0.0f;
-        if (!instr.limit.rowCount.equals(student.limit.rowCount)){
-            edited.limit.rowCount = instr.limit.rowCount;
-            cost += 0.5;
+        if (instr.limit.rowCount == null) {
+            if (student.limit.rowCount != null)
+                cost += 0.5 *CostConfig.delete_cost_rate;
+        } else {
+            if (! instr.limit.rowCount.equals(student.limit.rowCount)){
+                edited.limit.rowCount = instr.limit.rowCount;
+                cost += 0.5;
+            }
         }
-        if (!instr.limit.offset.equals(student.limit.offset)){
-            edited.limit.offset = instr.limit.offset;
-            cost += 0.5;
+        if (instr.limit.offset == null) {
+            if (student.limit.offset != null)
+                cost += 0.5 *CostConfig.delete_cost_rate;
+        } else {
+            if (! instr.limit.offset.equals(student.limit.offset)){
+                edited.limit.offset = instr.limit.offset;
+                cost += 0.5;
+            }
         }
         if (cost > 0){
             edits.add(new Pair<>(edited,cost));

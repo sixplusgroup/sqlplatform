@@ -146,7 +146,7 @@ public class PlainSelect extends Select {
                 .map(Expr::clone)
                 .collect(Collectors.toList());
         select.from = from.clone();
-        if (where!=null)
+        if (where != null)
             select.where = where.clone();
         select.groupBy = groupBy.clone();
         select.orderBy = orderBy.clone();

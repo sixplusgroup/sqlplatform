@@ -66,6 +66,8 @@ public class OrderBy {
 
     @Override
     public int hashCode() {
+        if (items.size() == 0)
+            return 1;
         return items.get(0).hashCode();
     }
 
@@ -76,7 +78,7 @@ public class OrderBy {
         OrderBy orderBy = (OrderBy) obj;
         if (orderBy.items.size() != items.size())
             return false;
-        for (int i=0; i<items.size(); i++){
+        for (int i=0; i<items.size(); i++) {
             if (!(orderBy.items.get(i).equals(items.get(i))))
                 return false;
         }
@@ -85,6 +87,8 @@ public class OrderBy {
 
     @Override
     public String toString() {
+        if (items.size() == 0)
+            return "";
         StringBuilder sb = new StringBuilder();
         sb.append("orderBy ");
         List<String> items_s = items.stream()

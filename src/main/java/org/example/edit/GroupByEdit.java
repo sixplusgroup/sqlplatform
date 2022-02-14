@@ -99,11 +99,13 @@ public class GroupByEdit implements Edit {
                     idx = curIdx;
                 }
             }
-            PlainSelect edited = stu.clone();
-            edited.groupBy.items = instr.groupBy.items.stream()
-                    .map(Expr::clone)
-                    .collect(Collectors.toList());
-            res.add(new Pair<>(edited, cost));
+            if (cost != 0) {
+                PlainSelect edited = stu.clone();
+                edited.groupBy.items = instr.groupBy.items.stream()
+                        .map(Expr::clone)
+                        .collect(Collectors.toList());
+                res.add(new Pair<>(edited, cost));
+            }
         }
         // having
         if (instr.groupBy.having != null && stu.groupBy.having != null) {
