@@ -1,17 +1,22 @@
 package org.example.node.table;
 
 import org.example.edit.CostConfig;
+import org.example.node.expr.AtomExpr;
 
 /**
  * @author shenyichen
  * @date 2022/1/26
  **/
 public class PlainTable extends Table {
-    public String name;
+    public AtomExpr name;
 
     public PlainTable(){}
 
     public PlainTable(String name) {
+        this.name = new AtomExpr(name);
+    }
+
+    public PlainTable(AtomExpr name) {
         this.name = name;
     }
 
@@ -30,7 +35,7 @@ public class PlainTable extends Table {
 
     @Override
     public Table clone() {
-        return new PlainTable(this.name);
+        return new PlainTable(name);
     }
 
     @Override
@@ -48,6 +53,6 @@ public class PlainTable extends Table {
 
     @Override
     public String toString() {
-        return name;
+        return name.toString();
     }
 }

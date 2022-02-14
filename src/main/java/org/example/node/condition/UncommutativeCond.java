@@ -8,7 +8,6 @@ import org.example.node.expr.Expr;
  * @date 2021/12/8
  **/
 public class UncommutativeCond extends AtomCond {
-    public String operator;
     public Expr left;
     public Expr right;
 

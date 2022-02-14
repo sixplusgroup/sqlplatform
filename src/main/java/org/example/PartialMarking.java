@@ -46,13 +46,17 @@ public class PartialMarking {
      * @return
      */
     public float partialMark(String instrSql, String studentSql, float maxScore) {
-        Select instrAST = BuildAST.buildSelect(instrSql,env);
-        Canonicalizer.canonicalize(instrAST);
-        Select studentAST = BuildAST.buildSelect(studentSql,env);
-        BuildAST.substituteAlias(instrAST, studentAST);
-        float totalScore = CalculateScore.totalScore(instrAST);
-        float score = CalculateScore.editScore(instrAST,studentAST,totalScore);
-        return getScaledScore(score,totalScore,maxScore);
+        try {
+            Select instrAST = BuildAST.buildSelect(instrSql,env);
+            Canonicalizer.canonicalize(instrAST);
+            Select studentAST = BuildAST.buildSelect(studentSql,env);
+            BuildAST.substituteAlias(instrAST, studentAST);
+            float totalScore = CalculateScore.totalScore(instrAST);
+            float score = CalculateScore.editScore(instrAST,studentAST,totalScore);
+            return getScaledScore(score,totalScore,maxScore);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     /**
@@ -71,6 +75,19 @@ public class PartialMarking {
     }
 
     public static void main(String[] args) {
+//         PASS
+//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where u.uid=s.id and u.uid=l.sid";
+//         PASS: AND展平
+//        String studentSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where u.uid=s.id and s.id=l.sid";
+//         PASS: alias替换、alias重名
+//        String studentSql = "select l.id from student l, user s, lesson r\n" +
+//                "where s.uid=l.id and l.id=r.sid";
+//         PASS: null
+//        String instrSql = "select s.id sid from student s";
+//        String studentSql = "select s.id from student s";
+//         PASS: alias替换
 //        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
 //                "from users u left join\n" +
 //                "  (select buyer_id, count(*) num\n" +
@@ -79,20 +96,29 @@ public class PartialMarking {
 //                "  group by buyer_id) as o\n" +
 //                "on u.user_id=o.buyer_id\n" +
 //                "order by u.user_id asc";
-//        String studentSql = "select u.user_id, u.join_date, num orders_in_2019\n" +
-//                "from users u left join\n" +
-//                "  (select buyer_id, count(*) num\n" +
+//        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
+//                "from\n" +
+//                "  (select buyer_id, count(*) haha\n" +
 //                "  from orders\n" +
 //                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o\n" +
-//                "on u.user_id=o.buyer_id and u.user_id>2\n" +
-//                "order by u.user_id asc";
-//        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
-//                "from orders o\n" +
-//                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
-//                "GROUP BY o.customer_id\n" +
-//                "order by order_num DESC, customer_id asc\n" +
-//                "limit 1;";
+//                "  group by buyer_id) as o1\n" +
+//                "  right join users u\n" +
+//                "on u.user_id=o1.buyer_id and u.user_id>2\n" +
+//                "order by u.user_id desc";
+
+        // to test
+        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
+                "from orders o\n" +
+                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
+                "GROUP BY o.customer_id\n" +
+                "order by order_num DESC, customer_id asc\n" +
+                "limit 1;";
+        String studentSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
+                "from orders o\n" +
+                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
+                "GROUP BY o.customer_id\n" +
+                "order by order_num DESC, customer_id asc\n" +
+                "limit 1;";
         // select round(
         //    ifnull(
         //    (select count(distinct requester_id ,accepter_id) from accepted_requests) /
@@ -121,8 +147,7 @@ public class PartialMarking {
 //                "group by group_id)\n" +
 //                "group by group_id\n" +
 //                "order by group_id;";
-        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
-                "where u.uid=s.id and u.uid=l.sid";
+
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
 //        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
@@ -142,8 +167,6 @@ public class PartialMarking {
 //                ") and count(*)<any(\n" +
 //                "    select count(*) from friends group by activity\n" +
 //                ")";
-        String studentSql = "select s.id from student s, user u, lesson l\n" +
-                "where u.uid=s.id and s.id=l.sid";
         PartialMarking marking = new PartialMarking(JdbcConstants.MYSQL, new ArrayList<>());
         System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
     }

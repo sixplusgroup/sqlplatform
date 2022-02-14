@@ -7,12 +7,19 @@ import org.example.edit.CostConfig;
  * @date 2022/1/17
  **/
 public class PropertyExpr extends Expr {
-    public String table;
-    public String attribute;
+    public AtomExpr table;
+    public AtomExpr attribute;
 
     public PropertyExpr(){}
 
-    public PropertyExpr(String table, String attribute){
+    public PropertyExpr(String table, String attribute) {
+        if (table != null)
+            this.table = new AtomExpr(table);
+        if (attribute != null)
+            this.attribute = new AtomExpr(attribute);
+    }
+
+    public PropertyExpr(AtomExpr table, AtomExpr attribute) {
         this.table = table;
         this.attribute = attribute;
     }
@@ -65,7 +72,7 @@ public class PropertyExpr extends Expr {
     @Override
     public String toString() {
         if (table == null)
-            return attribute;
-        return table + "." + attribute;
+            return attribute.toString();
+        return table.toString() + "." + attribute.toString();
     }
 }

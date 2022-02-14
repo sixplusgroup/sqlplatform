@@ -1,6 +1,5 @@
 package org.example.node.condition;
 
-import org.example.CalculateScore;
 import org.example.edit.CostConfig;
 import org.example.node.select.Select;
 

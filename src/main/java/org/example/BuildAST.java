@@ -155,7 +155,7 @@ public class BuildAST {
         for (Map.Entry<String, Table> item: instr.tableAliasMap.entrySet()) {
             Table instrTable = item.getValue();
             Table match = Table.isIn(instrTable, stuTables);
-            if (match instanceof Select) {
+            if (match != null) {
                 stuTables.remove(match);
                 tableAliasMap.put(stuTableMap.get(match), item.getKey());
             }
@@ -189,6 +189,8 @@ public class BuildAST {
                 }
             }
         }
+        if (stu.where != null)
+            stu.where = stu.where.rearrange();
     }
 
     private static List<Table> getSubQsFromCondition(Condition c) {
@@ -277,11 +279,13 @@ public class BuildAST {
         }
         else if (e instanceof PropertyExpr) {
             PropertyExpr pe = (PropertyExpr) e;
-            if (pe.table != null && tableAliasMap.containsKey(pe.table)) {
-                pe.table = tableAliasMap.get(pe.table);
+            if (pe.table != null && tableAliasMap.containsKey(pe.table.value) && (!pe.table.substituted)) {
+                pe.table.value = tableAliasMap.get(pe.table.value);
+                pe.table.substituted = true;
             }
-            if (attrAliasMap.containsKey(pe.attribute)) {
-                pe.attribute = attrAliasMap.get(pe.attribute);
+            if (attrAliasMap.containsKey(pe.attribute.value) && (!pe.attribute.substituted)) {
+                pe.attribute.value = attrAliasMap.get(pe.attribute.value);
+                pe.attribute.substituted = true;
             }
         }
     }

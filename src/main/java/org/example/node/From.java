@@ -96,7 +96,7 @@ public class From {
         }
         String alias = tableSource.getAlias();
         if (alias != null){
-            tableAliasMap.put(alias,t);
+            tableAliasMap.put(alias, t);
         }
         return t;
     }

@@ -23,12 +23,8 @@ import java.util.stream.Collectors;
 public class PlainSelect extends Select {
     private static Logger logger = Logger.getLogger(BuildAST.class.getName());
     // TODO LIST:
-    //  alias处理： alias对应的表是subquery时，按计算和instrSQL的分数时最接近的instr的subquery，如果没有就直接记0分
-    //      selections, group by， order by，having, from和where的subqueries里会有表和列的alias
-    //  等价类替换：selections, UncommutativeCond, from
     //  规范化
-    //  null ；重跑
-    // todo 复杂Compound，因为做了merge导致cost增加
+    //  复杂Compound，因为做了merge导致cost增加
     //  解决：建树后不做merge，merge放到规范化里去
     /**
      * 现在的想法是：提谓词的话edit用不上，也不能体现max(...)这种edit，
@@ -81,7 +77,7 @@ public class PlainSelect extends Select {
             }
         }
         if (where != null) {
-            where.rearrange();
+            where = where.rearrange();
         }
         groupBy = new GroupBy(query.getGroupBy(),env);
         orderBy = new OrderBy(query.getOrderBy());
@@ -90,10 +86,10 @@ public class PlainSelect extends Select {
         // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
         tableAliasMap.putAll(from.tableAliasMap);
         attrAliasMap.putAll(from.attrAliasMap);
-        for (int i=0;i<selections.size();i++){
+        for (int i=0;i<selections.size();i++) {
             String alias = query.getSelectList().get(i).getAlias();
             if (alias != null){
-                attrAliasMap.put(alias,selections.get(i));
+                attrAliasMap.put(alias, selections.get(i));
             }
         }
         outerSelect = null;

@@ -114,8 +114,8 @@ public class CompoundCond extends Condition {
      */
     public void mergeNot(){
         boolean flag = true;
-        for (Condition c: subConds){
-            if (c instanceof CompoundCond){
+        for (Condition c: subConds) {
+            if (c instanceof CompoundCond) {
                 ((CompoundCond) c).mergeNot();
             }
             if (!c.not){
@@ -334,6 +334,7 @@ public class CompoundCond extends Condition {
                     }
                 }
             }
+            p = father;
         }
         return e;
     }
