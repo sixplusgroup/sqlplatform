@@ -19,16 +19,13 @@ public class GroupByEdit implements Edit {
     public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         // items
-        List<Expr> items_clone = new ArrayList<>(stu.groupBy.items);
-        for (Expr e: instr.groupBy.items) {
-            Expr tmp = Expr.isIn(e,items_clone);
-            if (tmp == null) {
-                PlainSelect edited = stu.clone();
-                edited.groupBy.items.add(e.clone());
-                res.add(new Pair<>(edited, e.score()));
-            } else {
-                items_clone.remove(tmp);
-            }
+        List<Expr> instr_clone = new ArrayList<>(instr.groupBy.items);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.groupBy.items, stu.groupBy.items);
+        instr_clone.removeAll(matches.getKey());
+        for (Expr e: instr_clone) {
+            PlainSelect edited = stu.clone();
+            edited.groupBy.items.add(e.clone());
+            res.add(new Pair<>(edited, e.score()));
         }
         // having
         if (stu.groupBy.having == null && instr.groupBy.having != null) {
@@ -43,14 +40,10 @@ public class GroupByEdit implements Edit {
     public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         // items
-        List<Expr> items_clone = new ArrayList<>(stu.groupBy.items);
-        for (Expr e: instr.groupBy.items) {
-            Expr tmp = Expr.isIn(e,items_clone);
-            if (tmp != null) {
-                items_clone.remove(tmp);
-            }
-        }
-        for (Expr e: items_clone) {
+        List<Expr> stu_clone = new ArrayList<>(stu.groupBy.items);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.groupBy.items, stu.groupBy.items);
+        stu_clone.removeAll(matches.getValue());
+        for (Expr e: stu_clone) {
             PlainSelect edited = stu.clone();
             edited.groupBy.items.remove(e);
             res.add(new Pair<>(edited, e.score() * CostConfig.delete_cost_rate));
@@ -69,35 +62,33 @@ public class GroupByEdit implements Edit {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         // items
         boolean sameItems = true;
-        List<Expr> items_clone = new ArrayList<>(stu.groupBy.items);
-        for (Expr e: instr.groupBy.items) {
-            Expr tmp = Expr.isIn(e,items_clone);
-            if (tmp != null) {
-                items_clone.remove(tmp);
-                if (!(e.equals(tmp))) {
-                    sameItems = false;
-                    PlainSelect edited = stu.clone();
-                    edited.groupBy.items.remove(tmp);
-                    edited.groupBy.items.add(e);
-                    res.add(new Pair<>(edited, e.score() - e.score(tmp)));
-                }
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.groupBy.items, stu.groupBy.items);
+        List<Expr> match_instr = matches.getKey();
+        List<Expr> match_stu = matches.getValue();
+        for (int i=0; i<match_instr.size(); i++) {
+            Expr item = match_instr.get(i);
+            Expr match = match_stu.get(i);
+            if (!(match.equals(item))) {
+                sameItems = false;
+                PlainSelect edited = stu.clone();
+                edited.groupBy.items.remove(match);
+                edited.groupBy.items.add(item);
+                res.add(new Pair<>(edited, item.score() - item.score(match)));
             }
         }
-        sameItems &= (items_clone.size() == 0);
+        sameItems &= (instr.groupBy.items.size() == match_instr.size());
+        sameItems &= (stu.groupBy.items.size() == match_instr.size());
         // items 都一样，可以调整顺序
         if (sameItems) {
             float cost = 0;
             int idx = -1;
-            items_clone = new ArrayList<>(stu.groupBy.items);
+            List<Expr> items_clone = new ArrayList<>(stu.groupBy.items);
             for (Expr e: instr.groupBy.items) {
-                Expr tmp = Expr.isIn(e,items_clone);
-                if (tmp != null) {
-                    items_clone.remove(tmp);
-                    int curIdx = stu.groupBy.items.indexOf(tmp);
-                    if (curIdx < idx)
-                        cost += CostConfig.sequence_penalty;
-                    idx = curIdx;
-                }
+                items_clone.remove(e);
+                int curIdx = stu.groupBy.items.indexOf(e);
+                if (curIdx < idx)
+                    cost += CostConfig.sequence_penalty;
+                idx = curIdx;
             }
             if (cost != 0) {
                 PlainSelect edited = stu.clone();

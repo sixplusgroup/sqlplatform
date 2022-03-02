@@ -20,4 +20,5 @@ public class CostConfig {
     public static int other_digits = 5;
     public static float not = 1.0f;
     public static float sequence_penalty = 0.5f;
+    public static float expr_option = 0.5f;
 }

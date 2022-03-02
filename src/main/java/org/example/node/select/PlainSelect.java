@@ -189,7 +189,8 @@ public class PlainSelect extends Select {
             joinTypes.add(entry.getValue() + " " + entry.getKey());
         }
         sb.append(String.join(",",joinTypes));
-        sb.append(") where ");
+        sb.append(") ");
+        sb.append("where ");
         sb.append(where.toString());
         sb.append(" ").append(groupBy.toString());
         sb.append(" ").append(orderBy.toString());

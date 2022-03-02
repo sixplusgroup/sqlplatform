@@ -1,6 +1,7 @@
 package org.example.node;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
+import javafx.util.Pair;
 import org.example.Env;
 import org.example.edit.CostConfig;
 import org.example.node.condition.Condition;
@@ -59,20 +60,22 @@ public class GroupBy {
         float score = 0;
         // items
         int idx = -1;
-        List<Expr> items_clone = new ArrayList<>(groupBy.items);
-        for (Expr e: items) {
-            Expr tmp = Expr.isIn(e,items_clone);
-            if (tmp != null) {
-                score += e.score(tmp);
-                items_clone.remove(tmp);
-                int curIdx = groupBy.items.indexOf(tmp);
-                if (curIdx > idx)
-                    score += CostConfig.sequence_penalty;
-                idx = curIdx;
-            }
+        List<Expr> stuC_clone = new ArrayList<>(groupBy.items);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(items, groupBy.items);
+        List<Expr> match_instr = matches.getKey();
+        List<Expr> match_stu = matches.getValue();
+        for (int i=0; i<match_instr.size(); i++) {
+            Expr item = match_instr.get(i);
+            Expr match = match_stu.get(i);
+            stuC_clone.remove(match);
+            score += item.score(match);
+            int curIdx = groupBy.items.indexOf(match);
+            if (curIdx > idx)
+                score += CostConfig.sequence_penalty;
+            idx = curIdx;
         }
-        for (Expr e: items_clone) {
-            score -= e.score() * CostConfig.delete_cost_rate;
+        for (Expr item: stuC_clone) {
+            score -= item.score() * CostConfig.delete_cost_rate;
         }
         // having
         if (having != null) {

@@ -1,6 +1,8 @@
 package org.example.node.expr;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.expr.SQLAggregateOption;
+import javafx.util.Pair;
 import org.example.edit.CostConfig;
 
 import java.util.ArrayList;
@@ -15,8 +17,19 @@ import java.util.stream.Collectors;
 public class FuncExpr extends Expr {
     public String name;
     public List<Expr> parameters;
+    public String option;
 
     public FuncExpr(){
+    }
+
+    public FuncExpr(String name, SQLAggregateOption option, List<SQLExpr> exprs){
+        this.name = name;
+        if (option != null)
+            this.option = option.toString();
+        parameters = new ArrayList<>();
+        for (SQLExpr expr: exprs) {
+            parameters.add(Expr.build(expr));
+        }
     }
 
     public FuncExpr(String name, List<SQLExpr> exprs){
@@ -27,10 +40,11 @@ public class FuncExpr extends Expr {
         }
     }
 
-    public FuncExpr(List<Expr> exprs, String name){
+    public FuncExpr(List<Expr> exprs, String name, String option){
         this.name = name;
+        this.option = option;
         parameters = new ArrayList<>();
-        if (exprs!=null){
+        if (exprs != null){
             parameters.addAll(exprs);
         }
     }
@@ -39,14 +53,15 @@ public class FuncExpr extends Expr {
     public float score() {
         return (float) (CostConfig.func + parameters.stream()
                         .mapToDouble(Expr::score)
-                        .sum());
+                        .sum()
+                        + (option == null ? 0 : CostConfig.expr_option));
     }
 
     @Override
     public float score(Expr e) {
         // case 1: this includes e
         float score = 0.0f;
-        Expr match = Expr.isIn(e,parameters);
+        Expr match = Expr.isIn(e, parameters).getKey();
         if (match != null) {
             score = match.score(e);
         }
@@ -54,20 +69,27 @@ public class FuncExpr extends Expr {
             FuncExpr fe = (FuncExpr) e;
             // case 2: this equals e
             float matchScore = fe.name.equals(name) ? CostConfig.func : 0;
-            List<Expr> parameters_clone = new ArrayList<>(fe.parameters);
-            for (Expr item: parameters) {
-                match = Expr.isIn(item,parameters_clone);
-                if (match != null) {
-                    matchScore += item.score(match);
-                    parameters_clone.remove(item);
-                }
+            if (option != null) {
+                matchScore += (option.equals(fe.option) ? CostConfig.expr_option : 0);
+            } else if (fe.option != null) {
+                matchScore -= CostConfig.expr_option * CostConfig.delete_cost_rate;
             }
-            for (Expr item: parameters_clone) {
+            List<Expr> stuC_clone = new ArrayList<>(fe.parameters);
+            Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(parameters, fe.parameters);
+            List<Expr> match_instr = matches.getKey();
+            List<Expr> match_stu = matches.getValue();
+            for (int i=0; i<match_instr.size(); i++) {
+                Expr item = match_instr.get(i);
+                Expr match_item = match_stu.get(i);
+                stuC_clone.remove(match);
+                matchScore += item.score(match_item);
+            }
+            for (Expr item: stuC_clone) {
                 matchScore -= item.score() * CostConfig.delete_cost_rate;
             }
             score = Math.max(score, matchScore);
             // case 3: e includes this
-            match = Expr.isIn(this,fe.parameters);
+            match = Expr.isIn(this,fe.parameters).getKey();
             if (match != null) {
                 matchScore = score(match) - (fe.score() - match.score()) * CostConfig.delete_cost_rate;
             }
@@ -81,7 +103,7 @@ public class FuncExpr extends Expr {
         List<Expr> parameters_clone = parameters.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
-        return new FuncExpr(parameters_clone,name);
+        return new FuncExpr(parameters_clone, name, option);
     }
 
     @Override
@@ -95,6 +117,11 @@ public class FuncExpr extends Expr {
             return false;
         FuncExpr e = (FuncExpr) obj;
         if (!(e.name.equals(name)))
+            return false;
+        if (option != null) {
+            if (!(option.equals(e.option)))
+                return false;
+        } else if (e.option != null)
             return false;
         if (e.parameters.size()!=parameters.size())
             return false;
@@ -110,6 +137,8 @@ public class FuncExpr extends Expr {
         List<String> s = parameters.stream()
                 .map(Expr::toString)
                 .collect(Collectors.toList());
-        return name + "(" + String.join(",",s) + ")";
+        if (option == null)
+            return name + "(" + String.join(",",s) + ")";
+        return name + "(" + option + " " + String.join(",",s) + ")";
     }
 }

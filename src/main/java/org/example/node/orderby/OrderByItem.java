@@ -45,7 +45,7 @@ public class OrderByItem {
         List<Expr> exprs = l.stream()
                 .map(OrderByItem::getColumn)
                 .collect(Collectors.toList());
-        Expr match = Expr.isIn(o.column, exprs);
+        Expr match = Expr.isIn(o.column, exprs).getKey();
         if (match == null)
             return null;
         for (OrderByItem item: l) {

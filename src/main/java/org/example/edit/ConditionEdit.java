@@ -188,31 +188,35 @@ public class ConditionEdit {
 
     private List<Pair<PlainSelect, Float>> editCommutative(CommutativeCond instrC, CommutativeCond stuC) {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
+        List<Expr> instrC_clone = new ArrayList<>(instrC.operands);
         List<Expr> stuC_clone = new ArrayList<>(stuC.operands);
-        for (Expr item: instrC.operands) {
-            Expr match = Expr.isIn(item,stuC_clone);
-            // 匹配上了，edit
-            if (match != null) {
-                stuC_clone.remove(match);
-                if (!(match.equals(item))) {
-                    PlainSelect edited = stu.clone();
-                    Condition stuC_edited = Condition.find(stuC, edited.where);
-                    assert stuC_edited != null;
-                    CommutativeCond stu_edited_cc = (CommutativeCond) stuC_edited;
-                    stu_edited_cc.operands.remove(match);
-                    stu_edited_cc.operands.add(item.clone());
-                    res.add(new Pair<>(edited, item.score() - item.score(match)));
-                }
-            }
-            // add
-            else {
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instrC.operands, stuC.operands);
+        List<Expr> match_instr = matches.getKey();
+        List<Expr> match_stu = matches.getValue();
+        // 匹配上的，edit
+        for (int i=0; i<match_instr.size(); i++) {
+            Expr item = match_instr.get(i);
+            Expr match = match_stu.get(i);
+            instrC_clone.remove(item);
+            stuC_clone.remove(match);
+            if (!(match.equals(item))) {
                 PlainSelect edited = stu.clone();
                 Condition stuC_edited = Condition.find(stuC, edited.where);
                 assert stuC_edited != null;
                 CommutativeCond stu_edited_cc = (CommutativeCond) stuC_edited;
+                stu_edited_cc.operands.remove(match);
                 stu_edited_cc.operands.add(item.clone());
-                res.add(new Pair<>(edited, item.score()));
+                res.add(new Pair<>(edited, item.score() - item.score(match)));
             }
+        }
+        // add
+        for (Expr item: instrC_clone) {
+            PlainSelect edited = stu.clone();
+            Condition stuC_edited = Condition.find(stuC, edited.where);
+            assert stuC_edited != null;
+            CommutativeCond stu_edited_cc = (CommutativeCond) stuC_edited;
+            stu_edited_cc.operands.add(item.clone());
+            res.add(new Pair<>(edited, item.score()));
         }
         // remove
         for (Expr item: stuC_clone) {

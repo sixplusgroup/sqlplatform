@@ -43,6 +43,7 @@ public class BuildAST {
             return buildSelect(query,env);
         } catch (Exception e){
             logger.log(Level.WARNING,"SQL parse error:\n" + e.getMessage());
+            e.printStackTrace();
             throw e;
         }
     }
@@ -164,7 +165,7 @@ public class BuildAST {
         List<Expr> stuAttrs = new ArrayList<>(stuAttrMap.keySet());
         for (Map.Entry<String, Expr> item: instr.attrAliasMap.entrySet()) {
             Expr instrAttr = item.getValue();
-            Expr match = Expr.isIn(instrAttr, stuAttrs);
+            Expr match = Expr.isIn(instrAttr, stuAttrs).getKey();
             if (match != null) {
                 stuAttrs.remove(match);
                 attrAliasMap.put(stuAttrMap.get(match), item.getKey());

@@ -98,7 +98,8 @@ public class CalculateScore {
             try {
                 singleEdits = SingleEdit.singleEdit(instr,student);
             } catch (Exception e){
-                logger.log(Level.SEVERE,"Exception when calculating eidtScore:\n"+e.getMessage());
+                logger.log(Level.SEVERE,"Exception when calculating eidtScore:\n" + e.getMessage());
+                e.printStackTrace();
                 return 0.0f;
             }
             // 如果没有可进行的编辑，说明学生sql和正确sql已经完全一致，直接返回总分

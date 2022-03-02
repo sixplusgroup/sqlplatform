@@ -15,16 +15,13 @@ public class SelectionEdit implements Edit {
     @Override
     public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
-        List<Expr> stu_clone = new ArrayList<>(stu.selections);
-        for (Expr item: instr.selections) {
-            Expr match = Expr.isIn(item, stu_clone);
-            if (match == null) {
-                PlainSelect edited = stu.clone();
-                edited.selections.add(item);
-                res.add(new Pair<>(edited, item.score()));
-            } else {
-                stu_clone.remove(match);
-            }
+        List<Expr> instr_clone = new ArrayList<>(instr.selections);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.selections, stu.selections);
+        instr_clone.removeAll(matches.getKey());
+        for (Expr e: instr_clone) {
+            PlainSelect edited = stu.clone();
+            edited.selections.add(e);
+            res.add(new Pair<>(edited, e.score()));
         }
         return res;
     }
@@ -33,16 +30,12 @@ public class SelectionEdit implements Edit {
     public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<Expr> stu_clone = new ArrayList<>(stu.selections);
-        for (Expr item: instr.selections) {
-            Expr match = Expr.isIn(item, stu_clone);
-            if (match != null) {
-                stu_clone.remove(match);
-            }
-        }
-        for (Expr item: stu_clone) {
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.selections, stu.selections);
+        stu_clone.removeAll(matches.getValue());
+        for (Expr e: stu_clone) {
             PlainSelect edited = stu.clone();
-            edited.selections.remove(item);
-            res.add(new Pair<>(edited, item.score() * CostConfig.delete_cost_rate));
+            edited.selections.remove(e);
+            res.add(new Pair<>(edited, e.score() * CostConfig.delete_cost_rate));
         }
         return res;
     }
@@ -50,17 +43,17 @@ public class SelectionEdit implements Edit {
     @Override
     public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
         List<Pair<PlainSelect,Float>> res = new ArrayList <>();
-        List<Expr> stu_clone = new ArrayList<>(stu.selections);
-        for (Expr item: instr.selections) {
-            Expr match = Expr.isIn(item, stu_clone);
-            if (match != null) {
-                stu_clone.remove(match);
-                if (!(item.equals(match))) {
-                    PlainSelect edited = stu.clone();
-                    edited.selections.add(item);
-                    edited.selections.remove(match);
-                    res.add(new Pair<>(edited, item.score() - item.score(match)));
-                }
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.selections, stu.selections);
+        List<Expr> match_instr = matches.getKey();
+        List<Expr> match_stu = matches.getValue();
+        for (int i=0; i<match_instr.size(); i++) {
+            Expr item = match_instr.get(i);
+            Expr match = match_stu.get(i);
+            if (!(match.equals(item))) {
+                PlainSelect edited = stu.clone();
+                edited.selections.add(item);
+                edited.selections.remove(match);
+                res.add(new Pair<>(edited, item.score() - item.score(match)));
             }
         }
         return res;

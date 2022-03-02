@@ -32,7 +32,7 @@ public class OtherExpr extends Expr {
         } else if (e instanceof FuncExpr) {
             // case 2: e includes this
             FuncExpr fe = (FuncExpr) e;
-            Expr match = Expr.isIn(this,fe.parameters);
+            Expr match = Expr.isIn(this,fe.parameters).getKey();
             if (match != null) {
                 return score(match) - (fe.score() - match.score()) * CostConfig.delete_cost_rate;
             }

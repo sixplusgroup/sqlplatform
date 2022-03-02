@@ -30,7 +30,7 @@ public class ListExpr extends Expr {
     public float score(Expr e) {
         // case 1: this includes e
         if (!(e instanceof ListExpr)) {
-            Expr match = Expr.isIn(e,exprs);
+            Expr match = Expr.isIn(e,exprs).getKey();
             if (match != null) {
                 return match.score(e);
             } else {

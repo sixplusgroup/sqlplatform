@@ -103,28 +103,43 @@ public class PartialMarking {
 //                "  where year(order_date)=2019\n" +
 //                "  group by buyer_id) as o1\n" +
 //                "  right join users u\n" +
+//                "on u.user_id=o1.buyer_id\n" +
+//                "order by u.user_id asc";
+//        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
+//                "from\n" +
+//                "  (select buyer_id, count(*) haha\n" +
+//                "  from orders\n" +
+//                "  where year(order_date)=2019\n" +
+//                "  group by buyer_id) as o1\n" +
+//                "  right join users u\n" +
 //                "on u.user_id=o1.buyer_id and u.user_id>2\n" +
 //                "order by u.user_id desc";
-
+//         PASS: 复杂Expr，List<Expr>的match （下面的例子里修改的是MAX里的distinct和order by的顺序）
+//        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
+//                "from orders o\n" +
+//                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
+//                "GROUP BY o.customer_id\n" +
+//                "order by order_num DESC, customer_id asc\n" +
+//                "limit 1;";
+//        String studentSql = "select ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, o.customer_id, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), max(order_id) order_num, date_add(l1.login_date,interval 1 day) as date\n" +
+//                "from orders o\n" +
+//                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
+//                "GROUP BY o.customer_id\n" +
+//                "order by customer_id asc, order_num DESC\n" +
+//                "limit 1;";
         // to test
-        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
-                "from orders o\n" +
-                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
-                "GROUP BY o.customer_id\n" +
-                "order by order_num DESC, customer_id asc\n" +
-                "limit 1;";
-        String studentSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
-                "from orders o\n" +
-                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
-                "GROUP BY o.customer_id\n" +
-                "order by order_num DESC, customer_id asc\n" +
-                "limit 1;";
-        // select round(
-        //    ifnull(
-        //    (select count(distinct requester_id ,accepter_id) from accepted_requests) /
-        //    (select count(distinct sender_id ,send_to_id) from friend_requests)
-        //    ,0)
-        //    ,2) as accept_rate ;
+         String instrSql = "select round(\n" +
+                 "            ifnull(\n" +
+                 "            (select count(distinct requester_id ,accepter_id) from accepted_requests) /\n" +
+                 "            (select count(distinct sender_id ,send_to_id) from friend_requests)\n" +
+                 "            ,0)\n" +
+                 "            ,2) as accept_rate ;";
+         String studentSql = "select round(\n" +
+                 "            ifnull(\n" +
+                 "            (select count(distinct requester_id ,accepter_id) from accepted_requests) /\n" +
+                 "            (select count(distinct sender_id ,send_to_id) from friend_requests)\n" +
+                 "            ,0)\n" +
+                 "            ,2) as accept_rate ;";
 //        String instrSql = "select group_id,min(player_id) as player_id\n" +
 //                "from\n" +
 //                "    (select player,sum(score) as score\n" +
