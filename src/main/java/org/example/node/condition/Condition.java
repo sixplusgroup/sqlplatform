@@ -11,17 +11,15 @@ import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
 import org.example.node.expr.Expr;
 import org.example.node.expr.ListExpr;
+import org.example.util.ErrorLogger;
 
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author shenyichen
  * @date 2021/12/8
  **/
 public abstract class Condition {
-    private static Logger logger = Logger.getLogger(Condition.class.getName());
     public CompoundCond father;
     public String operator;
     protected boolean not;
@@ -120,7 +118,7 @@ public abstract class Condition {
             Expr testExpr = Expr.build(betweenExpr.testExpr);
             Expr beginExpr = Expr.build(betweenExpr.beginExpr);
             Expr endExpr = Expr.build(betweenExpr.endExpr);
-            if (betweenExpr.isNot()){
+            if (betweenExpr.isNot()) {
                 List<Condition> subConds = new ArrayList<>();
                 subConds.add(new UncommutativeCond("<",testExpr,beginExpr));
                 subConds.add(new UncommutativeCond(">",testExpr,endExpr));
@@ -134,7 +132,7 @@ public abstract class Condition {
         }
         // 其他情况
         else {
-            logger.log(Level.WARNING,"Condition type not recognized: "+expr.toString());
+            ErrorLogger.logSevere("Condition type not recognized: " + expr.toString());
             return new OtherCond(expr.toString());
         }
     }
@@ -151,9 +149,9 @@ public abstract class Condition {
             toExist(expr,((SetOpSelect) subQ).left,operator);
             toExist(expr,((SetOpSelect) subQ).right,operator);
         } else if (subQ instanceof PlainSelect) {
-            Condition c = null;
+            Condition c;
             List<Expr> selections = ((PlainSelect) subQ).selections;
-            if (selections==null || selections.size()==0) {
+            if (selections == null || selections.size() == 0) {
                 return;
             }
             if (expr instanceof ListExpr) {
@@ -176,6 +174,7 @@ public abstract class Condition {
                 }
             }
             ((PlainSelect) subQ).where = new CompoundCond("AND",Arrays.asList(((PlainSelect) subQ).where,c));
+            ((PlainSelect) subQ).where = ((PlainSelect) subQ).where.rearrange();
         }
     }
 
@@ -258,7 +257,7 @@ public abstract class Condition {
         while (p instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) p;
             List<Condition> subConds = new ArrayList<>(cc.getSubConds());
-            subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), stu.toString())));
+            subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), c.toString())));
             Condition tmp = subConds.get(0);
             if (tmp.equals(c)) {
                 return tmp;

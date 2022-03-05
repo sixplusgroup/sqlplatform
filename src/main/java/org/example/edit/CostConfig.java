@@ -5,7 +5,7 @@ package org.example.edit;
  * @date 2021/12/10
  **/
 public class CostConfig {
-    public static float delete_cost_rate = 0.5f;
+    public static float delete_cost_rate = 0.3f;
     public static float set_operator = 1.0f;
     public static float logic_operator = 1.0f;
     public static float math_operator = 1.0f;

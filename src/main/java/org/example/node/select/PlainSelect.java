@@ -13,7 +13,6 @@ import org.example.node.expr.Expr;
 import org.example.node.table.Table;
 
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
  * @date 2021/12/7
  **/
 public class PlainSelect extends Select {
-    private static Logger logger = Logger.getLogger(BuildAST.class.getName());
     // TODO LIST:
     //  规范化
     //  复杂Compound，因为做了merge导致cost增加
@@ -67,9 +65,11 @@ public class PlainSelect extends Select {
                 .stream()
                 .map(x -> Expr.build(x.getExpr()))
                 .collect(Collectors.toList());
-        from = new From(query.getFrom(), env, this);
+        if(query.getFrom() != null) {
+            from = new From(query.getFrom(), env, this);
+        }
         where = Condition.build(query.getWhere(),env);
-        if (from.joinCondition != null) {
+        if (from != null && from.joinCondition != null) {
             if (where != null){
                 where = new CompoundCond("AND", Arrays.asList(where,from.joinCondition));
             } else {
@@ -84,8 +84,10 @@ public class PlainSelect extends Select {
         limit = new Limit(query.getLimit());
         // alias：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
         // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
-        tableAliasMap.putAll(from.tableAliasMap);
-        attrAliasMap.putAll(from.attrAliasMap);
+        if (from != null) {
+            tableAliasMap.putAll(from.tableAliasMap);
+            attrAliasMap.putAll(from.attrAliasMap);
+        }
         for (int i=0;i<selections.size();i++) {
             String alias = query.getSelectList().get(i).getAlias();
             if (alias != null){
@@ -102,7 +104,8 @@ public class PlainSelect extends Select {
         score += selections.stream()
                 .mapToDouble(Expr::score)
                 .sum();
-        score += from.score();
+        if (from != null)
+            score += from.score();
         if (where != null)
             score += where.score();
         score += groupBy.score();
@@ -125,7 +128,8 @@ public class PlainSelect extends Select {
                 score -= 1;
         }
         score += Expr.listScore(selections, student.selections);
-        score += from.score(student.from);
+        if (from != null)
+            score += from.score(student.from);
         if (where != null)
             score += where.score(student.where);
         score += groupBy.score(student.groupBy);
@@ -141,7 +145,8 @@ public class PlainSelect extends Select {
         select.selections = selections.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
-        select.from = from.clone();
+        if (from != null)
+            select.from = from.clone();
         if (where != null)
             select.where = where.clone();
         select.groupBy = groupBy.clone();
@@ -163,8 +168,9 @@ public class PlainSelect extends Select {
         if (!(t instanceof PlainSelect))
             return false;
         PlainSelect ps = (PlainSelect) t;
-        return ps.distinct==distinct && ps.selections.equals(selections) && ps.from.equals(from)
-                && ((where==null && ps.where==null) || (where!=null && ps.where.equals(where)))
+        return ps.distinct==distinct && ps.selections.equals(selections)
+                && ((from==null && ps.from==null) || (from!=null && from.equals(ps.from)))
+                && ((where==null && ps.where==null) || (where!=null && where.equals(ps.where)))
                 && ps.groupBy.equals(groupBy) && ps.orderBy.equals(orderBy) && ps.limit.equals(limit);
     }
 
@@ -178,24 +184,15 @@ public class PlainSelect extends Select {
                 .map(Expr::toString)
                 .collect(Collectors.toList());
         sb.append(String.join(",",selections_s));
-        sb.append(" from ");
-        List<String> tables = from.tables.stream()
-                .map(Table::toString)
-                .collect(Collectors.toList());
-        sb.append(String.join(",",tables));
-        sb.append("(");
-        List<String> joinTypes = new ArrayList<>();
-        for (Map.Entry<String, Integer> entry: from.joinTypes.entrySet()) {
-            joinTypes.add(entry.getValue() + " " + entry.getKey());
+        if (from != null) {
+            sb.append(from.toString());
         }
-        sb.append(String.join(",",joinTypes));
-        sb.append(") ");
-        sb.append("where ");
-        sb.append(where.toString());
-        sb.append(" ").append(groupBy.toString());
-        sb.append(" ").append(orderBy.toString());
-        sb.append(" ").append(limit.toString());
-        return sb.toString();
+        if (where != null) {
+            sb.append(" where ");
+            sb.append(where.toString());
+        }
+        sb.append(groupBy.toString()).append(orderBy.toString()).append(limit.toString());
+        return sb.toString().replaceAll("\\s+", " ").trim();
     }
 
 }

@@ -13,11 +13,13 @@ import java.util.List;
  **/
 public class SingleEdit {
 
-    public static List<Pair<PlainSelect,Float>> singleEdit(PlainSelect instr, PlainSelect student) {
+    public static List<Pair<PlainSelect,Float>> singleEdit(PlainSelect instr, PlainSelect student) throws Exception {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
         edits.addAll(editDistinct(instr, student));
         edits.addAll(editSelections(instr, student));
-        edits.addAll(editFrom(instr, student));
+        if (instr.from != null) {
+            edits.addAll(editFrom(instr, student));
+        }
         edits.addAll(editConditions(instr, student));
         edits.addAll(editGroupBy(instr, student));
         edits.addAll(editOrderBy(instr, student));
@@ -47,7 +49,7 @@ public class SingleEdit {
         return edits;
     }
 
-    public static List<Pair<PlainSelect,Float>> editFrom(PlainSelect instr, PlainSelect student) {
+    public static List<Pair<PlainSelect,Float>> editFrom(PlainSelect instr, PlainSelect student) throws Exception {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
 
         TableEdit tableEdit = new TableEdit();
@@ -63,7 +65,7 @@ public class SingleEdit {
         return edits;
     }
 
-    public static List<Pair<PlainSelect,Float>> editConditions(PlainSelect instr, PlainSelect student) {
+    public static List<Pair<PlainSelect,Float>> editConditions(PlainSelect instr, PlainSelect student) throws Exception {
         ConditionEdit conditionEdit = new ConditionEdit(instr, student);
         List<Pair<PlainSelect,Float>> res = conditionEdit.singleEdit();
         for (Pair<PlainSelect, Float> item: res) {

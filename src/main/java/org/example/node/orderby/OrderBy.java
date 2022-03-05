@@ -90,7 +90,7 @@ public class OrderBy {
         if (items.size() == 0)
             return "";
         StringBuilder sb = new StringBuilder();
-        sb.append("orderBy ");
+        sb.append(" orderBy ");
         List<String> items_s = items.stream()
                 .map(OrderByItem::toString)
                 .collect(Collectors.toList());

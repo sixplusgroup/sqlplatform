@@ -131,7 +131,7 @@ public class GroupBy {
         if (items.size() == 0 && having == null)
             return "";
         StringBuilder sb = new StringBuilder();
-        sb.append("groupBy ");
+        sb.append(" groupBy ");
         List<String> items_s = items.stream()
                 .map(Expr::toString)
                 .collect(Collectors.toList());

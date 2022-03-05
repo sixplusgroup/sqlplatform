@@ -48,7 +48,7 @@ public class CompoundCond extends Condition {
         subConds = subConds_new;
         mergeNot();
         Condition c = merge();
-        if (c instanceof CompoundCond){
+        if (c instanceof CompoundCond) {
             ((CompoundCond)c).flatten();
             ((CompoundCond)c).flattenEquals();
             ((CompoundCond)c).flattemComparisons();
@@ -298,6 +298,9 @@ public class CompoundCond extends Condition {
             List<Expr> operands = item.stream()
                     .map(exprs::get)
                     .collect(Collectors.toList());
+            // 解决some转exist的同名问题导致的A=A在上面操作中变成只有一个的问题
+            if (operands.size() == 1)
+                operands.add(operands.get(0));
             res.add(new CommutativeCond("=", operands));
         }
         return res;

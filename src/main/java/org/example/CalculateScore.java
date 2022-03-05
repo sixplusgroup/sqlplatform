@@ -5,18 +5,15 @@ import org.example.enums.SetOp;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
+import org.example.util.ErrorLogger;
 
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author shenyichen
  * @date 2021/12/4
  **/
 public class CalculateScore {
-
-    private static Logger logger = Logger.getLogger(CalculateScore.class.getName());
     /**
      * 根据 instrAST 的组件数，计算总分
      * @param s
@@ -33,7 +30,7 @@ public class CalculateScore {
      * @param totalScore 总分
      * @return
      */
-    public static float editScore(Select instrAST, Select studentAST, float totalScore) {
+    public static float editScore(Select instrAST, Select studentAST, float totalScore) throws Exception {
         boolean instrIsSetOp = instrAST instanceof SetOpSelect;
         boolean studentIsSetOp = studentAST instanceof SetOpSelect;
         // case 1: 学生sql和正确sql中至少有一个是set operator
@@ -98,9 +95,9 @@ public class CalculateScore {
             try {
                 singleEdits = SingleEdit.singleEdit(instr,student);
             } catch (Exception e){
-                logger.log(Level.SEVERE,"Exception when calculating eidtScore:\n" + e.getMessage());
-                e.printStackTrace();
-                return 0.0f;
+                ErrorLogger.logSevere("Exception when calculating eidtScore:\ninstrSql:\n"
+                        + instr.toString() + "\nstudentSql:\n" + student.toString(), e);
+                throw e;
             }
             // 如果没有可进行的编辑，说明学生sql和正确sql已经完全一致，直接返回总分
             if (singleEdits.size()==0) {
@@ -109,7 +106,7 @@ public class CalculateScore {
             // 如果还有可进行的编辑，迭代edit
             // 每个edit可以是add, remove, edit，它们的cost分别按不匹配的组件算
             // 每次取edits中 calculateScore - cost 最高的edit，分数减去 cost
-            float maxScore = 0.0f;
+            float maxScore = -2.0f * (instr.score() + student.score());
             float cost = 0.0f;
             PlainSelect bestMatch = student;
             for (Pair<PlainSelect,Float> edit: singleEdits) {

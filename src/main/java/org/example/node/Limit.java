@@ -5,17 +5,13 @@ import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import org.example.BuildAST;
 import org.example.edit.CostConfig;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.example.util.ErrorLogger;
 
 /**
  * @author shenyichen
  * @date 2021/12/8
  **/
 public class Limit {
-    private static Logger logger = Logger.getLogger(BuildAST.class.getName());
-
     public Integer rowCount;
     public Integer offset;
 
@@ -37,7 +33,7 @@ public class Limit {
         } else if (rowCount instanceof SQLIntegerExpr) {
             this.rowCount = ((SQLIntegerExpr) rowCount).getNumber().intValue();
         } else {
-            logger.log(Level.WARNING,"Limit rowCount is not int value:" + rowCount.toString());
+            ErrorLogger.logSevere("Limit rowCount is not int value:" + rowCount.toString());
             this.rowCount = null;
         }
         if (offset==null){
@@ -45,7 +41,7 @@ public class Limit {
         } else if (offset instanceof SQLIntegerExpr) {
             this.offset = ((SQLIntegerExpr) offset).getNumber().intValue();
         } else {
-            logger.log(Level.WARNING,"Limit offset is not int value:" + offset.toString());
+            ErrorLogger.logSevere("Limit offset is not int value:" + offset.toString());
             this.offset = null;
         }
     }
@@ -112,7 +108,7 @@ public class Limit {
         if (rowCount == null && offset == null)
             return "";
         if (offset == null)
-            return "limit " + rowCount ;
-        return "limit " + rowCount + "," + offset;
+            return " limit " + rowCount ;
+        return " limit " + rowCount + "," + offset;
     }
 }

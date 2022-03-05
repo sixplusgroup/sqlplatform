@@ -148,6 +148,8 @@ public class From {
     }
 
     public float score(From f) {
+        if (f == null)
+            return 0;
         return scoreOfTables(f.tables) + scoreOfJoinTypes(f.joinTypes);
     }
 
@@ -238,4 +240,23 @@ public class From {
         return true;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" from ");
+        List<String> t = tables.stream()
+                .map(Table::toString)
+                .collect(Collectors.toList());
+        sb.append(String.join(",",t));
+        if (joinTypes.size() > 0) {
+            sb.append("(");
+            List<String> types = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry: joinTypes.entrySet()) {
+                types.add(entry.getValue() + " " + entry.getKey());
+            }
+            sb.append(String.join(",",types));
+            sb.append(")");
+        }
+        return sb.toString();
+    }
 }

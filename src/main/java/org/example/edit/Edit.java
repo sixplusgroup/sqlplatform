@@ -12,5 +12,5 @@ import java.util.List;
 public interface Edit {
     List<Pair<PlainSelect,Float>> add(PlainSelect instr, PlainSelect stu);
     List<Pair<PlainSelect,Float>> remove(PlainSelect instr, PlainSelect stu);
-    List<Pair<PlainSelect,Float>> edit(PlainSelect instr, PlainSelect stu);
+    List<Pair<PlainSelect,Float>> edit(PlainSelect instr, PlainSelect stu) throws Exception;
 }

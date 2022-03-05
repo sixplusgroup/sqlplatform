@@ -18,13 +18,12 @@ import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
 import org.example.node.table.Table;
+import org.example.util.ErrorLogger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * 将 sql 语句解析为 AST
@@ -32,9 +31,6 @@ import java.util.logging.Logger;
  * @date 2021/12/4
  **/
 public class BuildAST {
-
-    private static Logger logger = Logger.getLogger(BuildAST.class.getName());
-
     public static Select buildSelect(String sql, Env env) {
         try {
             List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, env.dbType);
@@ -42,8 +38,7 @@ public class BuildAST {
             SQLSelectQuery query = stmt.getSelect().getQuery();
             return buildSelect(query,env);
         } catch (Exception e){
-            logger.log(Level.WARNING,"SQL parse error:\n" + e.getMessage());
-            e.printStackTrace();
+            ErrorLogger.logSevere("SQL parse error:\nSQL: " + sql, e);
             throw e;
         }
     }
@@ -54,7 +49,7 @@ public class BuildAST {
         } else if (query instanceof SQLSelectQueryBlock) {
             return buildPlainSelect((SQLSelectQueryBlock) query, env);
         } else {
-            logger.log(Level.WARNING,"SQL is PGValuesQuery");
+            ErrorLogger.logSevere("SQL is PGValuesQuery:\nSQL: " + query.toString());
             return null;
         }
     }
@@ -113,7 +108,7 @@ public class BuildAST {
                     substituteAlias(instr_ss.right, stu_ss.right);
                 } else {
                     int disLeft = CalculateScore.editDistance(instr_ss.left.toString(), stu_ss.left.toString());
-                    int disRight = CalculateScore.editDistance(instr_ss.right.toString(), stu_ss.right.toString());
+                    int disRight = CalculateScore.editDistance(instr_ss.left.toString(), stu_ss.right.toString());
                     if (disLeft < disRight) {
                         substituteAlias(instr_ss.left, stu_ss.left);
                         substituteAlias(instr_ss.right, stu_ss.right);
@@ -134,16 +129,18 @@ public class BuildAST {
     private static void substituteAliasForPlainSelect(PlainSelect instr, PlainSelect stu) {
         // step 1: 处理 from 里的 subQueries
         List<Table> stuFromSubQs = new ArrayList<>();
-        for (Table t: stu.from.tables) {
-            if (t instanceof Select)
-                stuFromSubQs.add(t);
-        }
-        for (Table t: instr.from.tables) {
-            if (t instanceof Select) {
-                Table match = Table.isIn(t, stuFromSubQs);
-                if (match instanceof Select) {
-                    stuFromSubQs.remove(match);
-                    substituteAlias((Select) t, (Select) match);
+        if (instr.from != null && stu.from != null) {
+            for (Table t: stu.from.tables) {
+                if (t instanceof Select)
+                    stuFromSubQs.add(t);
+            }
+            for (Table t: instr.from.tables) {
+                if (t instanceof Select) {
+                    Table match = Table.isIn(t, stuFromSubQs);
+                    if (match instanceof Select) {
+                        stuFromSubQs.remove(match);
+                        substituteAlias((Select) t, (Select) match);
+                    }
                 }
             }
         }
@@ -183,7 +180,7 @@ public class BuildAST {
         List<Table> stuWhereSubQs = getSubQsFromCondition(stu.where);
         for (Table t: getSubQsFromCondition(instr.where)) {
             if (t instanceof Select) {
-                Table match = Table.isIn(t, stuFromSubQs);
+                Table match = Table.isIn(t, stuWhereSubQs);
                 if (match instanceof Select) {
                     stuWhereSubQs.remove(match);
                     substituteAlias((Select) t, (Select) match);

@@ -5,6 +5,7 @@ import org.example.CalculateScore;
 import org.example.node.condition.*;
 import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
+import org.example.util.ErrorLogger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,7 +23,7 @@ public class ConditionEdit {
         this.stu = stu;
     }
 
-    public List<Pair<PlainSelect, Float>> singleEdit() {
+    public List<Pair<PlainSelect, Float>> singleEdit() throws Exception {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         Condition instrC = instr.where;
         Condition stuC = stu.where;
@@ -46,7 +47,7 @@ public class ConditionEdit {
             return edits(instrC, stuC);
     }
 
-    private List<Pair<PlainSelect, Float>> edits(Condition instrC, Condition stuC) {
+    private List<Pair<PlainSelect, Float>> edits(Condition instrC, Condition stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>();
         if (instrC.equals(stuC))
             return res;
@@ -154,7 +155,7 @@ public class ConditionEdit {
         return res;
     }
 
-    private List<Pair<PlainSelect, Float>> editCompound(CompoundCond instrC, CompoundCond stuC) {
+    private List<Pair<PlainSelect, Float>> editCompound(CompoundCond instrC, CompoundCond stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         List<Condition> stuC_clone = new ArrayList<>(stuC.getSubConds());
         for (Condition item: instrC.getSubConds()) {
@@ -168,7 +169,12 @@ public class ConditionEdit {
             else {
                 PlainSelect edited = stu.clone();
                 Condition stuC_edited = Condition.find(stuC, edited.where);
-                assert stuC_edited != null;
+                if (stuC_edited == null) {
+                    ErrorLogger.logSevere("ConditionEdit.editCompound.add: stuC_edited == null\ninstrC:\n"
+                            + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                            + "\nstudentSql:\n" + stu.toString());
+                    throw new Exception("ConditionEdit.editCompound.add: stuC_edited == null");
+                }
                 CompoundCond stu_edited_cc = (CompoundCond) stuC_edited;
                 stu_edited_cc.add(item.clone());
                 res.add(new Pair<>(edited, item.score()));
@@ -178,7 +184,12 @@ public class ConditionEdit {
         for (Condition item: stuC_clone) {
             PlainSelect edited = stu.clone();
             Condition stuC_edited = Condition.find(stuC, edited.where);
-            assert stuC_edited != null;
+            if (stuC_edited == null) {
+                ErrorLogger.logSevere("ConditionEdit.editCompound.remove: stuC_edited == null\ninstrC:\n"
+                        + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                        + "\nstudentSql:\n" + stu.toString());
+                throw new Exception("ConditionEdit.editCompound.remove: stuC_edited == null");
+            }
             CompoundCond stu_edited_cc = (CompoundCond) stuC_edited;
             stu_edited_cc.remove(item);
             res.add(new Pair<>(edited, item.score() * CostConfig.delete_cost_rate));
@@ -186,7 +197,7 @@ public class ConditionEdit {
         return res;
     }
 
-    private List<Pair<PlainSelect, Float>> editCommutative(CommutativeCond instrC, CommutativeCond stuC) {
+    private List<Pair<PlainSelect, Float>> editCommutative(CommutativeCond instrC, CommutativeCond stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         List<Expr> instrC_clone = new ArrayList<>(instrC.operands);
         List<Expr> stuC_clone = new ArrayList<>(stuC.operands);
@@ -202,7 +213,12 @@ public class ConditionEdit {
             if (!(match.equals(item))) {
                 PlainSelect edited = stu.clone();
                 Condition stuC_edited = Condition.find(stuC, edited.where);
-                assert stuC_edited != null;
+                if (stuC_edited == null) {
+                    ErrorLogger.logSevere("ConditionEdit.editCommutative.edit: stuC_edited == null\ninstrC:\n"
+                            + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                            + "\nstudentSql:\n" + stu.toString());
+                    throw new Exception("ConditionEdit.editCommutative.edit: stuC_edited == null");
+                }
                 CommutativeCond stu_edited_cc = (CommutativeCond) stuC_edited;
                 stu_edited_cc.operands.remove(match);
                 stu_edited_cc.operands.add(item.clone());
@@ -213,7 +229,12 @@ public class ConditionEdit {
         for (Expr item: instrC_clone) {
             PlainSelect edited = stu.clone();
             Condition stuC_edited = Condition.find(stuC, edited.where);
-            assert stuC_edited != null;
+            if (stuC_edited == null) {
+                ErrorLogger.logSevere("ConditionEdit.editCommutative.add: stuC_edited == null\ninstrC:\n"
+                        + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                        + "\nstudentSql:\n" + stu.toString());
+                throw new Exception("ConditionEdit.editCommutative.add: stuC_edited == null");
+            }
             CommutativeCond stu_edited_cc = (CommutativeCond) stuC_edited;
             stu_edited_cc.operands.add(item.clone());
             res.add(new Pair<>(edited, item.score()));
@@ -222,7 +243,12 @@ public class ConditionEdit {
         for (Expr item: stuC_clone) {
             PlainSelect edited = stu.clone();
             Condition stuC_edited = Condition.find(stuC, edited.where);
-            assert stuC_edited != null;
+            if (stuC_edited == null) {
+                ErrorLogger.logSevere("ConditionEdit.editCommutative.remove: stuC_edited == null\ninstrC:\n"
+                        + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                        + "\nstudentSql:\n" + stu.toString());
+                throw new Exception("ConditionEdit.editCommutative.remove: stuC_edited == null");
+            }
             CommutativeCond stu_edited_cc = (CommutativeCond) stuC_edited;
             stu_edited_cc.operands.remove(item);
             res.add(new Pair<>(edited, item.score() * CostConfig.delete_cost_rate));
@@ -230,12 +256,17 @@ public class ConditionEdit {
         return res;
     }
 
-    private List<Pair<PlainSelect, Float>> editUncommutative(UncommutativeCond instrC, UncommutativeCond stuC) {
+    private List<Pair<PlainSelect, Float>> editUncommutative(UncommutativeCond instrC, UncommutativeCond stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         if (!(instrC.left.equals(stuC.left))) {
             PlainSelect edited = stu.clone();
             Condition stuC_edited = Condition.find(stuC, edited.where);
-            assert stuC_edited != null;
+            if (stuC_edited == null) {
+                ErrorLogger.logSevere("ConditionEdit.editUncommutative.left2left: stuC_edited == null\ninstrC:\n"
+                        + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                        + "\nstudentSql:\n" + stu.toString());
+                throw new Exception("ConditionEdit.editUncommutative.left2left: stuC_edited == null");
+            }
             UncommutativeCond stu_edited_uc = (UncommutativeCond) stuC_edited;
             stu_edited_uc.left = instrC.left.clone();
             res.add(new Pair<>(edited, instrC.left.score() - instrC.left.score(stuC.left)));
@@ -243,7 +274,12 @@ public class ConditionEdit {
         if (!(instrC.right.equals(stuC.right))) {
             PlainSelect edited = stu.clone();
             Condition stuC_edited = Condition.find(stuC, edited.where);
-            assert stuC_edited != null;
+            if (stuC_edited == null) {
+                ErrorLogger.logSevere("ConditionEdit.editUncommutative.right2right: stuC_edited == null\ninstrC:\n"
+                        + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                        + "\nstudentSql:\n" + stu.toString());
+                throw new Exception("ConditionEdit.editUncommutative.right2right: stuC_edited == null");
+            }
             UncommutativeCond stu_edited_uc = (UncommutativeCond) stuC_edited;
             stu_edited_uc.right = instrC.right.clone();
             res.add(new Pair<>(edited, instrC.right.score() - instrC.right.score(stuC.right)));
@@ -257,12 +293,17 @@ public class ConditionEdit {
                 && Expr.isStrictlyIn(stuC.right, instrC.operands);
     }
 
-    private Pair<PlainSelect, Float> editUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) {
+    private Pair<PlainSelect, Float> editUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) throws Exception {
         CommutativeCond new_stu = new CommutativeCond(instrC.operator,
                 Arrays.asList(stuC.left.clone(), stuC.right.clone()));
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.editUn2Comm: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.editUn2Comm: stuC_edited == null");
+        }
         if (stuC_edited.father == null) {
             edited.where = new_stu;
         } else {
@@ -282,11 +323,16 @@ public class ConditionEdit {
                 || (instrC.left.equals(stuC.operands.get(1)) && instrC.right.equals(stuC.operands.get(0)));
     }
 
-    private Pair<PlainSelect, Float> editComm2Un(UncommutativeCond instrC, CommutativeCond stuC) {
+    private Pair<PlainSelect, Float> editComm2Un(UncommutativeCond instrC, CommutativeCond stuC) throws Exception {
         UncommutativeCond new_stu = instrC.clone();
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.editComm2Un: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.editComm2Un: stuC_edited == null");
+        }
         if (stuC_edited.father == null) {
             edited.where = new_stu;
         } else {
@@ -297,24 +343,34 @@ public class ConditionEdit {
         return new Pair<>(edited, CostConfig.math_operator);
     }
 
-    private List<Pair<PlainSelect, Float>> editExist(Exist instrC, Exist stuC) {
+    private List<Pair<PlainSelect, Float>> editExist(Exist instrC, Exist stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         float totalScore = CalculateScore.totalScore(instrC.subQuery);
         float cost = totalScore - CalculateScore.editScore(instrC.subQuery, stuC.subQuery, totalScore);
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.editExist: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.editExist: stuC_edited == null");
+        }
         Exist stuC_edited_e = (Exist) stuC_edited;
         stuC_edited_e.subQuery = instrC.subQuery.clone();
         res.add(new Pair<>(edited, cost));
         return res;
     }
 
-    private List<Pair<PlainSelect, Float>> editOther(OtherCond instrC, OtherCond stuC) {
+    private List<Pair<PlainSelect, Float>> editOther(OtherCond instrC, OtherCond stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.editOther: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.editOther: stuC_edited == null");
+        }
         OtherCond stuC_edited_o = (OtherCond) stuC_edited;
         stuC_edited_o.value = instrC.value;
         res.add(new Pair<>(edited, stuC_edited_o.score() - stuC_edited_o.score(stuC)));
@@ -328,12 +384,17 @@ public class ConditionEdit {
      * @param stuC
      * @return
      */
-    private List<Pair<PlainSelect, Float>> editNormal(Condition instrC, Condition stuC) {
+    private List<Pair<PlainSelect, Float>> editNormal(Condition instrC, Condition stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>();
         if ((!(instrC instanceof AtomCond)) && instrC.getNot() != stuC.getNot()) {
             PlainSelect edited = stu.clone();
             Condition match = Condition.find(stuC, edited.where);
-            assert match != null;
+            if (match == null) {
+                ErrorLogger.logSevere("ConditionEdit.editNormal: match == null\ninstrC:\n"
+                        + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                        + "\nstudentSql:\n" + stu.toString());
+                throw new Exception("ConditionEdit.editNormal: match == null");
+            }
             Condition.setNot(match);
             res.add(new Pair<>(edited, CostConfig.not));
         }
@@ -341,7 +402,12 @@ public class ConditionEdit {
             if (!(instrC.operator.equals(stuC.operator))) {
                 PlainSelect edited = stu.clone();
                 Condition match = Condition.find(stuC, edited.where);
-                assert match != null;
+                if (match == null) {
+                    ErrorLogger.logSevere("ConditionEdit.editNormal: match == null\ninstrC:\n"
+                            + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                            + "\nstudentSql:\n" + stu.toString());
+                    throw new Exception("ConditionEdit.editNormal: match == null");
+                }
                 match.operator = instrC.operator;
                 if (instrC instanceof CompoundCond) {
                     res.add(new Pair<>(edited, CostConfig.logic_operator));
@@ -353,10 +419,15 @@ public class ConditionEdit {
         return res;
     }
 
-    private Pair<PlainSelect, Float> addInstrExtra(Condition instrC, Condition stuC, Condition match) {
+    private Pair<PlainSelect, Float> addInstrExtra(Condition instrC, Condition stuC, Condition match) throws Exception {
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.addInstrExtra: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.addInstrExtra: stuC_edited == null");
+        }
         if (stuC_edited.father == null) {
             edited.where = substitute(stuC, match, instrC.clone());
         } else {
@@ -366,7 +437,7 @@ public class ConditionEdit {
         return new Pair<>(edited, instrC.score() - match.score());
     }
 
-    private Pair<PlainSelect, Float> removeStuExtra(Condition stuC, Condition match) {
+    private Pair<PlainSelect, Float> removeStuExtra(Condition stuC, Condition match) throws Exception {
         PlainSelect edited = substitute(stuC, match);
         return new Pair<>(edited, (stuC.score() -match.score()) * CostConfig.delete_cost_rate);
     }
@@ -377,10 +448,15 @@ public class ConditionEdit {
      * @param instrC
      * @return
      */
-    private Pair<PlainSelect, Float> add(Condition stuC, Condition instrC) {
+    private Pair<PlainSelect, Float> add(Condition stuC, Condition instrC) throws Exception {
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.add: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.add: stuC_edited == null");
+        }
         if (stuC_edited.father == null) {
             edited.where = new CompoundCond("AND", Arrays.asList(stuC_edited, instrC.clone()));
         } else {
@@ -390,10 +466,15 @@ public class ConditionEdit {
         return new Pair<>(edited, instrC.score());
     }
 
-    private Pair<PlainSelect, Float> remove(Condition stuC) {
+    private Pair<PlainSelect, Float> remove(Condition stuC) throws Exception {
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.remove: stuC_edited == null\nstuC:\n"
+                    + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.remove: stuC_edited == null");
+        }
         if (stuC_edited.father == null) {
             edited.where = null;
         } else {
@@ -420,10 +501,15 @@ public class ConditionEdit {
      * @param instrC
      * @return
      */
-    private PlainSelect substitute(Condition stuC, Condition instrC) {
+    private PlainSelect substitute(Condition stuC, Condition instrC) throws Exception {
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
-        assert stuC_edited != null;
+        if (stuC_edited == null) {
+            ErrorLogger.logSevere("ConditionEdit.substitute: stuC_edited == null\ninstrC:\n"
+                    + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.substitute: stuC_edited == null");
+        }
         if (stuC_edited.father == null) {
             edited.where = instrC.clone();
         } else {
@@ -441,10 +527,22 @@ public class ConditionEdit {
      * @param holder
      * @return
      */
-    private Condition substitute(Condition toAdd, Condition toDel, Condition holder) {
+    private Condition substitute(Condition toAdd, Condition toDel, Condition holder) throws Exception {
         Condition match = Condition.find(toDel, holder);
-        assert match != null;
-        assert match.father != null;
+        if (match == null) {
+            ErrorLogger.logSevere("ConditionEdit.substitute: match == null\ntoAdd:\n"
+                    + toAdd.toString() + "\ntoDel:\n" + toDel.toString() + "\nholder:\n" + holder.toString()
+                    + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.substitute: match == null");
+        }
+        if (match.father == null) {
+            ErrorLogger.logSevere("ConditionEdit.substitute: match.father == null\ntoAdd:\n"
+                    + toAdd.toString() + "\ntoDel:\n" + toDel.toString() + "\nholder:\n" + holder.toString()
+                    + "\ninstrSql:\n" + instr.toString()
+                    + "\nstudentSql:\n" + stu.toString());
+            throw new Exception("ConditionEdit.substitute: match.father == null");
+        }
         CompoundCond father = match.father;
         father.remove(match);
         father.add(toAdd.clone());
@@ -500,7 +598,7 @@ public class ConditionEdit {
         return bConds.size() == 0;
     }
 
-    private Pair<PlainSelect, Float> flatten(CompoundCond instr, CompoundCond stu) {
+    private Pair<PlainSelect, Float> flatten(CompoundCond instr, CompoundCond stu) throws Exception {
         return new Pair<>(substitute(stu, instr), CostConfig.logic_operator);
     }
 

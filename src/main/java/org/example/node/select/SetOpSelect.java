@@ -34,7 +34,7 @@ public class SetOpSelect extends Select {
     public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, Env env) {
         this.left = left;
         this.right = right;
-        this.operator = SetOp.valueOf(operator.toString());
+        this.operator = SetOp.valueOf(operator.toString().replaceAll(" ","_"));
         this.orderBy = orderBy==null ? null : new OrderBy(orderBy);
         // 统计量赋值
         subqueries = new ArrayList<>();
@@ -89,7 +89,8 @@ public class SetOpSelect extends Select {
         select.left = left.clone();
         select.right = right.clone();
         select.operator = operator;
-        select.orderBy = orderBy.clone();
+        if (orderBy != null)
+            select.orderBy = orderBy.clone();
         select.subqueries = subqueries;
         select.tableAliasMap = tableAliasMap;
         select.attrAliasMap = attrAliasMap;
@@ -107,7 +108,7 @@ public class SetOpSelect extends Select {
             return false;
         SetOpSelect ss = (SetOpSelect) t;
         return ss.operator.equals(operator) && ss.left.equals(left) && ss.right.equals(right)
-                && ss.orderBy.equals(orderBy);
+                && ((ss.orderBy == null && orderBy == null) || (ss.orderBy != null && ss.orderBy.equals(orderBy)));
     }
 
     @Override

@@ -1,7 +1,9 @@
 package org.example.node.condition;
 
 import org.example.edit.CostConfig;
+import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
+import org.example.node.select.SetOpSelect;
 
 /**
  * @author shenyichen
@@ -23,6 +25,12 @@ public class Exist extends Condition {
 
     @Override
     public Condition rearrange() {
+        if (subQuery instanceof SetOpSelect) {
+
+        }
+        else {
+            ((PlainSelect) subQuery).where.rearrange();
+        }
         return this;
     }
 
@@ -78,7 +86,8 @@ public class Exist extends Condition {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (not)
-            sb.append("not exist ");
+            sb.append("not ");
+        sb.append("exist ");
         sb.append(subQuery.toString());
         return sb.toString();
     }

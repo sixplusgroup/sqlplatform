@@ -54,7 +54,7 @@ public class TableEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) throws Exception {
         List<Pair<PlainSelect,Float>> res = new ArrayList <>();
         List<Table> stu_clone = new ArrayList<>(stu.from.tables);
         for (Table item: instr.from.tables) {
