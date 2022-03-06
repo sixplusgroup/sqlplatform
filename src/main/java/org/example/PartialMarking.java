@@ -51,6 +51,9 @@ public class PartialMarking {
             Canonicalizer.canonicalize(instrAST);
             Select studentAST = BuildAST.buildSelect(studentSql.replaceAll("\\s+", " ").trim(),env);
             BuildAST.substituteAlias(instrAST, studentAST);
+            // 不能在buildSelect时就替换，可能因为tableAlias交叉导致问题
+            Canonicalizer.substituteEqualClass(instrAST);
+            Canonicalizer.substituteEqualClass(studentAST);
             float totalScore = CalculateScore.totalScore(instrAST);
             float score = CalculateScore.editScore(instrAST,studentAST,totalScore);
             return getScaledScore(score,totalScore,maxScore);
@@ -79,6 +82,9 @@ public class PartialMarking {
     public static void main(String[] args) {
 // PASS
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where u.uid=s.id and u.uid=l.sid";
+// PASS: selections等价类替换
+//        String studentSql = "select l.sid from user u, student s, lesson l\n" +
 //                "where u.uid=s.id and u.uid=l.sid";
 // PASS: AND展平
 //        String studentSql = "select s.id sid from student s, user u, lesson l\n" +
@@ -187,22 +193,32 @@ public class PartialMarking {
 //                "group by group_id)\n" +
 //                "group by group_id\n" +
 //                "order by group_id;";
+// PASS: not的等价，tables顺序、alias, 条件的顺序
+//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
+//        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
+//                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
 
         // to test
-        // PASS: not的等价，tables顺序、alias, 条件的顺序
-        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
-                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
-        String studentSql = "select s.id sid from student s, user u, lesson l\n" +
-                "where u.uid<s.id and u.uid>l.sid and u.uid>='0'";
-//        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
-//                "from employees e1\n" +
-//                "where e1.salary not in (\n" +
-//                "\tselect MAX(salary)\n" +
-//                "\tfrom employees e2\n" +
-//                "\twhere e1.dno = e2.dno\n" +
-//                "\tgroup by dno\n" +
-//                ")\n" +
-//                "order by dno;";
+        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
+                "from employees e1\n" +
+                "where e1.salary not in (\n" +
+                "\tselect MAX(salary)\n" +
+                "\tfrom employees e2\n" +
+                "\twhere e1.dno = e2.dno\n" +
+                "\tgroup by dno\n" +
+                ")\n" +
+                "order by dno;";
+        // PASS: 去掉not，
+        String studentSql = "select e1.dno,e1.eno, e1.salary\n" +
+                "from employees e1\n" +
+                "where e1.salary in (\n" +
+                "\tselect MAX(salary)\n" +
+                "\tfrom employees e2\n" +
+                "\twhere e1.dno = e2.dno\n" +
+                "\tgroup by dno\n" +
+                ")\n" +
+                "order by dno;";
 //        String instrSql = "select activity\n" +
 //                "from friends\n" +
 //                "group by activity\n" +

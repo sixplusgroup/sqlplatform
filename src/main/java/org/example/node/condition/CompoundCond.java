@@ -207,16 +207,19 @@ public class CompoundCond extends Condition {
     public void flattenEquals() {
         List<CommutativeCond> toFlatten = new ArrayList<>();
         List<Condition> subConds_clone = new ArrayList<>(subConds);
-        for (Condition c: subConds_clone) {
+        for (Condition c: subConds) {
             if (c instanceof CompoundCond) {
                 ((CompoundCond) c).flattenEquals();
             }
             else if (c instanceof CommutativeCond && c.operator.equals("=")) {
                 toFlatten.add((CommutativeCond) c);
-                subConds.remove(c);
+                subConds_clone.remove(c);
             }
         }
-        subConds.addAll(flattenEquals(toFlatten));
+        if (operator.equals("AND")) {
+            subConds_clone.addAll(flattenEquals(toFlatten));
+            subConds = subConds_clone;
+        }
     }
 
     /**
@@ -330,7 +333,7 @@ public class CompoundCond extends Condition {
             if (father.operator.equals("AND")) {
                 for (Condition item: father.subConds) {
                     if (item instanceof CommutativeCond && item.operator.equals("=")
-                            && Expr.isStrictlyIn(e, ((CommutativeCond) item).operands)) {
+                            && Expr.isDirectlyStrictlyIn(e, ((CommutativeCond) item).operands)) {
                         List<Expr> operands_clone = new ArrayList<>(((CommutativeCond) item).operands);
                         operands_clone.sort(Comparator.comparing(Expr::toString));
                         return operands_clone.get(0).clone();

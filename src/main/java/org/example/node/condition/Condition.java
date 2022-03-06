@@ -351,6 +351,7 @@ public abstract class Condition {
                     break;
                 case ">=":
                     c.operator = "<";
+                    break;
                 case "<":
                     c.operator = ">=";
                     break;

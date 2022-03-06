@@ -61,7 +61,7 @@ public class ListExpr extends Expr {
             return false;
         ListExpr le = (ListExpr) obj;
         for (Expr e: exprs){
-            if (!Expr.isStrictlyIn(e,le.exprs))
+            if (!Expr.isDirectlyStrictlyIn(e,le.exprs))
                 return false;
         }
         return true;

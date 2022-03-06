@@ -54,7 +54,7 @@ public abstract class Expr {
 
     public abstract float score(Expr e);
 
-    public static boolean isStrictlyIn(Expr e, List<Expr> l){
+    public static boolean isDirectlyStrictlyIn(Expr e, List<Expr> l){
         boolean flag = false;
         for (Expr tmp: l){
             if (e.equals(tmp)){

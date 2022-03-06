@@ -289,8 +289,8 @@ public class ConditionEdit {
 
     private boolean canDoUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) {
         return instrC.getNot() == stuC.getNot()
-                && Expr.isStrictlyIn(stuC.left, instrC.operands)
-                && Expr.isStrictlyIn(stuC.right, instrC.operands);
+                && Expr.isDirectlyStrictlyIn(stuC.left, instrC.operands)
+                && Expr.isDirectlyStrictlyIn(stuC.right, instrC.operands);
     }
 
     private Pair<PlainSelect, Float> editUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) throws Exception {

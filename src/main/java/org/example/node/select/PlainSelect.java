@@ -1,7 +1,7 @@
 package org.example.node.select;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
-import org.example.BuildAST;
+import org.example.Canonicalizer;
 import org.example.Env;
 import org.example.node.From;
 import org.example.node.GroupBy;
@@ -24,12 +24,6 @@ public class PlainSelect extends Select {
     //  规范化
     //  复杂Compound，因为做了merge导致cost增加
     //  解决：建树后不做merge，merge放到规范化里去
-    /**
-     * 现在的想法是：提谓词的话edit用不上，也不能体现max(...)这种edit，
-     * 所以想的是把condition先按and和or构成条件树，然后每个真正的条件上再分left, right这种，
-     * 最后每个item都可以是由predicate组成
-     * 每个项（粒度没想好）可以都赋一个score或者计算score的方法，这样比较统一
-     */
     public boolean distinct;
     /**
      * SQLBinaryOpExpr[operator, left, right]

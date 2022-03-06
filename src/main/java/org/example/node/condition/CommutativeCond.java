@@ -81,11 +81,11 @@ public class CommutativeCond extends AtomCond {
         if (c.operands.size()!=operands.size())
             return false;
         for (Expr tmp: operands) {
-            if (!Expr.isStrictlyIn(tmp,c.operands))
+            if (!Expr.isDirectlyStrictlyIn(tmp,c.operands))
                 return false;
         }
         for (Expr tmp: c.operands) {
-            if (!Expr.isStrictlyIn(tmp,operands))
+            if (!Expr.isDirectlyStrictlyIn(tmp,operands))
                 return false;
         }
         return true;
