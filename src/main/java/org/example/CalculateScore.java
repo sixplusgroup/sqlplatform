@@ -108,7 +108,7 @@ public class CalculateScore {
             // 每次取edits中 calculateScore - cost 最高的edit，分数减去 cost
             float maxScore = -2.0f * (instr.score() + student.score());
             float cost = 0.0f;
-            PlainSelect bestMatch = student;
+            PlainSelect bestMatch = null;
             for (Pair<PlainSelect,Float> edit: singleEdits) {
                 float tmpCost = edit.getValue();
                 float tmpScore = instr.score(edit.getKey()) - tmpCost;
@@ -118,6 +118,8 @@ public class CalculateScore {
                     bestMatch = edit.getKey();
                 }
             }
+            if (cost == 0.0f || bestMatch == null)
+                return totalScore;
             float newTotalScore = totalScore - cost;
             if (newTotalScore <= 0) {
                 return 0;

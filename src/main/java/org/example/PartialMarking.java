@@ -200,33 +200,41 @@ public class PartialMarking {
 //                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
 
         // to test
-        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
-                "from employees e1\n" +
-                "where e1.salary not in (\n" +
-                "\tselect MAX(salary)\n" +
-                "\tfrom employees e2\n" +
-                "\twhere e1.dno = e2.dno\n" +
-                "\tgroup by dno\n" +
-                ")\n" +
-                "order by dno;";
-        // PASS: 去掉not，
-        String studentSql = "select e1.dno,e1.eno, e1.salary\n" +
-                "from employees e1\n" +
-                "where e1.salary in (\n" +
-                "\tselect MAX(salary)\n" +
-                "\tfrom employees e2\n" +
-                "\twhere e1.dno = e2.dno\n" +
-                "\tgroup by dno\n" +
-                ")\n" +
-                "order by dno;";
-//        String instrSql = "select activity\n" +
-//                "from friends\n" +
-//                "group by activity\n" +
-//                "having count(*)>any(\n" +
-//                "    select count(*) from friends group by activity\n" +
-//                ") and count(*)<any(\n" +
-//                "    select count(*) from friends group by activity\n" +
-//                ")";
+//        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
+//                "from employees e1\n" +
+//                "where e1.salary not in (\n" +
+//                "\tselect MAX(salary)\n" +
+//                "\tfrom employees e2\n" +
+//                "\twhere e1.dno = e2.dno\n" +
+//                "\tgroup by dno\n" +
+//                ")\n" +
+//                "order by dno;";
+        // PASS: 去掉not
+//        String studentSql = "select e1.dno,e1.eno, e1.salary\n" +
+//                "from employees e1\n" +
+//                "where e1.salary in (\n" +
+//                "\tselect MAX(salary)\n" +
+//                "\tfrom employees e2\n" +
+//                "\twhere e1.dno = e2.dno\n" +
+//                "\tgroup by dno\n" +
+//                ")\n" +
+//                "order by dno;";
+        String instrSql = "select activity\n" +
+                "from friends\n" +
+                "group by activity\n" +
+                "having count(*)>any(\n" +
+                "    select count(*) from friends group by activity\n" +
+                ") and count(*)<any(\n" +
+                "    select count(*) from friends group by activity\n" +
+                ")";
+        String studentSql = "select activity\n" +
+                "from friends\n" +
+                "group by activity\n" +
+                "having count(*)<any(\n" +
+                "    select count(*) from friends group by activity\n" +
+                ") and count(*)>any(\n" +
+                "    select count(*) from friends group by activity\n" +
+                ")";
         PartialMarking marking = new PartialMarking(JdbcConstants.MYSQL, new ArrayList<>());
         System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
     }
