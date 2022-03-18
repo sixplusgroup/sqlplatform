@@ -1,9 +1,17 @@
 package org.example;
 
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
+import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 import org.example.node.select.Select;
+import org.example.util.CSVReader;
+import org.example.util.TxtWriter;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +24,7 @@ public class PartialMarking {
 
     public PartialMarking(String dbType, List<String> sqls){
         SchemaRepository repository = new SchemaRepository(dbType);
-        repository.console("use sc00;");
+//        repository.console("use sc00;");
         for (String sql: sqls) {
             repository.console(sql);
         }
@@ -48,7 +56,7 @@ public class PartialMarking {
     public float partialMark(String instrSql, String studentSql, float maxScore) {
         try {
             Select instrAST = BuildAST.buildSelect(instrSql.replaceAll("\\s+", " ").trim(),env);
-            Canonicalizer.canonicalize(instrAST);
+//            Canonicalizer.canonicalize(instrAST);
             Select studentAST = BuildAST.buildSelect(studentSql.replaceAll("\\s+", " ").trim(),env);
             BuildAST.substituteAlias(instrAST, studentAST);
             // 不能在buildSelect时就替换，可能因为tableAlias交叉导致问题
@@ -235,8 +243,55 @@ public class PartialMarking {
                 ") and count(*)>any(\n" +
                 "    select count(*) from friends group by activity\n" +
                 ")";
-        PartialMarking marking = new PartialMarking(JdbcConstants.MYSQL, new ArrayList<>());
-        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
+        final String dbType = JdbcConstants.MYSQL;
+        List<String> envs = new ArrayList<>();
+        PartialMarking marking = new PartialMarking(dbType, envs);
+//        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
+
+        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
+        String wirteToPath = "src/main/resources/org/example/PartialMarking.txt";
+        for (int i=0;i<res.size();i++) {
+            String s = res.get(i);
+            try {
+                float score = marking.partialMark(s,s,100.0f);
+                if (score < 100.0f) {
+                    TxtWriter.writeTo(wirteToPath, "Attention!! 评分" + score + " < 100 ！ " + (i+1) + "\n\n" +
+                            s + "\n\n\n\n\n");
+                }
+            } catch (Exception e) {
+                StringWriter trace = new StringWriter();
+                e.printStackTrace(new PrintWriter(trace));
+                TxtWriter.writeTo(wirteToPath, "Attention!! Error! " + (i+1) + "\n\n" +
+                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
+            }
+        }
+
+        // test column resolve
+//        final String dbType = JdbcConstants.MYSQL;
+//        List<String> envs = new ArrayList<>();
+//        SchemaRepository repository = new SchemaRepository(dbType);
+//        repository.console("create table t_emp(emp_id bigint, name varchar(20));");
+//        repository.console("create table t_org(org_id bigint, name varchar(20));");
+//        String sql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
+//                "FROM t_emp a\n" +
+//                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id";
+//        List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, dbType);
+//        SQLSelectStatement stmt = (SQLSelectStatement) stmtList.get(0);
+//        SQLSelectQueryBlock queryBlock = stmt.getSelect().getQueryBlock();
+//
+//        System.out.println((queryBlock.findTableSource("a")));//全名才能匹配，返回表名
+//        repository.resolve(stmt);// 使用repository做column resolve
+//        System.out.println(queryBlock.findTableSourceWithColumn("emp_id"));//返回表名
+//
+//        SQLExprTableSource tableSource = (SQLExprTableSource) queryBlock.findTableSourceWithColumn("emp_id");// .expr取得Identifier，.expr.name取得表名，.alias取得alias
+//        SQLCreateTableStatement createTableStmt = (SQLCreateTableStatement) tableSource.getSchemaObject().getStatement();
+//        System.out.println(createTableStmt);//取得建表语句
+//
+//        SQLSelectItem selectItem = queryBlock.findSelectItem("org_name");
+//        System.out.println(selectItem);
+//        SQLPropertyExpr selectItemExpr = (SQLPropertyExpr) selectItem.getExpr();
+//        SQLColumnDefinition column = selectItemExpr.getResolvedColumn();
+//        System.out.println(column);
     }
 
 

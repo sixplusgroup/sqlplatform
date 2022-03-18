@@ -31,6 +31,12 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+    <!-- hutool工具类，用于读取csv-->
+    <dependency>
+      <groupId>cn.hutool</groupId>
+      <artifactId>hutool-all</artifactId>
+      <version>5.3.8</version>
+    </dependency>
   </dependencies>
 
   <build>

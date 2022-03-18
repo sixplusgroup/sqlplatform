@@ -25,7 +25,6 @@ public class Canonicalizer {
             canonicalize(((SetOpSelect) ast).right);
         } else if (ast instanceof PlainSelect) {
             PlainSelect select = (PlainSelect) ast;
-            substituteEqualClass(select);
 
         }
     }

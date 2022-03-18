@@ -1,0 +1,115 @@
+Attention!! 评分94.44444 < 100 ！ 31
+
+SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;
+
+
+
+
+Attention!! 评分94.44444 < 100 ！ 31
+
+SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;
+
+
+
+
+Attention!! 评分98.888885 < 100 ！ 31
+
+SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;
+
+
+
+
+Attention!! 评分98.888885 < 100 ！ 31
+
+SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;
+
+
+
+
+Attention!! 评分98.888885 < 100 ！ 31
+
+SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;
+
+
+
+

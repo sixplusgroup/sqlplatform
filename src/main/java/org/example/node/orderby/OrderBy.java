@@ -30,7 +30,7 @@ public class OrderBy {
         return (float) items.stream()
                 .mapToDouble(OrderByItem::score)
                 .sum()
-                + items.size() * CostConfig.sequence_penalty;
+                + (items.size() - 1) * CostConfig.sequence_penalty;
     }
 
     public float score(OrderBy o){

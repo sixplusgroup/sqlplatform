@@ -6,7 +6,9 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
+import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
+import javafx.util.Pair;
 import org.example.enums.SetOp;
 import org.example.node.condition.*;
 import org.example.node.expr.Expr;
@@ -18,8 +20,12 @@ import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
 import org.example.node.table.Table;
+import org.example.util.CSVReader;
 import org.example.util.ErrorLogger;
+import org.example.util.TxtWriter;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +41,7 @@ public class BuildAST {
         try {
             List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, env.dbType);
             SQLSelectStatement stmt = (SQLSelectStatement) stmtList.get(0);
+            env.repository.resolve(stmt);
             SQLSelectQuery query = stmt.getSelect().getQuery();
             return buildSelect(query,env);
         } catch (Exception e){
@@ -154,8 +161,15 @@ public class BuildAST {
             Table instrTable = item.getValue();
             Table match = Table.isIn(instrTable, stuTables);
             if (match != null) {
-                stuTables.remove(match);
-                tableAliasMap.put(stuTableMap.get(match), item.getKey());
+                Pair<String, String> pair =
+                        getCorrespondingAlias(stuTableMap.get(match),item.getKey(),instr.toString(), stu.toString());
+                tableAliasMap.put(pair.getKey(), item.getKey());
+                if (pair.getValue() == null || pair.getValue().length() == 0) {
+                    stuTables.remove(match);
+                    stuTableMap.remove(match);
+                } else {
+                    stuTableMap.put(match, pair.getValue());
+                }
             }
         }
         HashMap<Expr, String> stuAttrMap = exchangeHashMap(stu.attrAliasMap);
@@ -164,8 +178,15 @@ public class BuildAST {
             Expr instrAttr = item.getValue();
             Expr match = Expr.isIn(instrAttr, stuAttrs).getKey();
             if (match != null) {
-                stuAttrs.remove(match);
-                attrAliasMap.put(stuAttrMap.get(match), item.getKey());
+                Pair<String, String> pair =
+                        getCorrespondingAlias(stuAttrMap.get(match),item.getKey(),instr.toString(), stu.toString());
+                attrAliasMap.put(pair.getKey(), item.getKey());
+                if (pair.getValue() == null || pair.getValue().length() == 0) {
+                    stuAttrs.remove(match);
+                    stuAttrMap.remove(match);
+                } else {
+                    stuAttrMap.put(match, pair.getValue());
+                }
             }
         }
         // step 2.2: substitute, 注意要传递给上一层Select（e.g. sql.csv 15）
@@ -204,10 +225,14 @@ public class BuildAST {
         return res;
     }
 
-    private static <T1, T2> HashMap<T2, T1> exchangeHashMap(HashMap<T1, T2> oriMap) {
-        HashMap<T2, T1> newMap = new HashMap<>();
-        for (Map.Entry<T1, T2> e: oriMap.entrySet()) {
-            newMap.put(e.getValue(), e.getKey());
+    private static <T2> HashMap<T2, String> exchangeHashMap(HashMap<String, T2> oriMap) {
+        HashMap<T2, String> newMap = new HashMap<>();
+        for (Map.Entry<String, T2> e: oriMap.entrySet()) {
+            if (newMap.containsKey(e.getValue())) {
+                newMap.put(e.getValue(), newMap.get(e.getValue()) + ":" + e.getKey());
+            } else {
+                newMap.put(e.getValue(), e.getKey());
+            }
         }
         return newMap;
     }
@@ -286,6 +311,28 @@ public class BuildAST {
                 pe.attribute.substituted = true;
             }
         }
+    }
+
+    private static Pair<String, String> getCorrespondingAlias(String toSplit, String standard, String instr, String stu) {
+        if (!toSplit.contains(":")) {
+            return new Pair<>(toSplit, "");
+        }
+        List<String> candidates = new ArrayList<>();
+        for (String s: toSplit.split(":")) {
+            candidates.add(s);
+        }
+        String match = "";
+        int distance = Integer.MAX_VALUE;
+        for (String s: candidates) {
+            String stuAliased = stu.replaceAll(s,standard);
+            int tmpDis = CalculateScore.editDistance(stuAliased, instr);
+            if (tmpDis < distance) {
+                match = s;
+                distance = tmpDis;
+            }
+        }
+        candidates.remove(match);
+        return new Pair<>(match, String.join(":",candidates));
     }
 
     public static void main(String[] args) {
@@ -391,6 +438,21 @@ public class BuildAST {
 //                "  count(l.user_id) * 1.0 / (select count(distinct user_id) from logins) rate," +
 //                "  round(sum(if(s.s_score<60,1,0)) / count(*), 2) \n" +
 //                "  from orders o";
-        buildSelect(sql,new Env(dbType,null));
+        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
+        SchemaRepository repository = new SchemaRepository(dbType);
+        Env env = new Env(dbType,repository);
+        String wirteToPath = "src/main/resources/org/example/BuildSelect.txt";
+        for (int i=0;i<res.size();i++) {
+            String s = res.get(i);
+            try {
+                buildSelect(s,env);
+            } catch (Exception e) {
+                StringWriter trace = new StringWriter();
+                e.printStackTrace(new PrintWriter(trace));
+                TxtWriter.writeTo(wirteToPath, "Attention!! " + (i+1) + "\n\n" +
+                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
+            }
+        }
+//        buildSelect(sql,new Env(dbType,repository));
     }
 }

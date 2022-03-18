@@ -1,0 +1,714 @@
+"select `name`,`amount` from blank_data where name='Tom' or name='Jerry';"
+"select `name`,`address` from address_data where name='Tom' or name='Jerry';"
+"select w.eno 
+from works w
+group by w.eno
+having sum(hours) > 1000;"
+"select e.eno
+from employees e
+where not exists (
+	select *
+	from relations r
+	where r.eno = e.eno
+);"
+"select p.pno
+from projects p
+where not exists (
+    select * 
+    from employees e
+    where not exists(
+        select *
+        from works w
+        where w.eno = e.eno and w.pno = p.pno
+    )
+)"
+"select e1.dno,e1.eno, e1.salary
+from employees e1
+where e1.salary in (
+	select MAX(salary)
+	from employees e2
+	where e1.dno = e2.dno
+	group by dno
+)
+order by dno;"
+"select s.sname from sailors s
+where s.age > 35 and not exists (
+	select * 
+	from reserves r join boats b
+	on r.bid = b.bid 
+	where  
+	r.sid = s.sid and 
+	b.color = 'RED' and
+	(r.reserve_date between '2020-09-01' and '2020-09-30')
+);"
+"select c.customer_id
+from customers c
+where not exists (
+    select * 
+    from products p
+    where not exists (
+        select * 
+        from orders o
+        where o.customer_id = c.customer_id and o.product_id = p.product_id
+    )
+);"
+"select o.customer_id, count(distinct order_id) as order_num
+from orders o
+where o.order_date BETWEEN '2020-08-01' and '2020-08-31'
+GROUP BY o.customer_id
+order by order_num DESC, customer_id asc
+limit 1;"
+"SELECT
+	p.product_name AS product_name,
+	o.order_id,
+	o.order_date
+FROM
+	orders o,
+	customers c,
+	products p
+WHERE
+	o.customer_id = c.customer_id
+AND o.product_id = p.product_id
+AND (o.product_id, o.order_date) IN (
+	SELECT
+		product_id,
+		MAX(order_date)
+	FROM
+		orders
+	GROUP BY
+		product_id
+)
+ORDER BY product_name;
+"
+"SELECT c.name customer_name,o2.order_id,o2.order_date
+FROM orders o1,orders o2,customers c
+WHERE o1.customer_id=o2.customer_id AND c.customer_id=o2.customer_id
+GROUP BY c.name,o2.order_id,o2.customer_id,o2.order_date
+HAVING SUM(o1.order_date>=o2.order_date)<=3
+ORDER BY c.name,o2.order_date desc;"
+"select player_id, count(*) as match_num from 
+(
+	select p.player_id 
+	from players p join matches m
+	on p.player_id = m.first_player or p.player_id = m.second_player
+) tot_player
+group by player_id
+ORDER BY match_num DESC,player_id asc
+limit 1;"
+"select group_id, count(match_id) as match_num
+from matches
+group by group_id;"
+"select match_id, ABS(first_score - second_score) as sub
+from matches
+order by ABS(first_score - second_score) desc, match_id asc
+limit 1;"
+"select group_id,min(player_id) as player_id
+from
+    (select player,sum(score) as score
+    from
+        ((select first_player player,first_score score from matches)
+        union all
+        (select second_player player,second_score score from matches)) t
+    group by player) a
+    right join players p on a.player=p.player_id
+where (group_id,score) in
+(select group_id,max(score) as mx
+from 
+    (select player,sum(score) as score
+    from
+        ((select first_player player,first_score score from matches)
+        union all
+        (select second_player player,second_score score from matches)) t
+    group by player) a
+    right join players p on a.player=p.player_id
+group by group_id)
+group by group_id
+order by group_id;"
+"select order_date,count(*) as num
+from orders 
+group by order_date
+order by num DESC,order_date asc
+limit 1;"
+"select u.user_id 
+from users u
+where exists (
+	select * 
+	from orders o LEFT JOIN items i
+	on o.item_id = i.item_id
+	where o.buyer_id = u.user_id and u.favorite_brand = i.item_brand
+);"
+"select user_id, join_date, count(order_id) orders_in_2019
+from users left join orders
+on user_id = buyer_id and year(order_date)='2019'
+group by user_id
+order by user_id;"
+"select user_id seller_id, if(favorite_brand = item_brand, 'yes', 'no') if_fav_brand
+from users left join (
+    select seller_id, item_brand
+    from (
+        select o1.seller_id, o1.item_id
+        from orders o1 join orders o2
+        on o1.seller_id = o2.seller_id
+        group by o1.order_id
+        having sum(o1.order_date > o2.order_date) = 1
+    ) o join items i
+    on o.item_id = i.item_id
+) tmp
+on user_id = seller_id
+order by seller_id;"
+"select round(
+    ifnull(
+    (select count(distinct requester_id ,accepter_id) from accepted_requests) / 
+    (select count(distinct sender_id ,send_to_id) from friend_requests)
+    ,0)
+    ,2) as accept_rate ;"
+"select distinct fr.sender_id user_id
+from friend_requests fr 
+where exists (
+	select * from friend_requests fr2
+	where fr2.sender_id = fr.sender_id
+) and not exists (
+	select * from accepted_requests 
+	where fr.sender_id = requester_id
+);"
+"select t1.m1 as mon, t1.accept/t2.alla accept_rate from
+(select month(accept_date) m1, count(distinct concat(requester_id, accepter_id)) accept
+from accepted_requests 
+group by month(accept_date)) t1
+inner join
+(select month(request_date) m2, count(distinct concat(sender_id, send_to_id)) alla
+from friend_requests 
+group by month(request_date)) t2
+on t1.m1=t2.m2
+order by mon;"
+"select user_id, count(*) friend_num
+from 
+((select requester_id user_id
+from accepted_requests
+)
+union all
+(select accepter_id user_id
+from accepted_requests)) t3
+group by user_id
+order by friend_num desc,user_id asc
+limit 1;"
+"SELECT distinct author_id as id
+FROM views
+WHERE author_id = viewer_id
+ORDER BY author_id;"
+"select  distinct viewer_id from views 
+group by viewer_id,view_date
+having count(distinct article_id) >= 2
+order by viewer_id;"
+"select viewer_id , count(*) as article_num  from views 
+group by viewer_id 
+order by article_num desc, viewer_id asc
+limit 1;"
+"select distinct viewer_id as id
+from views v1  
+where exists(
+	select *
+	from views v2
+	where v2.viewer_id = v1.viewer_id and v2.author_id = 3
+				and (v2.view_date BETWEEN '2020-08-01' and '2020-08-31')
+)
+order by id;"
+"SELECT user_id, MAX(login_date) as date FROM logins
+GROUP BY user_id
+ORDER BY user_id;"
+"select 
+count(distinct user_id)*1.0/(select count(distinct user_id) from logins) as rate
+from logins
+where (user_id,login_date)
+in (select user_id,DATE_ADD(min(login_date),INTERVAL 1 DAY) from logins group by user_id);"
+"select l.mdate as login_date,count(user_id) as new_user_num
+from (
+    select user_id,min(login_date) as mdate
+    from logins
+    group by user_id) as l
+group by l.mdate 
+having new_user_num >= 2
+order by login_date;"
+"SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;"
+"select job,round(sum(score)*1.0/count(user_id),3) as avg from grades
+group by job order by avg desc;"
+"select grades.* from grades join 
+(select job,round(sum(score)*1.0/count(user_id),3) as avg from grades
+group by job) as t
+on grades.job=t.job
+where grades.score > t.avg
+order by user_id;"
+"SELECT job,FLOOR((COUNT(*)+1)/2) AS `start`,FLOOR((COUNT(*)+1)/2)+if(COUNT(*) % 2=1,0,1) AS `end` 
+from grades
+GROUP BY job 
+order by job;"
+"select B.* from
+(SELECT job,FLOOR((COUNT(*)+1)/2) AS `start`,FLOOR((COUNT(*)+1)/2)+if(COUNT(*) % 2=1,0,1) AS `end` 
+FROM grades  GROUP BY job) A
+JOIN
+(select g1.*, (
+    select count(distinct g2.score) 
+    from grades g2 
+    where g2.score>=g1.score and g1.job=g2.job) as t_rank
+from grades g1 ) B
+on (A.job=B.job  and B.t_rank between A.start and A.end)
+order by B.user_id;"
+"select d.department_name as department, AVG(e.salary) as avg_salary
+from employees e LEFT JOIN departments d
+on e.department_id = d.department_id
+where d.department_name = 'Technology'
+group by e.department_id;"
+"select d.department_name department, MAX(salary)-MIN(salary) as sub
+from employees e LEFT JOIN departments d 
+on e.department_id = d.department_id
+group by e.department_id;"
+"select d.department_name as department,t.name,t.salary from 
+departments d join 
+(select name,salary,department_id from employees e1 where 1 = 
+(select count(distinct(salary)) from employees e2 
+where e1.department_id = e2.department_id 
+and e1.salary < e2.salary)) t
+on d.department_id = t.department_id
+order by department;"
+"select d.department_name as department,e.name ,e.salary as salary
+from employees as e left join departments as d 
+on e.department_id = d.department_id
+where e.id in
+(
+    select e1.id
+    from employees as e1 left join employees as e2
+    on e1.department_id = e2.department_id and e1.salary < e2.salary
+    group by e1.id
+    having count(distinct e2.salary) <= 2
+)
+and e.department_id in (select department_id from departments)
+order by d.department_name asc,e.salary desc;"
+"select s.sname from sailors s
+where not exists (
+	select * from boats b 
+	where not exists (
+		select * from reserves r
+		where r.sid = s.sid and r.bid = b.bid
+	)
+);"
+"select s.sname
+from sailors s
+where exists(
+	select *
+	from reserves r join boats b
+	on r.bid = b.bid
+	where b.color = 'GREEN' and r.sid = s.sid and r.reserve_date between '2020-05-01' and '2020-05-31'
+)
+order by rating DESC
+limit 1;"
+"select s.sname
+from sailors s
+where s.age > 35 and exists(
+	select * 
+	from reserves r join boats b
+	on r.bid = b.bid
+	where r.sid = s.sid and b.color = 'GREEN' and r.reserve_date between '2020-08-01' and '2020-08-31'
+) and exists (
+	select * 
+	from reserves r join boats b
+	on r.bid = b.bid
+	where r.sid = s.sid and b.color = 'RED' and r.reserve_date between '2020-08-01' and '2020-08-31'
+);"
+"select activity
+from friends
+group by activity
+having count(*)>any(
+    select count(*) from friends group by activity
+) and count(*)<any(
+    select count(*) from friends group by activity
+)"
+"select name, friends.activity
+from activities,friends
+where activities.activity=friends.activity and (startDate between '2020-02-20' and '2020-02-28') and (endDate between '2020-02-20' and '2020-02-28')"
+"select friends.name 
+from friends,activities
+where friends.activity=activities.activity and friends.activity='eating'"
+"select title from 
+(select m.title,avg(mr.rating) as rt from movie_rating mr
+inner join movies m
+on m.movie_id = mr.movie_id 
+inner join users u 
+on u.user_id = mr.user_id 
+where mr.created_at between '2020-02-01' and '2020-02-29'
+group by m.movie_id
+order by rt desc,m.title asc
+limit 1) b"
+"(SELECT name
+FROM users AS U
+INNER JOIN movie_rating AS MR
+ON U.user_id = MR.user_id
+GROUP BY U.user_id
+ORDER BY COUNT(*) DESC, name
+LIMIT 1)
+"
+"select movies.movie_id,title, avg(rating)as avg_rating, max(rating) as max_rating, min(rating) as min_rating
+from movies, movie_rating
+where movies.movie_id=movie_rating.movie_id
+group by movies.movie_id"
+"select name, title,created_at
+from movie_rating,users,movies
+where movie_rating.created_at between '2020-01-01' and '2020-01-31' and movie_rating.movie_id=movies.movie_id and movie_rating.user_id=users.user_id"
+"select movie_rating.user_id,name,title,rating
+from users,movie_rating,movies
+where movies.movie_id=movie_rating.movie_id and movie_rating.user_id=users.user_id and movie_rating.user_id=1"
+"select invoice_id,price,invoices.user_id,customer_name
+from invoices,customers
+where invoices.user_id=customers.customer_id and price=(select max(price) from invoices)"
+"select t.user_id,contact_name,contact_email
+from
+(
+    SELECT user_id,count(*) count_temp
+    FROM invoices
+    GROUP BY user_id  
+    HAVING count_temp>1
+)t, customers,contacts 
+where t.user_id=customers.customer_id and customers.customer_id=contacts.user_id"
+"select t.user_id,customer_name,email
+from
+(
+    SELECT user_id,count(*) count_temp
+    FROM invoices
+    GROUP BY user_id  
+    HAVING count_temp=1
+)t, customers
+where t.user_id=customers.customer_id"
+"select customer_id,customer_name,contact_name
+from customers,contacts
+where customer_id=user_id"
+"SELECT t.group_id, t.player_id
+
+FROM
+(SELECT p1.group_id, t4.scores, MIN(t4.player_id) AS player_id
+FROM
+(SELECT t3.player_id, SUM(t3.score) AS scores
+FROM
+((SELECT first_player AS player_id, SUM(first_score) AS score
+FROM matches
+GROUP BY first_player)
+UNION ALL
+(SELECT second_player AS player_id, SUM(second_score) AS score
+FROM matches
+GROUP BY second_player)) AS t3
+
+GROUP BY t3.player_id) AS t4
+INNER JOIN players AS p1
+ON t4.player_id=p1.player_id
+GROUP BY p1.group_id, t4.scores) AS t
+
+WHERE (t.group_id, t.scores) IN
+(
+SELECT p.group_id, MAX(t2.scores)
+FROM
+(SELECT player_id, SUM(score) AS scores
+FROM
+((SELECT first_player AS player_id, SUM(first_score) AS score
+FROM matches
+GROUP BY first_player)
+UNION ALL
+(SELECT second_player AS player_id, SUM(second_score) AS score
+FROM matches
+GROUP BY second_player)) AS t1
+GROUP BY player_id) AS t2
+INNER JOIN
+players AS p
+ON t2.player_id=p.player_id
+GROUP BY p.group_id
+)
+"
+"select player_name, match_id, t.score
+from
+(
+select player_name, match_id,second_score as score
+from players, matches
+where (players.player_id=matches.first_player or players.player_id=matches.second_player) and players.player_name='Aron' 
+
+union
+
+select player_name, match_id,first_score as score
+from players, matches
+where (players.player_id=matches.first_player or players.player_id=matches.second_player) and players.player_name='Aron'
+) t
+where t.score<>0"
+"select s1.gender,s1.day,sum(s2.score_points) as total from scores s1
+inner join scores s2
+on s1.gender = s2.gender 
+and s1.day >= s2.day 
+and s1.gender='F'
+group by s1.gender,s1.day  
+order by s1.gender,s1.day"
+"select player_name,gender,score_points
+from scores
+where day between '2020-01-01' and '2020-01-31'"
+"select players.player_name, player_id, score_points as score_points
+from scores,players
+where scores.player_name=players.player_name and score_points=(select min(score_points) from scores)"
+"SELECT c.name as customer_name,o2.customer_id,o2.order_id,o2.order_date
+FROM orders o1,orders o2,customers c
+WHERE
+	o1.customer_id = o2.customer_id  and o2.customer_id = 1 and c.customer_id = o2.customer_id
+GROUP BY
+	c.name,
+	o2.order_id,
+	o2.customer_id,
+	o2.order_date
+HAVING
+	SUM(o1.order_date >= o2.order_date) <= 3
+ORDER BY
+	c.name,
+	o2.customer_id,
+	o2.customer_id,
+	o2.order_date desc"
+"select t2.customer_id,t3.product_id,p.product_name
+from
+(select t1.customer_id,max(t1.cnt) freq
+from
+(select customer_id,product_id,count(order_id) cnt
+from orders
+group by customer_id,product_id) t1
+group by t1.customer_id) t2 join (
+select customer_id,product_id,count(order_id) cnt
+from orders
+group by customer_id,product_id
+) t3 on t2.freq=t3.cnt and t2.customer_id=t3.customer_id
+join products p on p.product_id=t3.product_id
+order by customer_id, product_id
+"
+"select product_name, o.product_id, order_id, order_date
+from orders o left join products p
+using(product_id)
+where (product_id, order_date) in
+(
+    select product_id, max(order_date) order_date
+    from orders
+    group by product_id
+)
+order by product_name, product_id, order_id"
+"SELECT product_name
+FROM products JOIN orders USING (product_id)
+WHERE order_date LIKE ""2020-08%""
+GROUP BY product_name"
+"SELECT
+    customer_id, name
+FROM
+    customers
+WHERE
+    customer_id NOT IN (
+        SELECT customer_id
+        FROM orders
+        WHERE product_id =3
+    ) AND customer_id IN (
+        SELECT customer_id
+        FROM orders
+        WHERE product_id =2
+    ) AND customer_id IN (
+        SELECT customer_id
+        FROM orders
+        WHERE product_id =1
+    )
+ORDER BY customer_id"
+"SELECT name,company,
+      (SELECT borrow_date FROM borrows WHERE reader_id =
+      (SELECT reader_id FROM readers WHERE name='赵正义') )   
+                  borrow_date
+FROM readers WHERE reader_id = (
+    SELECT reader_id FROM borrows WHERE  borrow_date = 
+        (SELECT borrow_date FROM borrows WHERE reader_id =
+        (SELECT reader_id FROM readers WHERE name='赵正义') ) 
+    AND reader_id != (SELECT reader_id FROM readers 
+                                   WHERE name='赵正义') );"
+"SELECT reader_id,name,company FROM readers 
+    WHERE company='财会系' and reader_id NOT IN
+            (SELECT reader_id FROM borrows 
+             WHERE borrow_date>='2006-08-01');"
+"SELECT name,company FROM readers WHERE reader_id in
+       (SELECT distinct reader_id FROM borrows 
+         GROUP BY reader_id having count(book_id)>=2);"
+"SELECT writer,book_name,
+   (SELECT borrow_date FROM borrows WHERE book_id in
+      (SELECT book_id from books WHERE writer LIKE '李%')) as borrow_date
+FROM books WHERE writer LIKE '李%';"
+"SELECT DISTINCT(book_name),price FROM books
+    WHERE output='高等教育出版社' 
+    ORDER BY price DESC;"
+"select period_state,min(date) start_date,max(date) end_date from (
+select 
+""failed"" period_state,
+fail_date as date,
+if(datediff(@pre_date,@pre_date:=fail_date)=-1,@id,@id:=@id+1) id
+from failed,(select @id:=0,@pre_date:=NULL)tmp1
+union
+select 
+""succeeded"" period_state,
+success_date as date,
+if(datediff(@pre_date,@pre_date:=success_date)=-1,@id,@id:=@id+1) id
+from succeeded,(select @id:=0,@pre_date:=NULL)tmp2
+) tmp
+where date BETWEEN ""2019-01-01"" AND ""2019-12-31""
+group by id,period_state
+ORDER BY start_date ASC
+"
+"SELECT business_id
+FROM events AS e
+JOIN (
+    SELECT event_type, AVG(occurences) AS eventAvg
+    FROM events
+    GROUP BY event_type
+) AS e1 
+ON e.event_type = e1.event_type
+WHERE e.occurences > e1.eventAvg
+GROUP BY business_id
+HAVING COUNT(*) >= 2"
+"Select x.event_type as event_type , IFNULL(x.success_count, 0) as success_count, IFNULL(y.fail_count, 0) as fail_count 
+from events e
+left join 
+(select count(success_date) as success_count, event_type from succeeded group by event_type) as x on e. event_type= x. event_type
+Left join
+(select count(fail_date) as fail_count, event_type from failed group by event_type) as y on y. event_type= e. event_type
+group by event_type,success_count,fail_count"
+"Select min(occurences) as occurences, e.event_type, IFNULL(t.fail_cnt, 0) as fail_count
+from events e 
+left join
+(select count(fail_date) as fail_cnt, event_type from failed 
+where fail_date between  '2018-12-01' and '2018-12-31' and event_type='reviews') as t
+on t. event_type= e. event_type 
+where t.event_type='reviews'"
+"select business_id
+from events
+where occurences=(select max(occurences)
+                   from events)
+"
+"select s.* from 
+    students s where s.s_id in(
+        select s_id from scores where s_id not in(
+            select a.s_id from scores a 
+                join scores b on a.s_id = b.s_id and b.c_id=2
+                join scores c on a.s_id = c.s_id and c.c_id=3
+            where a.c_id=1))"
+"SELECT
+	department.NAME AS department_name,
+	employee.NAME AS employee,
+	salary 
+FROM
+	employee,
+	department 
+WHERE
+	employee.DepartmentId = department.Id 
+	AND ( employee.DepartmentId, Salary ) 
+    IN (SELECT DepartmentId, max( Salary ) 
+        FROM employee 
+        GROUP BY DepartmentId )"
+"SELECT
+    a.Name AS 'employee'
+FROM
+    employee AS a,
+    employee AS b
+WHERE
+    a.ManagerId = b.Id
+        AND a.Salary > b.Salary
+;"
+"SELECT
+    (SELECT DISTINCT
+            salary
+        FROM
+            employee
+        ORDER BY Salary DESC
+        LIMIT 1 OFFSET 1) AS SecondHighestSalary
+;"
+"select * from emp 
+where sal > ( select max(sal) from emp where deptno = 30);  "
+"select ename,sal from emp e ,salgrade s 
+where e.sal >= s.losal and e.sal <= s.hisal 
+and s.grade = 4; "
+"select ename ,dname ,sal ,losal,hisal from emp,dept,salgrade 
+where emp.deptno = dept.deptno and grade = 2 
+and sal >= losal and sal < hisal; "
+"select e.* from emp e, salgrade s 
+where e.mgr=7698 and s.hisal < e.sal and s.grade = 
+  ( select grade from salgrade s ,emp e 
+where s.losal < e.sal and s.hisal > e.sal and e.ename = 'smith'); "
+"select ename, deptno,sal * 12 as ySalary 
+from emp 
+where deptno=20
+order by ySalary; "
+"  select d.*,c.排名,c.s_score,c.c_id from (
+                select a.s_id,a.s_score,a.c_id,@i:=@i+1 as 排名 from scores a,(select @i:=0)s where a.c_id=1    
+            )c
+            left join students d on c.s_id=d.s_id
+            where 排名 BETWEEN 2 AND 3
+            UNION
+            select d.*,c.排名,c.s_score,c.c_id from (
+                select a.s_id,a.s_score,a.c_id,@j:=@j+1 as 排名 from scores a,(select @j:=0)s where a.c_id=2   
+            )c
+            left join students d on c.s_id=d.s_id
+            where 排名 BETWEEN 2 AND 3"
+"select a.c_id,b.c_name,MAX(s_score)as max_score,MIN(s_score) as min_score,
+    ROUND(SUM(case when a.s_score<60 then 1 else 0 end)/SUM(case when a.s_score then 1 else 0 end),2) as '不及格率',
+    ROUND(SUM(case when a.s_score>=60 and a.s_score<90 then 1 else 0 end)/SUM(case when a.s_score then 1 else 0 end),2) as '中等率',
+    ROUND(SUM(case when a.s_score>=90 then 1 else 0 end)/SUM(case when a.s_score then 1 else 0 end),2) as '优秀率'
+    from scores a left join courses b on a.c_id = b.c_id GROUP BY a.c_id,b.c_name"
+" select distinct f.c_name,a.c_id,b.`85-100`,b.percent,c.`70-85`,c.percent,d.`60-70`,d.percent,e.`0-60`,e.percent from scores a
+                left join (select c_id,SUM(case when s_score >85 and s_score <=100 then 1 else 0 end) as `85-100`,
+                                            ROUND(100*(SUM(case when s_score >85 and s_score <=100 then 1 else 0 end)/count(*)),2) as percent
+                                from scores GROUP BY c_id)b on a.c_id=b.c_id
+                left join (select c_id,SUM(case when s_score >70 and s_score <=85 then 1 else 0 end) as `70-85`,
+                                            ROUND(100*(SUM(case when s_score >70 and s_score <=85 then 1 else 0 end)/count(*)),2) as percent
+                                from scores GROUP BY c_id)c on a.c_id=c.c_id
+                left join (select c_id,SUM(case when s_score >60 and s_score <=70 then 1 else 0 end) as `60-70`,
+                                            ROUND(100*(SUM(case when s_score >60 and s_score <=70 then 1 else 0 end)/count(*)),2) as percent
+                                from scores GROUP BY c_id)d on a.c_id=d.c_id
+                left join (select c_id,SUM(case when s_score >=0 and s_score <=60 then 1 else 0 end) as `0-60`,
+                                            ROUND(100*(SUM(case when s_score >=0 and s_score <=60 then 1 else 0 end)/count(*)),2) as percent
+                                from scores GROUP BY c_id)e on a.c_id=e.c_id
+                left join courses f on a.c_id = f.c_id"
+"select a.s_name from students a where a.s_id not in (
+    select s_id from scores where c_id = 
+                (select c_id from courses where t_id =(
+                    select t_id from teachers where t_name = '张三')) 
+                group by s_id);
+"
+"select i.invoice_id, c1.customer_name, i.price, 
+    count(ct.contact_name) contacts_cnt ,
+    count(c2.customer_name) trusted_contacts_cnt 
+from invoices i join customers c1 on i.user_id=c1.customer_id
+    left join contacts ct on i.user_id=ct.user_id
+    left join customers c2 on ct.contact_email=c2.email
+group by i.invoice_id
+order by i.invoice_id"
+"select b.departmentId,b.salary
+from (
+    select DepartmentId,salary,
+    case @com when DepartmentId then @rk:=@rk+1 else @rk:=1 end rk,
+    @com:=DepartmentId
+    from employee,(select @rk:=0, @com:='') a
+    order by DepartmentId,salary) b
+left join 
+    (
+    select DepartmentId,count(1)/2 cnt from employee group by DepartmentId) c
+on b.DepartmentId=c.DepartmentId
+where b.rk in (cnt+0.5,cnt+1,cnt);"
+"select count(activity) as cnt, activity
+from friends
+GROUP BY activity
+having cnt > 1
+"

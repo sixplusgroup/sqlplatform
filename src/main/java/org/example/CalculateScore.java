@@ -1,6 +1,7 @@
 package org.example;
 
 import javafx.util.Pair;
+import org.example.edit.CostConfig;
 import org.example.enums.SetOp;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
@@ -75,7 +76,10 @@ public class CalculateScore {
                 SetOpSelect student = (SetOpSelect) studentAST;
                 float score = 0.0f;
                 if (instr.operator == student.operator) {
-                    score += 1;
+                    score += CostConfig.set_operator;
+                }
+                if (instr.orderBy != null) {
+                    score += instr.orderBy.score(student.orderBy);
                 }
                 if (instr.operator == SetOp.EXCEPT) {
                     score += editScore(instr.left,student.left,totalScore(instr.left)) + editScore(instr.right,student.right,totalScore(instr.right));

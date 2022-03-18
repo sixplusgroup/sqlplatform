@@ -70,7 +70,9 @@ public class SingleEdit {
         List<Pair<PlainSelect,Float>> res = conditionEdit.singleEdit();
         for (Pair<PlainSelect, Float> item: res) {
             PlainSelect select = item.getKey();
-            select.where = select.where.rearrange();
+            if (select.where != null) {
+                select.where = select.where.rearrange();
+            }
         }
         return res;
     }
