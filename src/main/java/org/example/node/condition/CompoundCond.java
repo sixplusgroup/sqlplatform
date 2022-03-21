@@ -51,7 +51,6 @@ public class CompoundCond extends Condition {
         if (c instanceof CompoundCond) {
             ((CompoundCond)c).flatten();
             ((CompoundCond)c).flattenEquals();
-            ((CompoundCond)c).flattemComparisons();
         }
         return c;
     }
@@ -112,7 +111,7 @@ public class CompoundCond extends Condition {
     /**
      * 合并not
      */
-    public void mergeNot(){
+    public void mergeNot() {
         boolean flag = true;
         for (Condition c: subConds) {
             if (c instanceof CompoundCond) {
@@ -125,6 +124,9 @@ public class CompoundCond extends Condition {
         }
         if (flag){
             not = !not;
+            for (Condition c: subConds) {
+                c.not = false;
+            }
         }
     }
 
@@ -307,47 +309,6 @@ public class CompoundCond extends Condition {
             res.add(new CommutativeCond("=", operands));
         }
         return res;
-    }
-
-    /**
-     * 处理 A=B and A>C 的规则化问题：
-     * 解决：对A>C往上回溯，遇到AND，找里面的= （因为and展平了，or没用）
-     */
-    public void flattemComparisons() {
-        for (Condition c: subConds) {
-            if (c instanceof CompoundCond) {
-                ((CompoundCond) c).flattemComparisons();
-            }
-            else if (c instanceof UncommutativeCond && isComparision(c.operator)) {
-                UncommutativeCond uc = (UncommutativeCond) c;
-                uc.left = findEqualExpr(uc.left, uc);
-                uc.right = findEqualExpr(uc.right, uc);
-            }
-        }
-    }
-
-    private Expr findEqualExpr(Expr e, Condition c) {
-        Condition p = c;
-        while (p.father != null) {
-            CompoundCond father = p.father;
-            if (father.operator.equals("AND")) {
-                for (Condition item: father.subConds) {
-                    if (item instanceof CommutativeCond && item.operator.equals("=")
-                            && Expr.isDirectlyStrictlyIn(e, ((CommutativeCond) item).operands)) {
-                        List<Expr> operands_clone = new ArrayList<>(((CommutativeCond) item).operands);
-                        operands_clone.sort(Comparator.comparing(Expr::toString));
-                        return operands_clone.get(0).clone();
-                    }
-                }
-            }
-            p = father;
-        }
-        return e;
-    }
-
-    private boolean isComparision(String operator) {
-        return operator.equals(">") || operator.equals(">=")
-                || operator.equals("<") || operator.equals("<=");
     }
 
     public boolean isStrictlyIn(Condition c, List<Condition> l) {

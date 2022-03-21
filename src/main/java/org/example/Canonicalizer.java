@@ -78,8 +78,22 @@ public class Canonicalizer {
 
     public static void substituteCondition(List<List<Expr>> equalClasses, Condition c) {
         if (c instanceof CompoundCond) {
+            List<List<Expr>> newEqualClasses = equalClasses;
+            // additional equal classes
+            if (c.operator.equals("AND") && c.father != null && c.father.operator.equals("OR")) {
+                List<List<Expr>> additionalEquals = new ArrayList<>();
+                for (Condition subCond: ((CompoundCond) c).getSubConds()) {
+                    if (subCond instanceof CommutativeCond && subCond.operator.equals("=")) {
+                        additionalEquals.add(((CommutativeCond) subCond).operands);
+                    }
+                }
+                if (additionalEquals.size() > 0) {
+                    newEqualClasses = mergeEqualClasses(equalClasses, additionalEquals);
+                }
+            }
+            // substitute
             for (Condition subCond: ((CompoundCond) c).getSubConds()) {
-                substituteCondition(equalClasses, subCond);
+                substituteCondition(newEqualClasses, subCond);
             }
         } else if (c instanceof CommutativeCond) {
             if (!c.operator.equals("=")) {
@@ -122,6 +136,40 @@ public class Canonicalizer {
             }
         }
         return e;
+    }
+
+    private static List<List<Expr>> mergeEqualClasses(List<List<Expr>> old, List<List<Expr>> addition) {
+        List<List<Expr>> res = new ArrayList<>();
+        for (List<Expr> item: old) {
+            res.add(new ArrayList<>(item));
+        }
+        for (List<Expr> item: addition) {
+            boolean overlap = false;
+            for (List<Expr> resItem: res) {
+                if (overlap(item, resItem)) {
+                    overlap = true;
+                    resItem.removeAll(item);
+                    resItem.addAll(item);
+                }
+            }
+            if (!overlap) {
+                res.add(item);
+            }
+        }
+        for (List<Expr> equalClass: res) {
+            equalClass.sort(Comparator.comparing(Expr::toString));
+        }
+        return res;
+    }
+
+    private static boolean overlap(List<Expr> l1, List<Expr> l2) {
+        for (Expr e1: l1) {
+            for (Expr e2: l2) {
+                if (e1.equals(e2))
+                    return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) {

@@ -25,13 +25,18 @@ public class Exist extends Condition {
 
     @Override
     public Condition rearrange() {
-        if (subQuery instanceof SetOpSelect) {
+        rearrange(subQuery);
+        return this;
+    }
 
+    private void rearrange(Select s) {
+        if (s instanceof SetOpSelect) {
+            rearrange(((SetOpSelect) s).left);
+            rearrange(((SetOpSelect) s).right);
         }
         else {
-            ((PlainSelect) subQuery).where.rearrange();
+            ((PlainSelect) s).where.rearrange();
         }
-        return this;
     }
 
     @Override

@@ -104,23 +104,23 @@ public class PartialMarking {
 //        String instrSql = "select s.id sid from student s";
 //        String studentSql = "select s.id from student s";
 // PASS: alias替换
-//        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
-//                "from users u left join\n" +
-//                "  (select buyer_id, count(*) num\n" +
-//                "  from orders\n" +
-//                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o\n" +
-//                "on u.user_id=o.buyer_id\n" +
-//                "order by u.user_id asc";
-//        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
-//                "from\n" +
-//                "  (select buyer_id, count(*) haha\n" +
-//                "  from orders\n" +
-//                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o1\n" +
-//                "  right join users u\n" +
-//                "on u.user_id=o1.buyer_id\n" +
-//                "order by u.user_id asc";
+        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
+                "from users u left join\n" +
+                "  (select buyer_id, count(*) num\n" +
+                "  from orders\n" +
+                "  where year(order_date)=2019\n" +
+                "  group by buyer_id) as o\n" +
+                "on u.user_id=o.buyer_id\n" +
+                "order by u.user_id asc";
+        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
+                "from\n" +
+                "  (select buyer_id, count(*) haha\n" +
+                "  from orders\n" +
+                "  where year(order_date)=2019\n" +
+                "  group by buyer_id) as o1\n" +
+                "  right join users u\n" +
+                "on u.user_id=o1.buyer_id\n" +
+                "order by u.user_id asc";
 //        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
 //                "from\n" +
 //                "  (select buyer_id, count(*) haha\n" +
@@ -227,44 +227,44 @@ public class PartialMarking {
 //                "\tgroup by dno\n" +
 //                ")\n" +
 //                "order by dno;";
-        String instrSql = "select activity\n" +
-                "from friends\n" +
-                "group by activity\n" +
-                "having count(*)>any(\n" +
-                "    select count(*) from friends group by activity\n" +
-                ") and count(*)<any(\n" +
-                "    select count(*) from friends group by activity\n" +
-                ")";
-        String studentSql = "select activity\n" +
-                "from friends\n" +
-                "group by activity\n" +
-                "having count(*)<any(\n" +
-                "    select count(*) from friends group by activity\n" +
-                ") and count(*)>any(\n" +
-                "    select count(*) from friends group by activity\n" +
-                ")";
+//        String instrSql = "select activity\n" +
+//                "from friends\n" +
+//                "group by activity\n" +
+//                "having count(*)>any(\n" +
+//                "    select count(*) from friends group by activity\n" +
+//                ") and count(*)<any(\n" +
+//                "    select count(*) from friends group by activity\n" +
+//                ")";
+//        String studentSql = "select activity\n" +
+//                "from friends\n" +
+//                "group by activity\n" +
+//                "having count(*)<any(\n" +
+//                "    select count(*) from friends group by activity\n" +
+//                ") and count(*)>any(\n" +
+//                "    select count(*) from friends group by activity\n" +
+//                ")";
         final String dbType = JdbcConstants.MYSQL;
         List<String> envs = new ArrayList<>();
         PartialMarking marking = new PartialMarking(dbType, envs);
-//        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
+        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
 
-        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
-        String wirteToPath = "src/main/resources/org/example/PartialMarking.txt";
-        for (int i=0;i<res.size();i++) {
-            String s = res.get(i);
-            try {
-                float score = marking.partialMark(s,s,100.0f);
-                if (score < 100.0f) {
-                    TxtWriter.writeTo(wirteToPath, "Attention!! 评分" + score + " < 100 ！ " + (i+1) + "\n\n" +
-                            s + "\n\n\n\n\n");
-                }
-            } catch (Exception e) {
-                StringWriter trace = new StringWriter();
-                e.printStackTrace(new PrintWriter(trace));
-                TxtWriter.writeTo(wirteToPath, "Attention!! Error! " + (i+1) + "\n\n" +
-                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
-            }
-        }
+//        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
+//        String wirteToPath = "src/main/resources/org/example/PartialMarking.txt";
+//        for (int i=0;i<res.size();i++) {
+//            String s = res.get(i);
+//            try {
+//                float score = marking.partialMark(s,s,100.0f);
+//                if (score < 100.0f) {
+//                    TxtWriter.writeTo(wirteToPath, "Attention!! 评分" + score + " < 100 ！ " + (i+1) + "\n\n" +
+//                            s + "\n\n\n\n\n");
+//                }
+//            } catch (Exception e) {
+//                StringWriter trace = new StringWriter();
+//                e.printStackTrace(new PrintWriter(trace));
+//                TxtWriter.writeTo(wirteToPath, "Attention!! Error! " + (i+1) + "\n\n" +
+//                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
+//            }
+//        }
 
         // test column resolve
 //        final String dbType = JdbcConstants.MYSQL;

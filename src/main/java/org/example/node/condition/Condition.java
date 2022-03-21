@@ -71,6 +71,7 @@ public abstract class Condition {
                 }
                 // all转not exist
                 else if (left instanceof SQLAllExpr || right instanceof SQLAllExpr){
+                    op = getOppositeOp(op);
                     if (left instanceof SQLAllExpr){
                         SQLExpr tmp = left;
                         left = right;
@@ -320,27 +321,19 @@ public abstract class Condition {
         if (c instanceof CompoundCond){
             c.not = !c.not;
             if (c.not){
-                boolean flag = true;
-                for (Condition cdt:((CompoundCond) c).getSubConds()){
-                    if (!(cdt instanceof AtomCond))
-                        flag = false;
+                c.not = false;
+                switch (c.operator){
+                    case "AND":
+                        c.operator = "OR";
+                        break;
+                    case "OR":
+                        c.operator = "AND";
+                        break;
+                    default:
+                        break;
                 }
-                // 如果组成复合condition的都是AtomCondition，not下放
-                if (flag){
-                    c.not = false;
-                    switch (c.operator){
-                        case "AND":
-                            c.operator = "OR";
-                            break;
-                        case "OR":
-                            c.operator = "AND";
-                            break;
-                        default:
-                            break;
-                    }
-                    for (Condition cdt:((CompoundCond) c).getSubConds()){
-                        setNot(cdt);
-                    }
+                for (Condition cdt:((CompoundCond) c).getSubConds()){
+                    setNot(cdt);
                 }
             }
         }

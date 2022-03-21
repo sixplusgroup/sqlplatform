@@ -153,6 +153,9 @@ public class From {
         return scoreOfTables(f.tables) + scoreOfJoinTypes(f.joinTypes);
     }
 
+    /**
+     * 列表匹配
+     */
     private float scoreOfTables(List<Table> t) {
         if (tables == null || tables.size() == 0) {
             if (t == null || t.size() == 0)
