@@ -4,6 +4,9 @@ import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.statement.*;
+import com.alibaba.druid.sql.dialect.mysql.ast.MySqlPrimaryKey;
+import com.alibaba.druid.sql.repository.Schema;
+import com.alibaba.druid.sql.repository.SchemaObject;
 import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 import org.example.node.select.Select;
@@ -12,7 +15,9 @@ import org.example.util.TxtWriter;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -23,12 +28,7 @@ public class PartialMarking {
     Env env;
 
     public PartialMarking(String dbType, List<String> sqls){
-        SchemaRepository repository = new SchemaRepository(dbType);
-//        repository.console("use sc00;");
-        for (String sql: sqls) {
-            repository.console(sql);
-        }
-        env = new Env(dbType,repository);
+        env = new Env(dbType, sqls);
     }
 
     /**
@@ -56,14 +56,14 @@ public class PartialMarking {
     public float partialMark(String instrSql, String studentSql, float maxScore) {
         try {
             Select instrAST = BuildAST.buildSelect(instrSql.replaceAll("\\s+", " ").trim(),env);
-//            Canonicalizer.canonicalize(instrAST);
+            Canonicalizer.canonicalize(instrAST, env);
             Select studentAST = BuildAST.buildSelect(studentSql.replaceAll("\\s+", " ").trim(),env);
             BuildAST.substituteAlias(instrAST, studentAST);
             // 不能在buildSelect时就替换，可能因为tableAlias交叉导致问题
             Canonicalizer.substituteEqualClass(instrAST);
             Canonicalizer.substituteEqualClass(studentAST);
             float totalScore = CalculateScore.totalScore(instrAST);
-            float score = CalculateScore.editScore(instrAST,studentAST,totalScore);
+            float score = CalculateScore.editScore(instrAST, studentAST, totalScore, env);
             return getScaledScore(score,totalScore,maxScore);
         } catch (Exception e) {
             e.printStackTrace(); // to del
@@ -87,7 +87,7 @@ public class PartialMarking {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
 // PASS
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where u.uid=s.id and u.uid=l.sid";
@@ -104,23 +104,23 @@ public class PartialMarking {
 //        String instrSql = "select s.id sid from student s";
 //        String studentSql = "select s.id from student s";
 // PASS: alias替换
-        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
-                "from users u left join\n" +
-                "  (select buyer_id, count(*) num\n" +
-                "  from orders\n" +
-                "  where year(order_date)=2019\n" +
-                "  group by buyer_id) as o\n" +
-                "on u.user_id=o.buyer_id\n" +
-                "order by u.user_id asc";
-        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
-                "from\n" +
-                "  (select buyer_id, count(*) haha\n" +
-                "  from orders\n" +
-                "  where year(order_date)=2019\n" +
-                "  group by buyer_id) as o1\n" +
-                "  right join users u\n" +
-                "on u.user_id=o1.buyer_id\n" +
-                "order by u.user_id asc";
+//        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
+//                "from users u left join\n" +
+//                "  (select buyer_id, count(*) num\n" +
+//                "  from orders\n" +
+//                "  where year(order_date)=2019\n" +
+//                "  group by buyer_id) as o\n" +
+//                "on u.user_id=o.buyer_id\n" +
+//                "order by orders_in_2019 asc";
+//        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
+//                "from\n" +
+//                "  (select buyer_id, count(*) haha\n" +
+//                "  from orders\n" +
+//                "  where year(order_date)=2019\n" +
+//                "  group by buyer_id) as o1\n" +
+//                "  right join users u\n" +
+//                "on u.user_id=o1.buyer_id\n" +
+//                "order by u.user_id asc";
 //        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
 //                "from\n" +
 //                "  (select buyer_id, count(*) haha\n" +
@@ -243,11 +243,22 @@ public class PartialMarking {
 //                ") and count(*)>any(\n" +
 //                "    select count(*) from friends group by activity\n" +
 //                ")";
+        String instrSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
+                "FROM t_emp a\n" +
+                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
+                "group by emp_id order by emp_id,a.name";
+        String studentSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
+                "FROM t_emp a\n" +
+                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
+                "group by emp_id order by emp_id,a.name";
         final String dbType = JdbcConstants.MYSQL;
-        List<String> envs = new ArrayList<>();
-        PartialMarking marking = new PartialMarking(dbType, envs);
+        List<String> sqls = new ArrayList<>();
+        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
+        sqls.add("create table t_org(org_id bigint, name varchar(20));");
+        PartialMarking marking = new PartialMarking(dbType, sqls);
         System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
 
+        // Normally test all
 //        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
 //        String wirteToPath = "src/main/resources/org/example/PartialMarking.txt";
 //        for (int i=0;i<res.size();i++) {
@@ -265,34 +276,5 @@ public class PartialMarking {
 //                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
 //            }
 //        }
-
-        // test column resolve
-//        final String dbType = JdbcConstants.MYSQL;
-//        List<String> envs = new ArrayList<>();
-//        SchemaRepository repository = new SchemaRepository(dbType);
-//        repository.console("create table t_emp(emp_id bigint, name varchar(20));");
-//        repository.console("create table t_org(org_id bigint, name varchar(20));");
-//        String sql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
-//                "FROM t_emp a\n" +
-//                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id";
-//        List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, dbType);
-//        SQLSelectStatement stmt = (SQLSelectStatement) stmtList.get(0);
-//        SQLSelectQueryBlock queryBlock = stmt.getSelect().getQueryBlock();
-//
-//        System.out.println((queryBlock.findTableSource("a")));//全名才能匹配，返回表名
-//        repository.resolve(stmt);// 使用repository做column resolve
-//        System.out.println(queryBlock.findTableSourceWithColumn("emp_id"));//返回表名
-//
-//        SQLExprTableSource tableSource = (SQLExprTableSource) queryBlock.findTableSourceWithColumn("emp_id");// .expr取得Identifier，.expr.name取得表名，.alias取得alias
-//        SQLCreateTableStatement createTableStmt = (SQLCreateTableStatement) tableSource.getSchemaObject().getStatement();
-//        System.out.println(createTableStmt);//取得建表语句
-//
-//        SQLSelectItem selectItem = queryBlock.findSelectItem("org_name");
-//        System.out.println(selectItem);
-//        SQLPropertyExpr selectItemExpr = (SQLPropertyExpr) selectItem.getExpr();
-//        SQLColumnDefinition column = selectItemExpr.getResolvedColumn();
-//        System.out.println(column);
     }
-
-
 }

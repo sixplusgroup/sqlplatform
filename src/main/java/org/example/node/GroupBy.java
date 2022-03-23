@@ -1,11 +1,16 @@
 package org.example.node;
 
+import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLObject;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
+import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
 import javafx.util.Pair;
 import org.example.Env;
 import org.example.edit.CostConfig;
 import org.example.node.condition.Condition;
 import org.example.node.expr.Expr;
+import org.example.node.expr.PropertyExpr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +35,21 @@ public class GroupBy {
             having = null;
             return;
         }
-        items = clause.getItems()
-                .stream()
-                .map(Expr::build)
-                .collect(Collectors.toList());
+        items = new ArrayList<>();
+        for (SQLExpr item: clause.getItems()) {
+            if (item instanceof SQLIdentifierExpr && ((SQLIdentifierExpr) item).getResolvedOwnerObject() != null) {
+                String attr = ((SQLIdentifierExpr) item).getName();
+                String table = ((SQLIdentifierExpr) item).getResolvedOwnerObject().toString();
+                SQLObject object = ((SQLIdentifierExpr) item).getResolvedOwnerObject();
+                if (object instanceof SQLExprTableSource && ((SQLExprTableSource) object).getAlias() != null) {
+                    table = ((SQLExprTableSource) object).getAlias();
+                }
+                items.add(new PropertyExpr(table, attr));
+            }
+            else {
+                items.add(Expr.build(item));
+            }
+        }
         if (clause.getHaving() == null){
             having = null;
         } else {

@@ -30,10 +30,10 @@ public abstract class Expr {
         } else if (expr instanceof SQLIdentifierExpr) {
             // colunmn resolve之后，能改成表名.列名的全部改了，直接执行SQLPropertyExpr分支
             SQLIdentifierExpr idExpr = (SQLIdentifierExpr) expr;
-            return new PropertyExpr(null,idExpr.getName());
+            return new AtomExpr(idExpr.getName());
         } else if (expr instanceof SQLAllColumnExpr) {
-            // todo *单独处理
-            return new OtherExpr("*");
+            // * 单独处理
+            return new AtomExpr("*");
         } else if (expr instanceof SQLNullExpr) {
             return new ConstantExpr("NULL");
         } else if (expr instanceof SQLIntegerExpr) {

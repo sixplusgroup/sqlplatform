@@ -2,6 +2,7 @@ package org.example.edit;
 
 import javafx.util.Pair;
 import org.example.CalculateScore;
+import org.example.Env;
 import org.example.SingleEdit;
 import org.example.enums.SetOp;
 import org.example.node.expr.Expr;
@@ -19,7 +20,7 @@ import java.util.List;
  **/
 public class TableEdit implements Edit {
     @Override
-    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<Table> stu_clone = new ArrayList<>(stu.from.tables);
         for (Table item: instr.from.tables) {
@@ -36,7 +37,7 @@ public class TableEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<Table> stu_clone = new ArrayList<>(stu.from.tables);
         for (Table item: instr.from.tables) {
@@ -54,7 +55,7 @@ public class TableEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) throws Exception {
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu, Env env) throws Exception {
         List<Pair<PlainSelect,Float>> res = new ArrayList <>();
         List<Table> stu_clone = new ArrayList<>(stu.from.tables);
         for (Table item: instr.from.tables) {
@@ -68,7 +69,7 @@ public class TableEdit implements Edit {
                         Select item_s = (Select) item;
                         Select match_s = (Select) match;
                         float totalScore = CalculateScore.totalScore(item_s);
-                        cost = totalScore - CalculateScore.editScore(item_s, match_s, totalScore);
+                        cost = totalScore - CalculateScore.editScore(item_s, match_s, totalScore, env);
                     }
                     // 普通table
                     else {

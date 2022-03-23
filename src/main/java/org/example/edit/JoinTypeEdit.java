@@ -1,6 +1,7 @@
 package org.example.edit;
 
 import javafx.util.Pair;
+import org.example.Env;
 import org.example.node.select.PlainSelect;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import java.util.Map;
  **/
 public class JoinTypeEdit {
 
-    public Pair<PlainSelect, Float> typeEdit(PlainSelect instr, PlainSelect stu) {
+    public Pair<PlainSelect, Float> typeEdit(PlainSelect instr, PlainSelect stu, Env env) {
         HashMap<String, Integer> types_clone = new HashMap<>(stu.from.joinTypes);
         for (Map.Entry<String, Integer> item: instr.from.joinTypes.entrySet()) {
             String key = item.getKey();

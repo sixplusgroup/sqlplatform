@@ -31,7 +31,7 @@ public class CalculateScore {
      * @param totalScore 总分
      * @return
      */
-    public static float editScore(Select instrAST, Select studentAST, float totalScore) throws Exception {
+    public static float editScore(Select instrAST, Select studentAST, float totalScore, Env env) throws Exception {
         boolean instrIsSetOp = instrAST instanceof SetOpSelect;
         boolean studentIsSetOp = studentAST instanceof SetOpSelect;
         // case 1: 学生sql和正确sql中至少有一个是set operator
@@ -43,10 +43,10 @@ public class CalculateScore {
             if (!instrIsSetOp){
                 SetOpSelect student = (SetOpSelect) studentAST;
                 if (student.operator == SetOp.EXCEPT) {
-                    return editScore(instrAST,student.left,totalScore) - totalScore(student.right) - 1;
+                    return editScore(instrAST, student.left, totalScore, env) - totalScore(student.right) - 1;
                 } else {
-                    float left = editScore(instrAST,student.left,totalScore) - totalScore(student.right) - 1;
-                    float right = editScore(instrAST,student.right,totalScore) - totalScore(student.left) - 1;
+                    float left = editScore(instrAST, student.left, totalScore, env) - totalScore(student.right) - 1;
+                    float right = editScore(instrAST, student.right, totalScore, env) - totalScore(student.left) - 1;
                     return Math.max(left,right);
                 }
             }
@@ -58,10 +58,10 @@ public class CalculateScore {
             else if (!studentIsSetOp){
                 SetOpSelect instr = (SetOpSelect) instrAST;
                 if (instr.operator == SetOp.EXCEPT) {
-                    return editScore(instr.left,studentAST,totalScore(instr.left));
+                    return editScore(instr.left, studentAST, totalScore(instr.left), env);
                 } else {
-                    float left = editScore(instr.left,studentAST,totalScore(instr.left));
-                    float right = editScore(instr.right,studentAST,totalScore(instr.right));
+                    float left = editScore(instr.left, studentAST, totalScore(instr.left), env);
+                    float right = editScore(instr.right, studentAST, totalScore(instr.right), env);
                     return Math.max(left,right);
                 }
             }
@@ -82,10 +82,13 @@ public class CalculateScore {
                     score += instr.orderBy.score(student.orderBy);
                 }
                 if (instr.operator == SetOp.EXCEPT) {
-                    score += editScore(instr.left,student.left,totalScore(instr.left)) + editScore(instr.right,student.right,totalScore(instr.right));
+                    score += editScore(instr.left, student.left, totalScore(instr.left), env)
+                            + editScore(instr.right, student.right, totalScore(instr.right), env);
                 } else {
-                    float score1 = editScore(instr.left,student.left,totalScore(instr.left)) + editScore(instr.right,student.right,totalScore(instr.right));
-                    float score2 = editScore(instr.left,student.right,totalScore(instr.left)) + editScore(instr.right,student.left,totalScore(instr.right));
+                    float score1 = editScore(instr.left, student.left, totalScore(instr.left), env)
+                            + editScore(instr.right, student.right, totalScore(instr.right), env);
+                    float score2 = editScore(instr.left, student.right, totalScore(instr.left), env)
+                            + editScore(instr.right, student.left, totalScore(instr.right), env);
                     score += Math.max(score1, score2);
                 }
                 return score;
@@ -97,7 +100,7 @@ public class CalculateScore {
             PlainSelect student = (PlainSelect) studentAST;
             List<Pair<PlainSelect,Float>> singleEdits;
             try {
-                singleEdits = SingleEdit.singleEdit(instr,student);
+                singleEdits = SingleEdit.singleEdit(instr,student,env);
             } catch (Exception e){
                 ErrorLogger.logSevere("Exception when calculating eidtScore:\ninstrSql:\n"
                         + instr.toString() + "\nstudentSql:\n" + student.toString(), e);
@@ -128,7 +131,7 @@ public class CalculateScore {
             if (newTotalScore <= 0) {
                 return 0;
             }
-            return editScore(instr,bestMatch,newTotalScore);
+            return editScore(instr, bestMatch, newTotalScore, env);
         }
     }
 

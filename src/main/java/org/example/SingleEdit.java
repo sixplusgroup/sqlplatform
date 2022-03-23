@@ -13,19 +13,19 @@ import java.util.List;
  **/
 public class SingleEdit {
 
-    public static List<Pair<PlainSelect,Float>> singleEdit(PlainSelect instr, PlainSelect student) throws Exception {
+    public static List<Pair<PlainSelect,Float>> singleEdit(PlainSelect instr, PlainSelect student, Env env) throws Exception {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
         edits.addAll(editDistinct(instr, student));
-        edits.addAll(editSelections(instr, student));
+        edits.addAll(editSelections(instr, student, env));
         if (instr.from != null) {
-            edits.addAll(editFrom(instr, student));
+            edits.addAll(editFrom(instr, student, env));
         }
-        edits.addAll(editConditions(instr, student));
-        edits.addAll(editGroupBy(instr, student));
-        edits.addAll(editOrderBy(instr, student));
+        edits.addAll(editConditions(instr, student, env));
+        edits.addAll(editGroupBy(instr, student, env));
+        edits.addAll(editOrderBy(instr, student, env));
         edits.addAll(editLimit(instr, student));
         for (Pair<PlainSelect,Float> edit: edits){
-            Canonicalizer.canonicalize(edit.getKey());
+            Canonicalizer.canonicalize(edit.getKey(), env);
         }
         return edits;
     }
@@ -40,33 +40,33 @@ public class SingleEdit {
         return edits;
     }
 
-    public static List<Pair<PlainSelect,Float>> editSelections(PlainSelect instr, PlainSelect student) {
+    public static List<Pair<PlainSelect,Float>> editSelections(PlainSelect instr, PlainSelect student, Env env) {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
         SelectionEdit edit = new SelectionEdit();
-        edits.addAll(edit.add(instr,student));
-        edits.addAll(edit.remove(instr, student));
-        edits.addAll(edit.edit(instr, student));
+        edits.addAll(edit.add(instr, student, env));
+        edits.addAll(edit.remove(instr, student, env));
+        edits.addAll(edit.edit(instr, student, env));
         return edits;
     }
 
-    public static List<Pair<PlainSelect,Float>> editFrom(PlainSelect instr, PlainSelect student) throws Exception {
+    public static List<Pair<PlainSelect,Float>> editFrom(PlainSelect instr, PlainSelect student, Env env) throws Exception {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
 
         TableEdit tableEdit = new TableEdit();
-        edits.addAll(tableEdit.add(instr, student));
-        edits.addAll(tableEdit.remove(instr, student));
-        edits.addAll(tableEdit.edit(instr, student));
+        edits.addAll(tableEdit.add(instr, student, env));
+        edits.addAll(tableEdit.remove(instr, student, env));
+        edits.addAll(tableEdit.edit(instr, student, env));
 
         JoinTypeEdit joinTypeEdit = new JoinTypeEdit();
-        Pair<PlainSelect,Float> typeEdit = joinTypeEdit.typeEdit(instr, student);
+        Pair<PlainSelect,Float> typeEdit = joinTypeEdit.typeEdit(instr, student, env);
         if (typeEdit != null)
             edits.add(typeEdit);
 
         return edits;
     }
 
-    public static List<Pair<PlainSelect,Float>> editConditions(PlainSelect instr, PlainSelect student) throws Exception {
-        ConditionEdit conditionEdit = new ConditionEdit(instr, student);
+    public static List<Pair<PlainSelect,Float>> editConditions(PlainSelect instr, PlainSelect student, Env env) throws Exception {
+        ConditionEdit conditionEdit = new ConditionEdit(instr, student, env);
         List<Pair<PlainSelect,Float>> res = conditionEdit.singleEdit();
         for (Pair<PlainSelect, Float> item: res) {
             PlainSelect select = item.getKey();
@@ -77,21 +77,21 @@ public class SingleEdit {
         return res;
     }
 
-    public static List<Pair<PlainSelect,Float>> editGroupBy(PlainSelect instr, PlainSelect student) {
+    public static List<Pair<PlainSelect,Float>> editGroupBy(PlainSelect instr, PlainSelect student, Env env) {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
         GroupByEdit edit = new GroupByEdit();
-        edits.addAll(edit.add(instr, student));
-        edits.addAll(edit.remove(instr, student));
-        edits.addAll(edit.edit(instr, student));
+        edits.addAll(edit.add(instr, student, env));
+        edits.addAll(edit.remove(instr, student, env));
+        edits.addAll(edit.edit(instr, student, env));
         return edits;
     }
 
-    public static List<Pair<PlainSelect,Float>> editOrderBy(PlainSelect instr, PlainSelect student) {
+    public static List<Pair<PlainSelect,Float>> editOrderBy(PlainSelect instr, PlainSelect student, Env env) {
         List<Pair<PlainSelect,Float>> edits = new ArrayList<>();
         OrderByEdit edit = new OrderByEdit();
-        edits.addAll(edit.add(instr, student));
-        edits.addAll(edit.remove(instr, student));
-        edits.addAll(edit.edit(instr, student));
+        edits.addAll(edit.add(instr, student, env));
+        edits.addAll(edit.remove(instr, student, env));
+        edits.addAll(edit.edit(instr, student, env));
         return edits;
     }
 

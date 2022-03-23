@@ -11,10 +11,7 @@ import com.alibaba.druid.util.JdbcConstants;
 import javafx.util.Pair;
 import org.example.enums.SetOp;
 import org.example.node.condition.*;
-import org.example.node.expr.Expr;
-import org.example.node.expr.FuncExpr;
-import org.example.node.expr.ListExpr;
-import org.example.node.expr.PropertyExpr;
+import org.example.node.expr.*;
 import org.example.node.orderby.OrderByItem;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
@@ -210,6 +207,8 @@ public class BuildAST {
         }
         if (stu.where != null)
             stu.where = stu.where.rearrange();
+        stu.tableAliasMap = instr.tableAliasMap;
+        stu.attrAliasMap = instr.attrAliasMap;
     }
 
     private static List<Table> getSubQsFromCondition(Condition c) {
@@ -302,13 +301,16 @@ public class BuildAST {
         }
         else if (e instanceof PropertyExpr) {
             PropertyExpr pe = (PropertyExpr) e;
-            if (pe.table != null && tableAliasMap.containsKey(pe.table.value) && (!pe.table.substituted)) {
+            if (tableAliasMap.containsKey(pe.table.value) && (!pe.table.substituted)) {
                 pe.table.value = tableAliasMap.get(pe.table.value);
                 pe.table.substituted = true;
             }
-            if (attrAliasMap.containsKey(pe.attribute.value) && (!pe.attribute.substituted)) {
-                pe.attribute.value = attrAliasMap.get(pe.attribute.value);
-                pe.attribute.substituted = true;
+        }
+        else if (e instanceof AtomExpr) {
+            AtomExpr ae = (AtomExpr) e;
+            if (attrAliasMap.containsKey(ae.value) && (!ae.substituted)) {
+                ae.value = attrAliasMap.get(ae.value);
+                ae.substituted = true;
             }
         }
     }
@@ -439,8 +441,7 @@ public class BuildAST {
 //                "  round(sum(if(s.s_score<60,1,0)) / count(*), 2) \n" +
 //                "  from orders o";
         List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
-        SchemaRepository repository = new SchemaRepository(dbType);
-        Env env = new Env(dbType,repository);
+        Env env = new Env(dbType,new ArrayList<>());
         String wirteToPath = "src/main/resources/org/example/BuildSelect.txt";
         for (int i=0;i<res.size();i++) {
             String s = res.get(i);

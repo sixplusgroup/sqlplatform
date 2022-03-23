@@ -2,6 +2,7 @@ package org.example.edit;
 
 import javafx.util.Pair;
 import org.example.CalculateScore;
+import org.example.Env;
 import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
 
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class GroupByEdit implements Edit {
 
     @Override
-    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         // items
         List<Expr> instr_clone = new ArrayList<>(instr.groupBy.items);
@@ -37,7 +38,7 @@ public class GroupByEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         // items
         List<Expr> stu_clone = new ArrayList<>(stu.groupBy.items);
@@ -58,7 +59,7 @@ public class GroupByEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         // items
         boolean sameItems = true;

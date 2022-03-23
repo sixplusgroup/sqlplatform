@@ -1,9 +1,8 @@
 package org.example;
 
+import javafx.util.Pair;
 import org.example.node.condition.*;
-import org.example.node.expr.Expr;
-import org.example.node.expr.FuncExpr;
-import org.example.node.expr.ListExpr;
+import org.example.node.expr.*;
 import org.example.node.orderby.OrderByItem;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
@@ -17,16 +16,64 @@ import java.util.stream.Collectors;
  * @date 2021/12/4
  **/
 public class Canonicalizer {
-
-    // todo 规范化
-    public static void canonicalize(Select ast) {
+    public static void canonicalize(Select ast, Env env) {
         if (ast instanceof SetOpSelect) {
-            canonicalize(((SetOpSelect) ast).left);
-            canonicalize(((SetOpSelect) ast).right);
+            canonicalize(((SetOpSelect) ast).left, env);
+            canonicalize(((SetOpSelect) ast).right, env);
         } else if (ast instanceof PlainSelect) {
             PlainSelect select = (PlainSelect) ast;
-
+            canonicalizeOrderBy(select, env);
         }
+    }
+
+    public static void canonicalizeOrderBy(PlainSelect ps, Env env) {
+        for (Map.Entry<String, List<Pair<String, OrderByItem>>> item: separateOrderByItemByTable(ps).entrySet()) {
+            String[] table = item.getKey().split(":");
+            if (env.primaryKeys.containsKey(table[0])) {
+                List<String> pkeys = new ArrayList<>(env.primaryKeys.get(table[0]));
+                for (Pair<String, OrderByItem> pair: item.getValue()) {
+                    if (pkeys.contains(pair.getKey())) {
+                        pkeys.remove(pair.getKey());
+                        continue;
+                    }
+                    // 如果包含了这个特定表的全部主键后，还有多余，则多余的全都应当规则化掉
+                    if (pkeys.size() == 0) {
+                        ps.orderBy.items.remove(pair.getValue());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * HashMap<表名:表名alias, List<Pair<属性名, 对应OrderByItem>>>
+     * @param ps
+     * @return
+     */
+    private static HashMap<String, List<Pair<String, OrderByItem>>> separateOrderByItemByTable(PlainSelect ps) {
+        HashMap<String, List<Pair<String, OrderByItem>>> map = new HashMap<>();
+        for (OrderByItem item: ps.orderBy.items) {
+            Expr expr = item.column;
+            if (expr instanceof AtomExpr) {
+                String alias = ((AtomExpr) expr).value;
+                if (ps.attrAliasMap.containsKey(alias)) {
+                    expr = ps.attrAliasMap.get(alias);
+                }
+            }
+            if (expr instanceof PropertyExpr) {
+                String tableAlias = ((PropertyExpr) expr).table.toString();
+                String tableName = tableAlias;
+                if (ps.tableAliasMap.containsKey(tableAlias)) {
+                    tableName = ps.tableAliasMap.get(tableAlias).toString();
+                }
+                String key = tableName + ":" + tableAlias;
+                if (! map.containsKey(key)) {
+                    map.put(key, new ArrayList<>());
+                }
+                map.get(key).add(new Pair<>(((PropertyExpr) expr).attribute.toString(), item));
+            }
+        }
+        return map;
     }
 
     public static void substituteEqualClass(Select ast) {

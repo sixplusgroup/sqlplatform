@@ -1,6 +1,7 @@
 package org.example.edit;
 
 import javafx.util.Pair;
+import org.example.Env;
 import org.example.node.expr.Expr;
 import org.example.node.orderby.OrderByItem;
 import org.example.node.select.PlainSelect;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
  **/
 public class OrderByEdit implements Edit {
     @Override
-    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<OrderByItem> items_clone = new ArrayList<>(stu.orderBy.items);
         for (OrderByItem e: instr.orderBy.items) {
@@ -32,7 +33,7 @@ public class OrderByEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<OrderByItem> items_clone = new ArrayList<>(stu.orderBy.items);
         for (OrderByItem e: instr.orderBy.items) {
@@ -50,7 +51,7 @@ public class OrderByEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         boolean sameItems = true;
         List<OrderByItem> items_clone = new ArrayList<>(stu.orderBy.items);

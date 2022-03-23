@@ -22,7 +22,12 @@ public class OrderByItem {
     }
 
     public OrderByItem(SQLSelectOrderByItem item){
-        column = Expr.build(item.getExpr());
+        if (item.getResolvedSelectItem() != null) {
+            column = Expr.build(item.getResolvedSelectItem().getExpr());
+        }
+        else {
+            column = Expr.build(item.getExpr());
+        }
         if (item.getType() == null){
             order = Order.ASC;
         } else {

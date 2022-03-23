@@ -1,6 +1,7 @@
 package org.example.edit;
 
 import javafx.util.Pair;
+import org.example.Env;
 import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
 
@@ -13,7 +14,7 @@ import java.util.List;
  **/
 public class SelectionEdit implements Edit {
     @Override
-    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> add(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<Expr> instr_clone = new ArrayList<>(instr.selections);
         Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.selections, stu.selections);
@@ -27,7 +28,7 @@ public class SelectionEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> remove(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList<>();
         List<Expr> stu_clone = new ArrayList<>(stu.selections);
         Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.selections, stu.selections);
@@ -41,7 +42,7 @@ public class SelectionEdit implements Edit {
     }
 
     @Override
-    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu) {
+    public List<Pair<PlainSelect, Float>> edit(PlainSelect instr, PlainSelect stu, Env env) {
         List<Pair<PlainSelect,Float>> res = new ArrayList <>();
         Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instr.selections, stu.selections);
         List<Expr> match_instr = matches.getKey();

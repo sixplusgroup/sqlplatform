@@ -2,6 +2,7 @@ package org.example.edit;
 
 import javafx.util.Pair;
 import org.example.CalculateScore;
+import org.example.Env;
 import org.example.node.condition.*;
 import org.example.node.expr.Expr;
 import org.example.node.select.PlainSelect;
@@ -17,10 +18,12 @@ import java.util.List;
  **/
 public class ConditionEdit {
     PlainSelect instr, stu;
+    Env env;
 
-    public ConditionEdit(PlainSelect instr, PlainSelect stu) {
+    public ConditionEdit(PlainSelect instr, PlainSelect stu, Env env) {
         this.instr = instr;
         this.stu = stu;
+        this.env = env;
     }
 
     public List<Pair<PlainSelect, Float>> singleEdit() throws Exception {
@@ -346,7 +349,7 @@ public class ConditionEdit {
     private List<Pair<PlainSelect, Float>> editExist(Exist instrC, Exist stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         float totalScore = CalculateScore.totalScore(instrC.subQuery);
-        float cost = totalScore - CalculateScore.editScore(instrC.subQuery, stuC.subQuery, totalScore);
+        float cost = totalScore - CalculateScore.editScore(instrC.subQuery, stuC.subQuery, totalScore, env);
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
         if (stuC_edited == null) {
