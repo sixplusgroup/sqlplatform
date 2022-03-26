@@ -113,7 +113,7 @@ public class ConditionEdit {
                     match_stu = stuC;
                 // case 2) 同级比较：不都是 CompoundCond，递归
                 if (!(match_instr instanceof CompoundCond && match_stu instanceof CompoundCond)) {
-                    res.addAll(edits(match_instr, stuC));
+                    res.addAll(edits(match_instr, match_stu));
                     return res;
                 }
                 // case 3) 同级比较：都是 CompoundCond

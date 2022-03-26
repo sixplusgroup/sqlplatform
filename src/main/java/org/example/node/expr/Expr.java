@@ -1,7 +1,9 @@
 package org.example.node.expr;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.expr.*;
+import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import javafx.util.Pair;
 import org.example.CalculateScore;
 import org.example.edit.CostConfig;
@@ -28,7 +30,15 @@ public abstract class Expr {
             SQLPropertyExpr propExpr = (SQLPropertyExpr) expr;
             return new PropertyExpr(propExpr.getOwner().toString(),propExpr.getName());
         } else if (expr instanceof SQLIdentifierExpr) {
-            // colunmn resolve之后，能改成表名.列名的全部改了，直接执行SQLPropertyExpr分支
+            if (((SQLIdentifierExpr) expr).getResolvedOwnerObject() != null) {
+                String attr = ((SQLIdentifierExpr) expr).getName();
+                String table = ((SQLIdentifierExpr) expr).getResolvedOwnerObject().toString();
+                SQLObject object = ((SQLIdentifierExpr) expr).getResolvedOwnerObject();
+                if (object instanceof SQLExprTableSource && ((SQLExprTableSource) object).getAlias() != null) {
+                    table = ((SQLExprTableSource) object).getAlias();
+                }
+                return new PropertyExpr(table, attr);
+            }
             SQLIdentifierExpr idExpr = (SQLIdentifierExpr) expr;
             return new AtomExpr(idExpr.getName());
         } else if (expr instanceof SQLAllColumnExpr) {

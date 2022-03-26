@@ -37,18 +37,7 @@ public class GroupBy {
         }
         items = new ArrayList<>();
         for (SQLExpr item: clause.getItems()) {
-            if (item instanceof SQLIdentifierExpr && ((SQLIdentifierExpr) item).getResolvedOwnerObject() != null) {
-                String attr = ((SQLIdentifierExpr) item).getName();
-                String table = ((SQLIdentifierExpr) item).getResolvedOwnerObject().toString();
-                SQLObject object = ((SQLIdentifierExpr) item).getResolvedOwnerObject();
-                if (object instanceof SQLExprTableSource && ((SQLExprTableSource) object).getAlias() != null) {
-                    table = ((SQLExprTableSource) object).getAlias();
-                }
-                items.add(new PropertyExpr(table, attr));
-            }
-            else {
-                items.add(Expr.build(item));
-            }
+            items.add(Expr.build(item));
         }
         if (clause.getHaving() == null){
             having = null;

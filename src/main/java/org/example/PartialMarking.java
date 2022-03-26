@@ -243,38 +243,33 @@ public class PartialMarking {
 //                ") and count(*)>any(\n" +
 //                "    select count(*) from friends group by activity\n" +
 //                ")";
-        String instrSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
-                "FROM t_emp a\n" +
-                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
-                "group by emp_id order by emp_id,a.name";
-        String studentSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
-                "FROM t_emp a\n" +
-                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
-                "group by emp_id order by emp_id,a.name";
+//        String instrSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
+//                "FROM t_emp a\n" +
+//                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
+//                "group by emp_id order by emp_id,a.name";
+//        String studentSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
+//                "FROM t_emp a\n" +
+//                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
+//                "group by emp_id order by emp_id,a.name";
+//        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
+//        sqls.add("create table t_org(org_id bigint, name varchar(20));");
+
+        // test my sqls
+        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
+                "from employees e1\n" +
+                "where e1.salary in (\n" +
+                "\tselect MAX(salary)\n" +
+                "\tfrom employees e2\n" +
+                "\twhere e1.dno = e2.dno\n" +
+                "\tgroup by dno\n" +
+                ")\n" +
+                "order by dno;";
+        String studentSql = "select dno, eno, salary from employees e\n" +
+                "where salary >= all (select e1.salary from employees e1 where e1.dno=e.dno)\n" +
+                "order by dno asc";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
-        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
-        sqls.add("create table t_org(org_id bigint, name varchar(20));");
         PartialMarking marking = new PartialMarking(dbType, sqls);
         System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
-
-        // Normally test all
-//        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
-//        String wirteToPath = "src/main/resources/org/example/PartialMarking.txt";
-//        for (int i=0;i<res.size();i++) {
-//            String s = res.get(i);
-//            try {
-//                float score = marking.partialMark(s,s,100.0f);
-//                if (score < 100.0f) {
-//                    TxtWriter.writeTo(wirteToPath, "Attention!! 评分" + score + " < 100 ！ " + (i+1) + "\n\n" +
-//                            s + "\n\n\n\n\n");
-//                }
-//            } catch (Exception e) {
-//                StringWriter trace = new StringWriter();
-//                e.printStackTrace(new PrintWriter(trace));
-//                TxtWriter.writeTo(wirteToPath, "Attention!! Error! " + (i+1) + "\n\n" +
-//                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
-//            }
-//        }
     }
 }

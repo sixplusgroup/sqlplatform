@@ -50,7 +50,7 @@ public class CompoundCond extends Condition {
         Condition c = merge();
         if (c instanceof CompoundCond) {
             ((CompoundCond)c).flatten();
-            ((CompoundCond)c).flattenEquals();
+            c = ((CompoundCond)c).flattenEquals();
         }
         return c;
     }
@@ -149,7 +149,7 @@ public class CompoundCond extends Condition {
         }
         if (flag){
             // 2.2 提取合并内容
-            List<Condition> sameConds = ((CompoundCond)subConds.get(0)).subConds;
+            List<Condition> sameConds = new ArrayList<>(((CompoundCond)subConds.get(0)).subConds);
             for (int i=1;i<subConds.size();i++){
                 List<Condition> tmpList =((CompoundCond)subConds.get(i)).subConds;
                 sameConds.removeIf(c -> !isStrictlyIn(c, tmpList));
@@ -206,7 +206,7 @@ public class CompoundCond extends Condition {
      *  = 的展平: A=B and B=C 展平为 =(A, B, C)
      *  并查集解法
      */
-    public void flattenEquals() {
+    public Condition flattenEquals() {
         List<CommutativeCond> toFlatten = new ArrayList<>();
         List<Condition> subConds_clone = new ArrayList<>(subConds);
         for (Condition c: subConds) {
@@ -221,6 +221,12 @@ public class CompoundCond extends Condition {
         if (operator.equals("AND")) {
             subConds_clone.addAll(flattenEquals(toFlatten));
             subConds = subConds_clone;
+        }
+        if (subConds.size() > 1) {
+            return this;
+        }
+        else {
+            return subConds.get(0);
         }
     }
 
