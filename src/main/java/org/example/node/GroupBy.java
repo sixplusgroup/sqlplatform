@@ -5,6 +5,7 @@ import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import javafx.util.Pair;
 import org.example.Env;
 import org.example.edit.CostConfig;
@@ -13,6 +14,7 @@ import org.example.node.expr.Expr;
 import org.example.node.expr.PropertyExpr;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,7 @@ public class GroupBy {
         having = null;
     }
 
-    public GroupBy(SQLSelectGroupByClause clause, Env env){
+    public GroupBy(SQLSelectGroupByClause clause, Env env, HashMap<SQLTableSource, String> tableMapping) {
         if (clause == null || clause.getItems() == null || clause.getItems().size() == 0){
             items = new ArrayList<>();
             having = null;
@@ -37,12 +39,12 @@ public class GroupBy {
         }
         items = new ArrayList<>();
         for (SQLExpr item: clause.getItems()) {
-            items.add(Expr.build(item));
+            items.add(Expr.build(item, tableMapping));
         }
         if (clause.getHaving() == null){
             having = null;
         } else {
-            having = Condition.build(clause.getHaving(),env);
+            having = Condition.build(clause.getHaving(), env, tableMapping);
         }
     }
 

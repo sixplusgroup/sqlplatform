@@ -55,14 +55,26 @@ public class PlainSelect extends Select {
     public PlainSelect(SQLSelectQueryBlock query, Env env){
         super();
         distinct = query.getDistionOption()!=0;
-        selections = query.getSelectList()
-                .stream()
-                .map(x -> Expr.build(x.getExpr()))
-                .collect(Collectors.toList());
         if(query.getFrom() != null) {
             from = new From(query.getFrom(), env, this);
         }
-        where = Condition.build(query.getWhere(),env);
+        // alias：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
+        // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
+        if (from != null) {
+            tableAliasMap.putAll(from.tableAliasMap);
+            attrAliasMap.putAll(from.attrAliasMap);
+        }
+        selections = query.getSelectList()
+                .stream()
+                .map(x -> Expr.build(x.getExpr(), from.tableMapping))
+                .collect(Collectors.toList());
+        for (int i=0;i<selections.size();i++) {
+            String alias = query.getSelectList().get(i).getAlias();
+            if (alias != null){
+                attrAliasMap.put(alias, selections.get(i));
+            }
+        }
+        where = Condition.build(query.getWhere(), env, from.tableMapping);
         if (from != null && from.joinCondition != null) {
             if (where != null){
                 where = new CompoundCond("AND", Arrays.asList(where,from.joinCondition));
@@ -73,21 +85,9 @@ public class PlainSelect extends Select {
         if (where != null) {
             where = where.rearrange();
         }
-        groupBy = new GroupBy(query.getGroupBy(),env);
-        orderBy = new OrderBy(query.getOrderBy());
+        groupBy = new GroupBy(query.getGroupBy(), env, from.tableMapping);
+        orderBy = new OrderBy(query.getOrderBy(), from.tableMapping);
         limit = new Limit(query.getLimit());
-        // alias：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
-        // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
-        if (from != null) {
-            tableAliasMap.putAll(from.tableAliasMap);
-            attrAliasMap.putAll(from.attrAliasMap);
-        }
-        for (int i=0;i<selections.size();i++) {
-            String alias = query.getSelectList().get(i).getAlias();
-            if (alias != null){
-                attrAliasMap.put(alias, selections.get(i));
-            }
-        }
         outerSelect = null;
     }
 

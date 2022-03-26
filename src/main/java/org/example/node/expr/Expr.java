@@ -4,11 +4,13 @@ import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import javafx.util.Pair;
 import org.example.CalculateScore;
 import org.example.edit.CostConfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,23 +19,27 @@ import java.util.stream.Collectors;
  * @date 2021/12/7
  **/
 public abstract class Expr {
-    public static Expr build(SQLExpr expr){
+    public static Expr build(SQLExpr expr, HashMap<SQLTableSource, String> tableMapping){
         if (expr == null)
             return null;
         if (expr instanceof SQLAggregateExpr) {
             SQLAggregateExpr aggrExpr = (SQLAggregateExpr) expr;
-            return new FuncExpr(aggrExpr.getMethodName(), aggrExpr.getOption(), aggrExpr.getArguments());
+            return new FuncExpr(aggrExpr.getMethodName(), aggrExpr.getOption(), aggrExpr.getArguments(), tableMapping);
         } else if (expr instanceof SQLMethodInvokeExpr) {
             SQLMethodInvokeExpr methodExpr = (SQLMethodInvokeExpr) expr;
-            return new FuncExpr(methodExpr.getMethodName(), methodExpr.getArguments());
+            return new FuncExpr(methodExpr.getMethodName(), methodExpr.getArguments(), tableMapping);
         } else if (expr instanceof SQLPropertyExpr) {
             SQLPropertyExpr propExpr = (SQLPropertyExpr) expr;
             return new PropertyExpr(propExpr.getOwner().toString(),propExpr.getName());
         } else if (expr instanceof SQLIdentifierExpr) {
             if (((SQLIdentifierExpr) expr).getResolvedOwnerObject() != null) {
                 String attr = ((SQLIdentifierExpr) expr).getName();
-                String table = ((SQLIdentifierExpr) expr).getResolvedOwnerObject().toString();
                 SQLObject object = ((SQLIdentifierExpr) expr).getResolvedOwnerObject();
+                String table = object.toString();
+                if (object instanceof SQLTableSource
+                        && tableMapping != null && tableMapping.containsKey(object)) {
+                    table = tableMapping.get(object);
+                }
                 if (object instanceof SQLExprTableSource && ((SQLExprTableSource) object).getAlias() != null) {
                     table = ((SQLExprTableSource) object).getAlias();
                 }
@@ -53,7 +59,7 @@ public abstract class Expr {
         } else if (expr instanceof SQLListExpr) {
             return new ListExpr(((SQLListExpr) expr).getItems()
             .stream()
-            .map(Expr::build)
+            .map(e -> Expr.build(e, tableMapping))
             .collect(Collectors.toList()));
         } else {
             return new OtherExpr(expr.toString());

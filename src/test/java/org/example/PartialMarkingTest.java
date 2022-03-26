@@ -123,7 +123,7 @@ public class PartialMarkingTest {
 //                "  `name` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,\n" +
 //                "  PRIMARY KEY (`customer_id`) USING BTREE\n" +
 //                ") ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;");
-        String sql = "select name from customer c where name=\"John\"";
+        String sql = "select name from (select name from customer c where name=\"John\")";
         Env env = new Env(dbType, sqls);
         Select s = BuildAST.buildSelect(sql, env);
         System.out.println(s.toString());

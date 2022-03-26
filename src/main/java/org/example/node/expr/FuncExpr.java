@@ -2,10 +2,12 @@ package org.example.node.expr;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.SQLAggregateOption;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import javafx.util.Pair;
 import org.example.edit.CostConfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,21 +24,21 @@ public class FuncExpr extends Expr {
     public FuncExpr(){
     }
 
-    public FuncExpr(String name, SQLAggregateOption option, List<SQLExpr> exprs){
+    public FuncExpr(String name, SQLAggregateOption option, List<SQLExpr> exprs, HashMap<SQLTableSource, String> tableMapping){
         this.name = name;
         if (option != null)
             this.option = option.toString();
         parameters = new ArrayList<>();
         for (SQLExpr expr: exprs) {
-            parameters.add(Expr.build(expr));
+            parameters.add(Expr.build(expr, tableMapping));
         }
     }
 
-    public FuncExpr(String name, List<SQLExpr> exprs){
+    public FuncExpr(String name, List<SQLExpr> exprs, HashMap<SQLTableSource, String> tableMapping){
         this.name = name;
         parameters = new ArrayList<>();
         for (SQLExpr expr: exprs) {
-            parameters.add(Expr.build(expr));
+            parameters.add(Expr.build(expr, tableMapping));
         }
     }
 

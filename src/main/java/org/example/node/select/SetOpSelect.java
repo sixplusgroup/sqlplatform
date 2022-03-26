@@ -35,7 +35,7 @@ public class SetOpSelect extends Select {
         this.left = left;
         this.right = right;
         this.operator = SetOp.valueOf(operator.toString().replaceAll(" ","_"));
-        this.orderBy = orderBy==null ? null : new OrderBy(orderBy);
+        this.orderBy = orderBy==null ? null : new OrderBy(orderBy, null);
         // 统计量赋值
         subqueries = new ArrayList<>();
         subqueries.addAll(left.subqueries);

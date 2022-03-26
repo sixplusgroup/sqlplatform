@@ -1,9 +1,11 @@
 package org.example.node.orderby;
 
 import com.alibaba.druid.sql.ast.SQLOrderBy;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import org.example.edit.CostConfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,11 +20,11 @@ public class OrderBy {
         items = new ArrayList<>();
     }
 
-    public OrderBy(SQLOrderBy orderBy) {
+    public OrderBy(SQLOrderBy orderBy, HashMap<SQLTableSource, String> tableMapping) {
        if (orderBy==null || orderBy.getItems()==null || orderBy.getItems().size()==0) {
            items = new ArrayList<>();
        } else {
-           items = orderBy.getItems().stream().map(OrderByItem::new).collect(Collectors.toList());
+           items = orderBy.getItems().stream().map(i -> new OrderByItem(i, tableMapping)).collect(Collectors.toList());
        }
     }
 

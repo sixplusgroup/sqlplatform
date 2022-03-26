@@ -3,6 +3,7 @@ package org.example.node.condition;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import org.example.BuildAST;
 import org.example.CalculateScore;
 import org.example.Env;
@@ -34,7 +35,7 @@ public abstract class Condition {
      * @param expr
      * @return
      */
-    public static Condition build(SQLExpr expr, Env env){
+    public static Condition build(SQLExpr expr, Env env, HashMap<SQLTableSource, String> tableMapping){
         if (expr == null)
             return null;
         if (expr instanceof SQLBinaryOpExpr){
@@ -45,8 +46,8 @@ public abstract class Condition {
             // 复合条件
             if (operator == SQLBinaryOperator.BooleanAnd || operator == SQLBinaryOperator.BooleanOr || operator == SQLBinaryOperator.BooleanXor) {
                 List<Condition> subConds = new ArrayList<>();
-                subConds.add(build(left,env));
-                subConds.add(build(right,env));
+                subConds.add(build(left, env, tableMapping));
+                subConds.add(build(right, env, tableMapping));
                 return new CompoundCond(operator.name,subConds);
             } else {// 单个条件
                 String op = getNormalizedOp(operator.name);
@@ -64,7 +65,7 @@ public abstract class Condition {
                         selectQuery = ((SQLSomeExpr) right).subQuery.getQuery();
                     if (right instanceof SQLAnyExpr)
                         selectQuery = ((SQLAnyExpr) right).subQuery.getQuery();
-                    Expr expr_some = Expr.build(left);
+                    Expr expr_some = Expr.build(left, tableMapping);
                     Select subQ = BuildAST.buildSelect(selectQuery,env);
                     toExist(expr_some,subQ,op);
                     return new Exist(false,subQ);
@@ -78,7 +79,7 @@ public abstract class Condition {
                         right = tmp;
                         op = getOppositeOp(op);
                     }
-                    Expr expr_all = Expr.build(left);
+                    Expr expr_all = Expr.build(left, tableMapping);
                     SQLSelectQuery selectQuery = ((SQLAllExpr)right).subQuery.getQuery();
                     Select subQ = BuildAST.buildSelect(selectQuery,env);
                     toExist(expr_all,subQ,op);
@@ -86,16 +87,17 @@ public abstract class Condition {
                 }
                 // 普通运算符的情况
                 else if (isCommutative(op)){
-                    return new CommutativeCond(op,Arrays.asList(Expr.build(left), Expr.build(right)));
+                    return new CommutativeCond(op,
+                            Arrays.asList(Expr.build(left, tableMapping), Expr.build(right, tableMapping)));
                 }
                 else {
-                    return new UncommutativeCond(op, Expr.build(left), Expr.build(right));
+                    return new UncommutativeCond(op, Expr.build(left, tableMapping), Expr.build(right, tableMapping));
                 }
             }
         }
         // not
         else if (expr instanceof SQLNotExpr) {
-            Condition c = build(((SQLNotExpr) expr).expr,env);
+            Condition c = build(((SQLNotExpr) expr).expr, env, tableMapping);
             setNot(c);
             return c;
         }
@@ -108,7 +110,7 @@ public abstract class Condition {
         // in转exist
         else if (expr instanceof SQLInSubQueryExpr) {
             SQLInSubQueryExpr inExpr = (SQLInSubQueryExpr) expr;
-            Expr expr_in = Expr.build(inExpr.getExpr());
+            Expr expr_in = Expr.build(inExpr.getExpr(), tableMapping);
             Select subQ = BuildAST.buildSelect(inExpr.subQuery.getQuery(),env);
             toExist(expr_in, subQ, "=");
             return new Exist(inExpr.isNot(),subQ);
@@ -116,9 +118,9 @@ public abstract class Condition {
         // between 转 CompoundCond
         else if (expr instanceof SQLBetweenExpr) {
             SQLBetweenExpr betweenExpr = (SQLBetweenExpr) expr;
-            Expr testExpr = Expr.build(betweenExpr.testExpr);
-            Expr beginExpr = Expr.build(betweenExpr.beginExpr);
-            Expr endExpr = Expr.build(betweenExpr.endExpr);
+            Expr testExpr = Expr.build(betweenExpr.testExpr, tableMapping);
+            Expr beginExpr = Expr.build(betweenExpr.beginExpr, tableMapping);
+            Expr endExpr = Expr.build(betweenExpr.endExpr, tableMapping);
             if (betweenExpr.isNot()) {
                 List<Condition> subConds = new ArrayList<>();
                 subConds.add(new UncommutativeCond("<",testExpr,beginExpr));

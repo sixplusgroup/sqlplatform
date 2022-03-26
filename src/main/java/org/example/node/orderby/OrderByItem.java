@@ -1,10 +1,12 @@
 package org.example.node.orderby;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import org.example.edit.CostConfig;
 import org.example.enums.Order;
 import org.example.node.expr.Expr;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,12 +23,12 @@ public class OrderByItem {
         this.order = order;
     }
 
-    public OrderByItem(SQLSelectOrderByItem item){
+    public OrderByItem(SQLSelectOrderByItem item, HashMap<SQLTableSource, String> tableMapping){
         if (item.getResolvedSelectItem() != null) {
-            column = Expr.build(item.getResolvedSelectItem().getExpr());
+            column = Expr.build(item.getResolvedSelectItem().getExpr(), tableMapping);
         }
         else {
-            column = Expr.build(item.getExpr());
+            column = Expr.build(item.getExpr(), tableMapping);
         }
         if (item.getType() == null){
             order = Order.ASC;

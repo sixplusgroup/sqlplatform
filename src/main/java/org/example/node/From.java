@@ -14,9 +14,12 @@ import org.example.node.select.Select;
 import org.example.node.table.JoinTable;
 import org.example.node.table.PlainTable;
 import org.example.node.table.Table;
+import org.example.util.GenerateTableAlias;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.example.BuildAST.exchangeHashMap;
 
 /**
  * @author shenyichen
@@ -30,6 +33,7 @@ public class From {
     public Condition joinCondition;
     public HashMap<String, Table> tableAliasMap;
     public HashMap<String, Expr> attrAliasMap;
+    public HashMap<SQLTableSource, String> tableMapping; // 存储 tableSource 和 alias 关系
 
 
     public From() {
@@ -38,6 +42,7 @@ public class From {
         joinCondition = null;
         tableAliasMap = new HashMap<>();
         attrAliasMap = new HashMap<>();
+        tableMapping = new HashMap<>();
     }
 
     public From(List<Table> tables, HashMap<String, Integer> joinTypes, Condition joinCondition) {
@@ -58,7 +63,7 @@ public class From {
             Table left = handleTableSource(((SQLJoinTableSource) tableSource).getLeft(), env, outerSelect);
             Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env, outerSelect);
             JoinType type = handleJoinType(((SQLJoinTableSource) tableSource).getJoinType());
-            handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition(),env);
+            handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition(), env, tableMapping);
             t = new JoinTable(left,right,type);
         }
         else if (tableSource instanceof SQLUnionQueryTableSource) {
@@ -96,8 +101,32 @@ public class From {
         }
         String alias = tableSource.getAlias();
         if (alias != null){
-            tableAliasMap.put(alias, t);
+            String oldAlias = alias;
+            while (tableAliasMap.containsKey(oldAlias)) {
+                oldAlias = GenerateTableAlias.getAlias();
+            }
+            tableAliasMap.put(oldAlias, tableAliasMap.get(alias));
+            SQLTableSource oldTableSource = null;
+            for (Map.Entry<SQLTableSource, String> entry: tableMapping.entrySet()) {
+                if (entry.getValue().equals(alias)) {
+                    oldTableSource = entry.getKey();
+                    break;
+                }
+            }
+            if (oldTableSource != null) {
+                tableMapping.put(oldTableSource, oldAlias);
+            }
         }
+        else {
+            if (tableSource instanceof SQLExprTableSource) {
+                alias = t.toString();
+            }
+            else {
+                alias = GenerateTableAlias.getAlias();
+            }
+        }
+        tableAliasMap.put(alias, t);
+        tableMapping.put(tableSource, alias);
         return t;
     }
 
@@ -124,11 +153,11 @@ public class From {
         return JoinType.valueOf(type);
     }
 
-    public void handleCondsFromSQLExpr(SQLExpr conds, Env env){
+    public void handleCondsFromSQLExpr(SQLExpr conds, Env env, HashMap<SQLTableSource, String> tableMapping){
         if (conds == null){
             return;
         }
-        Condition c = Condition.build(conds,env);
+        Condition c = Condition.build(conds, env, tableMapping);
         if (joinCondition != null){
             joinCondition = new CompoundCond("AND", Arrays.asList(joinCondition,c));
         }else {

@@ -224,7 +224,7 @@ public class BuildAST {
         return res;
     }
 
-    private static <T2> HashMap<T2, String> exchangeHashMap(HashMap<String, T2> oriMap) {
+    public static <T2> HashMap<T2, String> exchangeHashMap(HashMap<String, T2> oriMap) {
         HashMap<T2, String> newMap = new HashMap<>();
         for (Map.Entry<String, T2> e: oriMap.entrySet()) {
             if (newMap.containsKey(e.getValue())) {
