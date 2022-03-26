@@ -187,11 +187,11 @@ public class BuildAST {
             }
         }
         // step 2.2: substitute, 注意要传递给上一层Select（e.g. sql.csv 15）
-        substituteMainBody(stu, tableAliasMap, attrAliasMap);
+        substituteMainBody(stu, tableAliasMap, attrAliasMap, true);
         PlainSelect p = stu;
         if (p.getOuterSelect() != null) {
             PlainSelect outerSelect = p.getOuterSelect();
-            substituteMainBody(outerSelect, tableAliasMap, attrAliasMap);
+            substituteMainBody(outerSelect, tableAliasMap, attrAliasMap, false);
             p = outerSelect;
         }
         // step 3: 处理 where 里的 subQueries
@@ -238,9 +238,15 @@ public class BuildAST {
 
     private static void substituteMainBody(PlainSelect stu,
                                            HashMap<String, String> tableAliasMap,
-                                           HashMap<String, String> attrAliasMap) {
+                                           HashMap<String, String> attrAliasMap,
+                                           boolean self) {
         for (Expr e: stu.selections) {
-            substituteExpr(e, tableAliasMap, attrAliasMap);
+            if (self) {
+                substituteExpr(e, tableAliasMap, new HashMap<>());
+            }
+            else {
+                substituteExpr(e, tableAliasMap, attrAliasMap);
+            }
         }
         substituteCondition(stu.where, tableAliasMap, attrAliasMap);
         for (Expr e: stu.groupBy.items) {
@@ -282,7 +288,7 @@ public class BuildAST {
             substituteSubQ(((SetOpSelect) select).right, tableAliasMap, attrAliasMap);
         }
         else {
-            substituteMainBody((PlainSelect) select, tableAliasMap, attrAliasMap);
+            substituteMainBody((PlainSelect) select, tableAliasMap, attrAliasMap, false);
         }
     }
 
@@ -304,6 +310,10 @@ public class BuildAST {
             if (tableAliasMap.containsKey(pe.table.value) && (!pe.table.substituted)) {
                 pe.table.value = tableAliasMap.get(pe.table.value);
                 pe.table.substituted = true;
+            }
+            if (attrAliasMap.containsKey(pe.attribute.value) && (!pe.attribute.substituted)) {
+                pe.attribute.value = attrAliasMap.get(pe.attribute.value);
+                pe.attribute.substituted = true;
             }
         }
         else if (e instanceof AtomExpr) {

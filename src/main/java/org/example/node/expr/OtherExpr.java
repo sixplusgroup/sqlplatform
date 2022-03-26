@@ -13,7 +13,7 @@ public class OtherExpr extends Expr {
     public OtherExpr(){}
 
     public OtherExpr(String value){
-        this.value = value;
+        this.value = value.toLowerCase();
     }
 
     @Override
@@ -26,9 +26,10 @@ public class OtherExpr extends Expr {
     public float score(Expr e) {
         // case 1: this equals e
         if (e instanceof OtherExpr) {
-            return score() * (1 -
-                    1.0f * CalculateScore.editDistance(e.toString(),this.toString())
-                            / Math.max(e.toString().length(),this.toString().length()));
+            return score() *
+                    (equals(e) ? 1 : (1 -
+                            1.0f * CalculateScore.editDistance(e.toString(),this.toString())
+                            / Math.max(e.toString().length(),this.toString().length())));
         } else if (e instanceof FuncExpr) {
             // case 2: e includes this
             FuncExpr fe = (FuncExpr) e;
@@ -54,7 +55,10 @@ public class OtherExpr extends Expr {
     public boolean equals(Object obj) {
         if (!(obj instanceof OtherExpr))
             return false;
-        return ((OtherExpr) obj).value.equals(value);
+        int d = CalculateScore.editDistance(((OtherExpr) obj).value, value);
+        if (d <= 0.4 * value.length())
+            return true;
+        return false;
     }
 
     @Override

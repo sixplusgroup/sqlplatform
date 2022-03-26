@@ -102,9 +102,11 @@ public class GroupByEdit implements Edit {
         // having
         if (instr.groupBy.having != null && stu.groupBy.having != null) {
             int distance = CalculateScore.editDistance(instr.groupBy.having.toString(), stu.groupBy.having.toString());
-            PlainSelect edited = stu.clone();
-            edited.groupBy.having = instr.groupBy.having.clone();
-            res.add(new Pair<>(edited, (float) (distance / CostConfig.other_digits)));
+            if (distance > 0) {
+                PlainSelect edited = stu.clone();
+                edited.groupBy.having = instr.groupBy.having.clone();
+                res.add(new Pair<>(edited, (float) (distance / CostConfig.other_digits)));
+            }
         }
         return res;
     }

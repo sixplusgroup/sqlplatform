@@ -99,8 +99,9 @@ public class From {
             t = new PlainTable(tableSource.getAlias());
             tables.add(t);
         }
+        // 处理 alias
         String alias = tableSource.getAlias();
-        if (alias != null){
+        if (alias != null) {
             String oldAlias = alias;
             while (tableAliasMap.containsKey(oldAlias)) {
                 oldAlias = GenerateTableAlias.getAlias();

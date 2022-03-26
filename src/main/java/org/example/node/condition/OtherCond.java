@@ -47,9 +47,10 @@ public class OtherCond extends Condition {
                 if (c.not)
                     score -= CostConfig.not;
             }
-            score += (score() - (not ? CostConfig.not : 0)) * (1 -
-                    1.0f * CalculateScore.editDistance(c.toString(),this.toString())
-                            / Math.max(c.toString().length(),this.toString().length()));
+            score += (score() - (not ? CostConfig.not : 0)) *
+                    (equals(c) ? 1 : (1 -
+                            1.0f * CalculateScore.editDistance(c.toString(),this.toString())
+                            / Math.max(c.toString().length(),this.toString().length())));
         }
         else if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
@@ -76,7 +77,12 @@ public class OtherCond extends Condition {
         if (!(obj instanceof OtherCond))
             return false;
         OtherCond o = (OtherCond) obj;
-        return o.not == not && o.value.equals(value);
+        if (o.not != not)
+            return false;
+        int d = CalculateScore.editDistance(o.value,value);
+        if (d <= 0.4 * value.length())
+            return true;
+        return false;
     }
 
     @Override

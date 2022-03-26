@@ -55,9 +55,11 @@ public class PartialMarking {
      */
     public float partialMark(String instrSql, String studentSql, float maxScore) {
         try {
-            Select instrAST = BuildAST.buildSelect(instrSql.replaceAll("\\s+", " ").trim(),env);
+            Select instrAST = BuildAST.buildSelect(instrSql.replaceAll("\\s+", " ")
+                    .toLowerCase().trim(),env);
             Canonicalizer.canonicalize(instrAST, env);
-            Select studentAST = BuildAST.buildSelect(studentSql.replaceAll("\\s+", " ").trim(),env);
+            Select studentAST = BuildAST.buildSelect(studentSql.replaceAll("\\s+", " ")
+                    .toLowerCase().trim(),env);
             BuildAST.substituteAlias(instrAST, studentAST);
             // 不能在buildSelect时就替换，可能因为tableAlias交叉导致问题
             Canonicalizer.substituteEqualClass(instrAST);
@@ -89,11 +91,11 @@ public class PartialMarking {
 
     public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
 // PASS
-//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
-//                "where u.uid=s.id and u.uid=l.sid";
+        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+                "where u.uid=s.id and u.uid=l.sid";
 // PASS: selections等价类替换
-//        String studentSql = "select l.sid from user u, student s, lesson l\n" +
-//                "where u.uid=s.id and u.uid=l.sid";
+        String studentSql = "select l.sid from user u, student s, lesson l\n" +
+                "where u.uid=s.id and u.uid=l.sid";
 // PASS: AND展平
 //        String studentSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where u.uid=s.id and s.id=l.sid";
@@ -120,16 +122,7 @@ public class PartialMarking {
 //                "  group by buyer_id) as o1\n" +
 //                "  right join users u\n" +
 //                "on u.user_id=o1.buyer_id\n" +
-//                "order by u.user_id asc";
-//        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
-//                "from\n" +
-//                "  (select buyer_id, count(*) haha\n" +
-//                "  from orders\n" +
-//                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o1\n" +
-//                "  right join users u\n" +
-//                "on u.user_id=o1.buyer_id and u.user_id>2\n" +
-//                "order by u.user_id desc";
+//                "order by orders_in_2019 asc";
 // PASS: 复杂Expr，List<Expr>的match （下面的例子里修改的是MAX里的distinct和order by的顺序）
 //        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
 //                "from orders o\n" +
@@ -137,11 +130,11 @@ public class PartialMarking {
 //                "GROUP BY o.customer_id\n" +
 //                "order by order_num DESC, customer_id asc\n" +
 //                "limit 1;";
-//        String studentSql = "select ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, o.customer_id, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), max(order_id) order_num, date_add(l1.login_date,interval 1 day) as date\n" +
+//        String studentSql = "select ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, o.customer_id, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), max(distinct order_id) order_num, date_add(l1.login_date,interval 1 day) as date\n" +
 //                "from orders o\n" +
 //                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
 //                "GROUP BY o.customer_id\n" +
-//                "order by customer_id asc, order_num DESC\n" +
+//                "order by order_num DESC, customer_id asc\n" +
 //                "limit 1;";
 // PASS: 无from todo parameters顺序
 //        String instrSql = "select round(\n" +
@@ -206,43 +199,7 @@ public class PartialMarking {
 //                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
 //        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
 //                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
-
-        // to test
-//        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
-//                "from employees e1\n" +
-//                "where e1.salary not in (\n" +
-//                "\tselect MAX(salary)\n" +
-//                "\tfrom employees e2\n" +
-//                "\twhere e1.dno = e2.dno\n" +
-//                "\tgroup by dno\n" +
-//                ")\n" +
-//                "order by dno;";
-        // PASS: 去掉not
-//        String studentSql = "select e1.dno,e1.eno, e1.salary\n" +
-//                "from employees e1\n" +
-//                "where e1.salary in (\n" +
-//                "\tselect MAX(salary)\n" +
-//                "\tfrom employees e2\n" +
-//                "\twhere e1.dno = e2.dno\n" +
-//                "\tgroup by dno\n" +
-//                ")\n" +
-//                "order by dno;";
-//        String instrSql = "select activity\n" +
-//                "from friends\n" +
-//                "group by activity\n" +
-//                "having count(*)>any(\n" +
-//                "    select count(*) from friends group by activity\n" +
-//                ") and count(*)<any(\n" +
-//                "    select count(*) from friends group by activity\n" +
-//                ")";
-//        String studentSql = "select activity\n" +
-//                "from friends\n" +
-//                "group by activity\n" +
-//                "having count(*)<any(\n" +
-//                "    select count(*) from friends group by activity\n" +
-//                ") and count(*)>any(\n" +
-//                "    select count(*) from friends group by activity\n" +
-//                ")";
+// PASS: 带resolve随便测测
 //        String instrSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
 //                "FROM t_emp a\n" +
 //                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
@@ -253,20 +210,6 @@ public class PartialMarking {
 //                "group by emp_id order by emp_id,a.name";
 //        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
 //        sqls.add("create table t_org(org_id bigint, name varchar(20));");
-
-        // test my sqls
-        String instrSql = "select e1.dno,e1.eno, e1.salary\n" +
-                "from employees e1\n" +
-                "where e1.salary in (\n" +
-                "\tselect MAX(salary)\n" +
-                "\tfrom employees e2\n" +
-                "\twhere e1.dno = e2.dno\n" +
-                "\tgroup by dno\n" +
-                ")\n" +
-                "order by dno;";
-        String studentSql = "select dno, eno, salary from employees e\n" +
-                "where salary >= all (select e1.salary from employees e1 where e1.dno=e.dno)\n" +
-                "order by dno asc";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
         PartialMarking marking = new PartialMarking(dbType, sqls);

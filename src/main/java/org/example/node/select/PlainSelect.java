@@ -58,16 +58,22 @@ public class PlainSelect extends Select {
         if(query.getFrom() != null) {
             from = new From(query.getFrom(), env, this);
         }
+        else {
+            from = new From();
+        }
         // alias：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
         // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
-        if (from != null) {
-            tableAliasMap.putAll(from.tableAliasMap);
-            attrAliasMap.putAll(from.attrAliasMap);
+        tableAliasMap.putAll(from.tableAliasMap);
+        attrAliasMap.putAll(from.attrAliasMap);
+        if (query.getSelectList() == null) {
+            selections = new ArrayList<>();
         }
-        selections = query.getSelectList()
-                .stream()
-                .map(x -> Expr.build(x.getExpr(), from.tableMapping))
-                .collect(Collectors.toList());
+        else {
+            selections = query.getSelectList()
+                    .stream()
+                    .map(x -> Expr.build(x.getExpr(), from.tableMapping))
+                    .collect(Collectors.toList());
+        }
         for (int i=0;i<selections.size();i++) {
             String alias = query.getSelectList().get(i).getAlias();
             if (alias != null){

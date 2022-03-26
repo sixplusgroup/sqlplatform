@@ -34,7 +34,8 @@ public class SetOpSelect extends Select {
     public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, Env env) {
         this.left = left;
         this.right = right;
-        this.operator = SetOp.valueOf(operator.toString().replaceAll(" ","_"));
+//        this.operator = SetOp.valueOf(operator.toString().replaceAll(" ","_"));
+        this.operator = SetOp.valueOf(operator.toString().split(" ")[0]);
         this.orderBy = orderBy==null ? null : new OrderBy(orderBy, null);
         // 统计量赋值
         subqueries = new ArrayList<>();

@@ -47,6 +47,8 @@ public class PropertyExpr extends Expr {
             if (match != null) {
                 return score(match) - (fe.score() - match.score()) * CostConfig.delete_cost_rate;
             }
+        } else if (e instanceof AtomExpr) {
+            return (attribute.equals(e)) ? score() : 0;
         }
         return 0;
     }
@@ -63,10 +65,15 @@ public class PropertyExpr extends Expr {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof PropertyExpr))
+        if (!(obj instanceof PropertyExpr || obj instanceof AtomExpr))
             return false;
-        PropertyExpr e = (PropertyExpr) obj;
-        return (table == null || table.equals(e.table)) && e.attribute.equals(attribute);
+        if (obj instanceof PropertyExpr) {
+            PropertyExpr e = (PropertyExpr) obj;
+            return (table == null || table.equals(e.table)) && e.attribute.equals(attribute);
+        }
+        else {
+            return attribute.equals(obj);
+        }
     }
 
     @Override

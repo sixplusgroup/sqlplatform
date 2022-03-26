@@ -1,9 +1,11 @@
 package org.example.node.orderby;
 
+import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import org.example.edit.CostConfig;
 import org.example.enums.Order;
+import org.example.node.expr.AtomExpr;
 import org.example.node.expr.Expr;
 
 import java.util.HashMap;
@@ -24,8 +26,9 @@ public class OrderByItem {
     }
 
     public OrderByItem(SQLSelectOrderByItem item, HashMap<SQLTableSource, String> tableMapping){
-        if (item.getResolvedSelectItem() != null) {
-            column = Expr.build(item.getResolvedSelectItem().getExpr(), tableMapping);
+        SQLSelectItem resolvedItem = item.getResolvedSelectItem();
+        if (resolvedItem != null) {
+            column = Expr.build(resolvedItem.getExpr(), tableMapping);
         }
         else {
             column = Expr.build(item.getExpr(), tableMapping);

@@ -61,6 +61,14 @@ public class FuncExpr extends Expr {
 
     @Override
     public float score(Expr e) {
+        if (name.equals("COUNT") && option == null
+                && e instanceof FuncExpr && ((FuncExpr) e).name.equals(name) && ((FuncExpr) e).option == null) {
+            if ((parameters.get(0) instanceof AtomExpr && ((AtomExpr) parameters.get(0)).value.equals("*"))
+            || (((FuncExpr) e).parameters.get(0) instanceof AtomExpr
+                    && (((AtomExpr) ((FuncExpr) e).parameters.get(0)).value.equals("*")))) {
+                return score();
+            }
+        }
         // case 1: this includes e
         float score = 0.0f;
         Expr match = Expr.isIn(e, parameters).getKey();
@@ -115,6 +123,14 @@ public class FuncExpr extends Expr {
 
     @Override
     public boolean equals(Object obj) {
+        if (name.equals("COUNT") && option == null
+                && obj instanceof FuncExpr && ((FuncExpr) obj).name.equals(name) && ((FuncExpr) obj).option == null) {
+            if ((parameters.get(0) instanceof AtomExpr && ((AtomExpr) parameters.get(0)).value.equals("*"))
+                    || (((FuncExpr) obj).parameters.get(0) instanceof AtomExpr
+                    && (((AtomExpr) ((FuncExpr) obj).parameters.get(0)).value.equals("*")))) {
+                return true;
+            }
+        }
         if (!(obj instanceof FuncExpr))
             return false;
         FuncExpr e = (FuncExpr) obj;

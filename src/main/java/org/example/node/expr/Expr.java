@@ -3,7 +3,6 @@ package org.example.node.expr;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.expr.*;
-import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import javafx.util.Pair;
 import org.example.CalculateScore;
@@ -40,8 +39,8 @@ public abstract class Expr {
                         && tableMapping != null && tableMapping.containsKey(object)) {
                     table = tableMapping.get(object);
                 }
-                if (object instanceof SQLExprTableSource && ((SQLExprTableSource) object).getAlias() != null) {
-                    table = ((SQLExprTableSource) object).getAlias();
+                if (object instanceof SQLTableSource && ((SQLTableSource) object).getAlias() != null) {
+                    table = ((SQLTableSource) object).getAlias();
                 }
                 return new PropertyExpr(table, attr);
             }
@@ -136,12 +135,15 @@ public abstract class Expr {
         for (Expr item: l) {
             String tmp = item.toString();
             int d = CalculateScore.editDistance(s,tmp);
-            if (d < distance && d < 0.5 * s.length()) {
+            if (d < distance) {
                 distance = d;
                 res = item;
             }
         }
-        return new Pair<>(res, 1 - (distance * 1.0 / s.length()));
+        if (res != null && e.score(res) > 0) {
+            return new Pair<>(res, 1 - (distance * 1.0 / s.length()));
+        }
+        return new Pair<>(null, 1d);
     }
 
     /**
