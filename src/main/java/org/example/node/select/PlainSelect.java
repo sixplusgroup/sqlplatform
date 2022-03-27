@@ -6,6 +6,8 @@ import org.example.Env;
 import org.example.node.From;
 import org.example.node.GroupBy;
 import org.example.node.Limit;
+import org.example.node.expr.AtomExpr;
+import org.example.node.expr.PropertyExpr;
 import org.example.node.orderby.OrderBy;
 import org.example.node.condition.CompoundCond;
 import org.example.node.condition.Condition;
@@ -80,6 +82,7 @@ public class PlainSelect extends Select {
                 attrAliasMap.put(alias, selections.get(i));
             }
         }
+        normalizeSelections();
         where = Condition.build(query.getWhere(), env, from.tableMapping);
         if (from != null && from.joinCondition != null) {
             if (where != null){
@@ -95,6 +98,26 @@ public class PlainSelect extends Select {
         orderBy = new OrderBy(query.getOrderBy(), from.tableMapping);
         limit = new Limit(query.getLimit());
         outerSelect = null;
+    }
+
+    /**
+     * 处理 *：转换为具体的列
+     */
+    public void normalizeSelections() {
+        List<Expr> l = new ArrayList<>(selections);
+        selections = new ArrayList<>();
+        for (Expr e: l) {
+            if (e instanceof PropertyExpr && ((PropertyExpr) e).attribute.value.equals("*")
+                    && ((PropertyExpr) e).attribute.allColumnValue != null
+                    && ((PropertyExpr) e).attribute.allColumnValue.size() > 0)
+                selections.addAll(((PropertyExpr) e).attribute.allColumnValue);
+            else if (e instanceof AtomExpr && ((AtomExpr) e).value.equals("*")
+                    && ((AtomExpr) e).allColumnValue != null
+                    && ((AtomExpr) e).allColumnValue.size() > 0)
+                selections.addAll(((AtomExpr) e).allColumnValue);
+            else
+                selections.add(e);
+        }
     }
 
     @Override

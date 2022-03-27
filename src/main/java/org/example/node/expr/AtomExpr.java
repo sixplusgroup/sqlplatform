@@ -1,6 +1,10 @@
 package org.example.node.expr;
 
+import com.alibaba.druid.sql.ast.statement.*;
 import org.example.edit.CostConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author shenyichen
@@ -8,6 +12,7 @@ import org.example.edit.CostConfig;
  **/
 public class AtomExpr extends Expr {
     public String value;
+    public List<PropertyExpr> allColumnValue;
     public boolean substituted;
 
     public AtomExpr() {
@@ -17,6 +22,25 @@ public class AtomExpr extends Expr {
     public AtomExpr(String value) {
         this();
         this.value = value;
+    }
+
+    public AtomExpr(String value, SQLTableSource tableSource) {
+        this();
+        this.value = value;
+        this.allColumnValue = new ArrayList<>();
+        if (tableSource instanceof SQLExprTableSource) {
+            SQLExprTableSource t = (SQLExprTableSource) tableSource;
+            String table = t.getAlias();
+            if (table == null)
+                table = t.toString();
+            if (t.getSchemaObject().getStatement() instanceof SQLCreateTableStatement) {
+                for (SQLTableElement item: ((SQLCreateTableStatement) t.getSchemaObject().getStatement()).getTableElementList()) {
+                    if (item instanceof SQLColumnDefinition) {
+                        allColumnValue.add(new PropertyExpr(table, ((SQLColumnDefinition) item).getNameAsString()));
+                    }
+                }
+            }
+        }
     }
 
     @Override

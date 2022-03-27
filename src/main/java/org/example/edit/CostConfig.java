@@ -9,6 +9,8 @@ public class CostConfig {
     public static float set_operator = 1.0f;
     public static float logic_operator = 1.0f;
     public static float math_operator = 1.0f;
+    public static float order_by_item = 1.0f;
+    public static float group_by_item = 1.0f;
     public static float table = 1.0f;
     public static float join_type = 1.0f;
     public static float condition = 3.0f;

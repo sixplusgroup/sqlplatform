@@ -1,5 +1,10 @@
 package org.example;
 
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
+import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.util.JdbcConstants;
 import javafx.util.Pair;
 import org.example.node.select.Select;
@@ -114,16 +119,11 @@ public class PartialMarkingTest {
     public void testCreateSql() {
         String path = "src/main/resources/org/example/examDataFiles/upload_c9c0c1f5ceb0443bf580e69f8deb8633.sql";
         List<String> sqls = new ArrayList<>();
-        sqls.add(MyFileReader.readFile(path));
-//        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
-//        sqls.add("create table t_org(org_id bigint, name varchar(20));");
-//        sqls.add("DROP TABLE IF EXISTS `customer`;\n" +
-//                "CREATE TABLE `customer`  (\n" +
-//                "  `customer_id` int NOT NULL,\n" +
-//                "  `name` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,\n" +
-//                "  PRIMARY KEY (`customer_id`) USING BTREE\n" +
-//                ") ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;");
-        String sql = "select name from (select name from customer c where name=\"John\")";
+//        sqls.add(MyFileReader.readFile(path));
+//        String sql = "select name from (select name from customer c where name=\"John\")";
+        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
+        sqls.add("create table t_org(org_id bigint, name varchar(20));");
+        String sql = "select t.* from t_emp t";
         Env env = new Env(dbType, sqls);
         Select s = BuildAST.buildSelect(sql, env);
         System.out.println(s.toString());

@@ -1,9 +1,6 @@
 package org.example.node;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLObject;
-import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
-import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import javafx.util.Pair;
@@ -11,7 +8,6 @@ import org.example.Env;
 import org.example.edit.CostConfig;
 import org.example.node.condition.Condition;
 import org.example.node.expr.Expr;
-import org.example.node.expr.PropertyExpr;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,10 +50,8 @@ public class GroupBy {
     }
 
     public float score() {
-        float score = (float) items.stream()
-                .mapToDouble(Expr::score)
-                .sum();
-        score += items.size() * CostConfig.sequence_penalty;
+        float score = items.size() * CostConfig.group_by_item
+                + items.size() * CostConfig.sequence_penalty;
         if (having != null)
             score += having.score();
         return score;
@@ -75,14 +69,14 @@ public class GroupBy {
             Expr item = match_instr.get(i);
             Expr match = match_stu.get(i);
             stuC_clone.remove(match);
-            score += item.score(match);
+            score += CostConfig.group_by_item * item.score(match) / item.score();
             int curIdx = groupBy.items.indexOf(match);
             if (curIdx > idx)
                 score += CostConfig.sequence_penalty;
             idx = curIdx;
         }
         for (Expr item: stuC_clone) {
-            score -= item.score() * CostConfig.delete_cost_rate;
+            score -= CostConfig.group_by_item * CostConfig.delete_cost_rate;
         }
         // having
         if (having != null) {

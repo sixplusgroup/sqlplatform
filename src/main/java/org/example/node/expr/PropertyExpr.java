@@ -1,5 +1,7 @@
 package org.example.node.expr;
 
+import com.alibaba.druid.sql.ast.SQLObject;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import org.example.edit.CostConfig;
 
 /**
@@ -17,6 +19,16 @@ public class PropertyExpr extends Expr {
             this.table = new AtomExpr(table);
         if (attribute != null)
             this.attribute = new AtomExpr(attribute);
+    }
+
+    public PropertyExpr(String table, String attribute, SQLObject object) {
+        if (table != null)
+            this.table = new AtomExpr(table);
+        if (attribute != null)
+            if (object instanceof SQLTableSource)
+                this.attribute = new AtomExpr(attribute, (SQLTableSource) object);
+            else
+                this.attribute = new AtomExpr(attribute);
     }
 
     public PropertyExpr(AtomExpr table, AtomExpr attribute) {

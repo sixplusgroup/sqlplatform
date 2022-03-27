@@ -29,7 +29,10 @@ public abstract class Expr {
             return new FuncExpr(methodExpr.getMethodName(), methodExpr.getArguments(), tableMapping);
         } else if (expr instanceof SQLPropertyExpr) {
             SQLPropertyExpr propExpr = (SQLPropertyExpr) expr;
-            return new PropertyExpr(propExpr.getOwner().toString(),propExpr.getName());
+            if (propExpr.getName().equals("*")) {
+                return new PropertyExpr(propExpr.getOwner().toString(), propExpr.getName(), propExpr.getResolvedOwnerObject());
+            }
+            return new PropertyExpr(propExpr.getOwner().toString(), propExpr.getName());
         } else if (expr instanceof SQLIdentifierExpr) {
             if (((SQLIdentifierExpr) expr).getResolvedOwnerObject() != null) {
                 String attr = ((SQLIdentifierExpr) expr).getName();
@@ -48,7 +51,7 @@ public abstract class Expr {
             return new AtomExpr(idExpr.getName());
         } else if (expr instanceof SQLAllColumnExpr) {
             // * 单独处理
-            return new AtomExpr("*");
+            return new AtomExpr("*", ((SQLAllColumnExpr) expr).getResolvedTableSource());
         } else if (expr instanceof SQLNullExpr) {
             return new ConstantExpr("NULL");
         } else if (expr instanceof SQLIntegerExpr) {

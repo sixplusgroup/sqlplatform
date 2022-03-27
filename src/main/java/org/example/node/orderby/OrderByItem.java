@@ -41,11 +41,12 @@ public class OrderByItem {
     }
 
     public float score(){
-        return column.score() + CostConfig.order;
+        return CostConfig.order_by_item + CostConfig.order;
     }
 
-    public float score(OrderByItem o){
-        return column.score(o.column) + (order.equals(o.order) ? CostConfig.order : 0);
+    public float score(OrderByItem o) {
+        return (CostConfig.order_by_item * column.score(o.column) / column.score())
+                + (order.equals(o.order) ? CostConfig.order : 0);
     }
 
     /**

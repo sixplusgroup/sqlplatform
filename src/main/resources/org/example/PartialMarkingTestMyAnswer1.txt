@@ -376,7 +376,7 @@ order by department asc, salary desc
 
 
 
-【能不能转换？】[标准答案集问题] Attention!! 评分0.0 < 100 ！ 13
+[*]【能不能转换？】[标准答案集问题] Attention!! 评分0.0 < 100 ！ 13
 
 答案sql:
 select t.user_id,contact_name,contact_email
@@ -388,6 +388,7 @@ from
     HAVING count_temp>1
 )t, customers,contacts 
 where t.user_id=customers.customer_id and customers.customer_id=contacts.user_id
+【答案中customers表冗余？】
 学生sql:
 select * from contacts
 where user_id in
