@@ -33,7 +33,8 @@ public class AtomExpr extends Expr {
             String table = t.getAlias();
             if (table == null)
                 table = t.toString();
-            if (t.getSchemaObject().getStatement() instanceof SQLCreateTableStatement) {
+            if (t.getSchemaObject() != null && t.getSchemaObject().getStatement() != null
+                    && t.getSchemaObject().getStatement() instanceof SQLCreateTableStatement) {
                 for (SQLTableElement item: ((SQLCreateTableStatement) t.getSchemaObject().getStatement()).getTableElementList()) {
                     if (item instanceof SQLColumnDefinition) {
                         allColumnValue.add(new PropertyExpr(table, ((SQLColumnDefinition) item).getNameAsString()));

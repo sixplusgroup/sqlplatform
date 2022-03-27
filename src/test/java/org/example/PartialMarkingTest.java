@@ -94,7 +94,7 @@ public class PartialMarkingTest {
         // stack over flow: 第6个
         HashMap<Integer, List<String>> mainQData = getResFromMainQ();
         List<Triple<Integer, String, String>> myAnswer = CSVReader.readCsv4(read_csv_prefix + "my_answer.csv");
-        String wirteToPath = prefix + "PartialMarkingTestMyAnswer3.txt";
+        String wirteToPath = prefix + "PartialMarkingTestMyAnswer2.txt";
         for (Triple<Integer, String, String> item: myAnswer) {
             Integer mainId = item.first;
             List<String> sqls = mainQData.get(mainId);
