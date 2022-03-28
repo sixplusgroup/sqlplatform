@@ -8,10 +8,7 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.util.JdbcConstants;
 import javafx.util.Pair;
 import org.example.node.select.Select;
-import org.example.util.CSVReader;
-import org.example.util.MyFileReader;
-import org.example.util.Triple;
-import org.example.util.TxtWriter;
+import org.example.util.*;
 import org.junit.Test;
 
 import java.io.PrintWriter;
@@ -22,19 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.example.util.Constants.*;
+
 /**
  * @author shenyichen
  * @date 2022/3/25
  **/
 public class PartialMarkingTest {
-
-    static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://localhost:3306/sqlexam";
-    static final String USER = "root";
-    static final String PASS = "aptx4869";
     static final String read_csv_prefix = "../../src/main/resources/org/example/";
-    static final String prefix = "src/main/resources/org/example/";
-    static final String dbType = JdbcConstants.MYSQL;
 
     @Test
     public void testOriginalAll() {
@@ -138,7 +130,7 @@ public class PartialMarkingTest {
             Class.forName(JDBC_DRIVER);
             // 打开链接
             System.out.println("连接数据库...");
-            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+            conn = DriverManager.getConnection(DB_URL,USER,PWD);
             // 执行查询
             System.out.println(" 实例化Statement对象...");
             stmt = conn.createStatement();
@@ -190,7 +182,7 @@ public class PartialMarkingTest {
             Class.forName(JDBC_DRIVER);
             // 打开链接
             System.out.println("连接数据库...");
-            conn = DriverManager.getConnection(DB_URL,USER,PASS);
+            conn = DriverManager.getConnection(DB_URL,USER,PWD);
             // 执行查询
             System.out.println(" 实例化Statement对象...");
             stmt = conn.createStatement();
