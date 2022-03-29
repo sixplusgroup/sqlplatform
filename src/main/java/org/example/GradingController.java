@@ -20,8 +20,6 @@ public class GradingController {
 
     @PostMapping("/getScore")
     public float getScore(@RequestBody GetScoreVO data) {
-        System.out.println(data.getMainId());
-        System.out.println(data.getSubId());
         return getScore(data.getMainId(), data.getSubId(), data.getStudentSql(), data.getMaxScore(), Constants.dbType);
     }
 
