@@ -26,7 +26,7 @@ public class GetQuestionInfo {
             String sql = "SELECT db_path FROM main_questions where id=?";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, mainId);
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery();
             while(rs.next()){
                 String dbPath = rs.getString("db_path");
                 sqls.add(MyFileReader.readFile(prefix + dbPath));

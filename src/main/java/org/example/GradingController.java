@@ -4,10 +4,9 @@ import org.example.PartialMarking;
 import org.example.util.Constants;
 import org.example.util.data.GetQuestionInfo;
 import org.example.util.data.OperateAnswerSet;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.example.util.vo.AddToAnswerSetVO;
+import org.example.util.vo.GetScoreVO;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,10 +18,16 @@ import java.util.List;
 @RequestMapping("/api/score")
 public class GradingController {
 
-    @GetMapping("/getScore")
-    public float getScore(Integer mainId, Integer subId, String studentSql, float maxScore) {
-        return 100.0f;
-//        return getScore(mainId, subId, studentSql, maxScore, Constants.dbType);
+    @PostMapping("/getScore")
+    public float getScore(@RequestBody GetScoreVO data) {
+        System.out.println(data.getMainId());
+        System.out.println(data.getSubId());
+        return getScore(data.getMainId(), data.getSubId(), data.getStudentSql(), data.getMaxScore(), Constants.dbType);
+    }
+
+    @GetMapping("/getCorrect")
+    public List<String> getScore(Integer mainId, Integer subId) {
+        return OperateAnswerSet.getAnswers(mainId, subId);
     }
 
     public float getScore(Integer mainId, Integer subId, String studentSql, float maxScore, String dbType) {
@@ -32,9 +37,9 @@ public class GradingController {
         return partialMarking.partialMarkForAnswerSet(answers, studentSql, maxScore);
     }
 
-    @GetMapping("/addToAnswerSet")
-    public void addToAnswerSet(Integer mainId, Integer subId, String instrSql) {
-        addToAnswerSet(mainId, subId, instrSql, Constants.dbType);
+    @PostMapping("/addToAnswerSet")
+    public void addToAnswerSet(@RequestBody AddToAnswerSetVO data) {
+        addToAnswerSet(data.getMainId(), data.getSubId(), data.getInstrSql(), Constants.dbType);
     }
 
     public void addToAnswerSet(Integer mainId, Integer subId, String instrSql, String dbType) {
@@ -42,5 +47,19 @@ public class GradingController {
         if (score < 100.0f) {
             OperateAnswerSet.addAnswer(mainId, subId, instrSql);
         }
+    }
+
+    public static void main(String[] args) {
+        GetScoreVO data = new GetScoreVO();
+        data.setMainId(2);
+        data.setSubId(14);
+        data.setStudentSql("select sname from sailors s\n" +
+                "where age > 35 and not exists\n" +
+                "  (select * from reserves r, boats b\n" +
+                "  where r.sid=s.sid and r.bid=b.bid and b.color='RED'\n" +
+                "  and r.reserve_date>='2020-09-01' and r.reserve_date<='2020-09-30')");
+        data.setMaxScore(100.0f);
+        GradingController controller = new GradingController();
+        controller.getScore(data);
     }
 }
