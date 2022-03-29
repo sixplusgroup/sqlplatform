@@ -4,6 +4,7 @@ import org.example.PartialMarking;
 import org.example.util.Constants;
 import org.example.util.data.GetQuestionInfo;
 import org.example.util.data.OperateAnswerSet;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/score")
 public class GradingController {
 
-    @PostMapping("/getScore")
+    @GetMapping("/getScore")
     public float getScore(Integer mainId, Integer subId, String studentSql, float maxScore) {
         return 100.0f;
 //        return getScore(mainId, subId, studentSql, maxScore, Constants.dbType);
@@ -31,7 +32,7 @@ public class GradingController {
         return partialMarking.partialMarkForAnswerSet(answers, studentSql, maxScore);
     }
 
-    @PostMapping("/addToAnswerSet")
+    @GetMapping("/addToAnswerSet")
     public void addToAnswerSet(Integer mainId, Integer subId, String instrSql) {
         addToAnswerSet(mainId, subId, instrSql, Constants.dbType);
     }
