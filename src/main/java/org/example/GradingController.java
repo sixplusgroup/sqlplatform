@@ -20,6 +20,7 @@ public class GradingController {
 
     @PostMapping("/getScore")
     public float getScore(@RequestBody GetScoreVO data) {
+        System.out.println("get score...");
         return getScore(data.getMainId(), data.getSubId(), data.getStudentSql(), data.getMaxScore(), Constants.dbType);
     }
 
@@ -37,6 +38,7 @@ public class GradingController {
 
     @PostMapping("/addToAnswerSet")
     public void addToAnswerSet(@RequestBody AddToAnswerSetVO data) {
+        System.out.println("add to answer set");
         addToAnswerSet(data.getMainId(), data.getSubId(), data.getInstrSql(), Constants.dbType);
     }
 
@@ -49,13 +51,12 @@ public class GradingController {
 
     public static void main(String[] args) {
         GetScoreVO data = new GetScoreVO();
-        data.setMainId(2);
-        data.setSubId(14);
-        data.setStudentSql("select sname from sailors s\n" +
-                "where age > 35 and not exists\n" +
-                "  (select * from reserves r, boats b\n" +
-                "  where r.sid=s.sid and r.bid=b.bid and b.color='RED'\n" +
-                "  and r.reserve_date>='2020-09-01' and r.reserve_date<='2020-09-30')");
+        data.setMainId(1);
+        data.setSubId(10);
+        data.setStudentSql("select w.eno \n" +
+                "from works w\n" +
+                "group by w.eno\n" +
+                "having sum(hours) > 100;");
         data.setMaxScore(100.0f);
         GradingController controller = new GradingController();
         controller.getScore(data);

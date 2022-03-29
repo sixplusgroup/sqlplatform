@@ -105,7 +105,7 @@ public class GroupByEdit implements Edit {
             if (distance > 0) {
                 PlainSelect edited = stu.clone();
                 edited.groupBy.having = instr.groupBy.having.clone();
-                res.add(new Pair<>(edited, (float) (distance / CostConfig.other_digits)));
+                res.add(new Pair<>(edited, (float) (distance * 1.0f / CostConfig.other_digits)));
             }
         }
         return res;
