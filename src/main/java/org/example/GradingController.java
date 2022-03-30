@@ -4,8 +4,10 @@ import org.example.PartialMarking;
 import org.example.util.Constants;
 import org.example.util.data.GetQuestionInfo;
 import org.example.util.data.OperateAnswerSet;
+import org.example.util.data.OperateScoreRecord;
 import org.example.util.vo.AddToAnswerSetVO;
 import org.example.util.vo.GetScoreVO;
+import org.example.util.vo.UpsertScoreRecordVO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,16 +51,30 @@ public class GradingController {
         }
     }
 
+    @PostMapping("/upsertScoreRecord")
+    public void upsertScoreRecord(@RequestBody UpsertScoreRecordVO data) {
+        System.out.println("upsert score record");
+        OperateScoreRecord.upsertScoreRecord(data);
+    }
+
     public static void main(String[] args) {
-        GetScoreVO data = new GetScoreVO();
+//        GetScoreVO data = new GetScoreVO();
+//        data.setMainId(1);
+//        data.setSubId(10);
+//        data.setStudentSql("select w.eno \n" +
+//                "from works w\n" +
+//                "group by w.eno\n" +
+//                "having sum(hours) > 100;");
+//        data.setMaxScore(100.0f);
+//        GradingController controller = new GradingController();
+//        controller.getScore(data);
+        UpsertScoreRecordVO data = new UpsertScoreRecordVO();
+        data.setExamId("haha");
+        data.setStudentId("lala");
         data.setMainId(1);
-        data.setSubId(10);
-        data.setStudentSql("select w.eno \n" +
-                "from works w\n" +
-                "group by w.eno\n" +
-                "having sum(hours) > 100;");
-        data.setMaxScore(100.0f);
+        data.setSubId(2);
+        data.setScore(9.4f);
         GradingController controller = new GradingController();
-        controller.getScore(data);
+        controller.upsertScoreRecord(data);
     }
 }
