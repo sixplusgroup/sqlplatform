@@ -1,6 +1,5 @@
 package org.example;
 
-import org.example.PartialMarking;
 import org.example.util.Constants;
 import org.example.util.data.GetQuestionInfo;
 import org.example.util.data.OperateAnswerSet;
@@ -57,14 +56,4 @@ public class GradingController {
         OperateScoreRecord.upsertScoreRecord(data);
     }
 
-    public static void main(String[] args) {
-//        UpsertScoreRecordVO data = new UpsertScoreRecordVO();
-//        data.setExamId("haha");
-//        data.setStudentId("lala");
-//        data.setMainId(1);
-//        data.setSubId(2);
-//        data.setScore(9.4f);
-//        GradingController controller = new GradingController();
-//        controller.upsertScoreRecord(data);
-    }
 }

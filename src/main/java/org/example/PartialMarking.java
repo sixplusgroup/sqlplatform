@@ -89,7 +89,7 @@ public class PartialMarking {
         }
     }
 
-    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
+    public static void main(String[] args) {
         String instrSql = "select max(Salary) SecondHighestSalary\n" +
                 "from employee\n" +
                 "where\n" +
