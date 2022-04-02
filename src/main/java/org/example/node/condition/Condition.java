@@ -71,16 +71,23 @@ public abstract class Condition {
                     return new Exist(false,subQ);
                 }
                 // all转not exist
-                else if (left instanceof SQLAllExpr || right instanceof SQLAllExpr){
-                    op = getOppositeOp(op);
-                    if (left instanceof SQLAllExpr){
+                else if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr
+                        || right instanceof SQLAllExpr || right instanceof SQLQueryExpr){
+                    op = getComplementaryOp(op);
+                    if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr){
                         SQLExpr tmp = left;
                         left = right;
                         right = tmp;
                         op = getOppositeOp(op);
                     }
                     Expr expr_all = Expr.build(left, tableMapping);
-                    SQLSelectQuery selectQuery = ((SQLAllExpr)right).subQuery.getQuery();
+                    SQLSelectQuery selectQuery;
+                    if (right instanceof SQLAllExpr) {
+                        selectQuery = ((SQLAllExpr)right).subQuery.getQuery();
+                    }
+                    else {
+                        selectQuery = ((SQLQueryExpr)right).subQuery.getQuery();
+                    }
                     Select subQ = BuildAST.buildSelect(selectQuery,env);
                     toExist(expr_all,subQ,op);
                     return new Exist(true,subQ);
@@ -340,28 +347,7 @@ public abstract class Condition {
             }
         }
         else if (c instanceof AtomCond){
-            switch (c.operator){
-                case ">":
-                    c.operator = "<=";
-                    break;
-                case ">=":
-                    c.operator = "<";
-                    break;
-                case "<":
-                    c.operator = ">=";
-                    break;
-                case "<=":
-                    c.operator = ">";
-                    break;
-                case "=":
-                    c.operator = "!=";
-                    break;
-                case "!=":
-                    c.operator = "=";
-                    break;
-                default:
-                    c.not = true;
-            }
+            c.operator = getComplementaryOp(c.operator);
         }
         else {
             c.not = !c.not;
@@ -369,14 +355,46 @@ public abstract class Condition {
     }
 
     /**
-     * 用于交换left, right时
-     * @param operator
+     * 用于对operator取反
+     * @param op
      * @return
      */
-    public static String getOppositeOp(String operator){
-        if (isCommutative(operator))
-            return operator;
-        switch (operator){
+    public static String getComplementaryOp(String op) {
+        switch (op){
+            case ">":
+                return "<=";
+            case ">=":
+                return "<";
+            case "<":
+                return ">=";
+            case "<=":
+                return ">";
+            case "=":
+                return "!=";
+            case "!=":
+                return "=";
+            case "==":
+                return "!==";
+            case "===":
+                return "!===";
+            case "!==":
+                return "==";
+            case "!===":
+                return "===";
+            default:
+                return op;
+        }
+    }
+
+    /**
+     * 用于交换left, right时
+     * @param op
+     * @return
+     */
+    public static String getOppositeOp(String op){
+        if (isCommutative(op))
+            return op;
+        switch (op){
             case ">":
                 return "<";
             case ">=":
@@ -387,7 +405,7 @@ public abstract class Condition {
                 return ">=";
             default:
                 // 其他情况应该不用考虑
-                return operator;
+                return op;
         }
     }
 

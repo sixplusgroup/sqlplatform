@@ -349,121 +349,26 @@ public class BuildAST {
 
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;
-        String sql = "select * from student, lesson";
-//        String sql = "select student.id, (select 1 from lesson where lesson.id=1) from student";
-//        String sql = "select u.uid, u.name myname from user u, stu";
-//        String sql = "select * from  (select * from table_a left outer join table_b on table_a.aa=table_b.bb)";
-//        String sql = "select * from table_a left outer join table_b on table_a.aa=table_b.bb and table_a.aa>2";
-//        String sql = "select course_id, sec_id, year, semester, count(ID) from takes group by (course_id, sec_id, year, semester)";
-//        String sql = "select e.dno, eno, salary from employees e\n" +
-//                "where eno>1 and salary >= min (select e1.salary from employees e1 where e1.dno=e.dno)\n" +
-//                "order by dno asc";
-//        String sql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
-//                "from users u left join\n" +
-//                "  (select buyer_id, count(*) num\n" +
-//                "  from orders\n" +
-//                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o\n" +
-//                "on u.user_id=o.buyer_id\n" +
-//                "order by u.user_id asc";
-//        String sql = "SELECT\n" +
-//                "\tp.product_name AS product_name,\n" +
-//                "\to.order_id,\n" +
-//                "\to.order_date\n" +
-//                "FROM\n" +
-//                "\torders o,\n" +
-//                "\tcustomers c,\n" +
-//                "\tproducts p\n" +
-//                "WHERE\n" +
-//                "\to.customer_id = c.customer_id\n" +
-//                "AND o.product_id = p.product_id\n" +
-//                "AND (o.product_id, o.order_date) IN (\n" +
-//                "\tSELECT\n" +
-//                "\t\tproduct_id,\n" +
-//                "\t\tMAX(order_date)\n" +
-//                "\tFROM\n" +
-//                "\t\torders\n" +
-//                "\tGROUP BY\n" +
-//                "\t\tproduct_id\n" +
-//                ")\n" +
-//                "ORDER BY product_name;\n";
-//        String sql = "select round(\n" +
-//                "    ifnull(\n" +
-//                "    (select count(distinct requester_id ,accepter_id) from accepted_requests) / \n" +
-//                "    (select count(distinct sender_id ,send_to_id) from friend_requests)\n" +
-//                "    ,0)\n" +
-//                "    ,2) as accept_rate ;";
-//        String sql = "select group_id,min(player_id) as player_id\n" +
-//                "from\n" +
-//                "    (select player,sum(score) as score\n" +
-//                "    from\n" +
-//                "        ((select first_player player,first_score score from matches)\n" +
-//                "        union all\n" +
-//                "        (select second_player player,second_score score from matches)) t\n" +
-//                "    group by player) a\n" +
-//                "    right join players p on a.player=p.player_id\n" +
-//                "where (group_id,score) in\n" +
-//                "(select group_id,max(score) as mx\n" +
-//                "from \n" +
-//                "    (select player,sum(score) as score\n" +
-//                "    from\n" +
-//                "        ((select first_player player,first_score score from matches)\n" +
-//                "        union all\n" +
-//                "        (select second_player player,second_score score from matches)) t\n" +
-//                "    group by player) a\n" +
-//                "    right join players p on a.player=p.player_id\n" +
-//                "group by group_id)\n" +
-//                "group by group_id\n" +
-//                "order by group_id;";
-//        String sql = "select date, round(count(l.user_id)/count(nu.user_id), 3) rate from\n" +
-//                "  (select user_id, min(login_date) date from logins group by user_id) nu\n" +
-//                "  left join logins l\n" +
-//                "  on l.user_id=nu.user_id and l.login_date=date_add(nu.date, interval 1 day)\n" +
-//                "group by date\n" +
-//                "union all\n" +
-//                "select login_date date, 0.000 rate from logins\n" +
-//                "where login_date not in\n" +
-//                "  (select min(login_date) date from logins group by user_id)\n" +
-//                "order by date asc, rate desc";
-//        String sql = "select user_id, sum(num) friend_num\n" +
-//                "from\n" +
-//                "  (select requester_id user_id, count(*) num\n" +
-//                "  from (select distinct requester_id, accepter_id from accepted_requests) t1\n" +
-//                "  group by requester_id\n" +
-//                "  union all\n" +
-//                "  select accepter_id user_id, count(*) num\n" +
-//                "  from (select distinct requester_id, accepter_id from accepted_requests) t2\n" +
-//                "  group by accepter_id) tmp\n" +
-//                "group by user_id\n" +
-//                "order by friend_num desc, user_id asc\n" +
-//                "limit 1,8";
-//        String sql = "select customer_id, count(*) order_num\n" +
-//                "from orders\n" +
-//                "where order_date>='2020-08-01' and order_date<='2020-08-31'\n" +
-//                "group by customer_id\n" +
-//                "order by order_num desc, customer_id asc\n" +
-//                "limit 1";
-//        String sql = "select customer_id, o.order_id, count(*),\n" +
-//                "  rank() over (partition by customer_id order by order_date desc) r," +
-//                "  sum(if(p.player_id=m.first_player, first_score, second_score))," +
-//                "  month(request_date), min(date), 0.000, ifnull(contacts_cnt,0)," +
-//                "  count(l.user_id) * 1.0 / (select count(distinct user_id) from logins) rate," +
-//                "  round(sum(if(s.s_score<60,1,0)) / count(*), 2) \n" +
-//                "  from orders o";
-        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
-        Env env = new Env(dbType,new ArrayList<>());
-        String wirteToPath = "src/main/resources/org/example/BuildSelect.txt";
-        for (int i=0;i<res.size();i++) {
-            String s = res.get(i);
-            try {
-                buildSelect(s,env);
-            } catch (Exception e) {
-                StringWriter trace = new StringWriter();
-                e.printStackTrace(new PrintWriter(trace));
-                TxtWriter.writeTo(wirteToPath, "Attention!! " + (i+1) + "\n\n" +
-                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
-            }
-        }
-//        buildSelect(sql,new Env(dbType,repository));
+//        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
+//        Env env = new Env(dbType,new ArrayList<>());
+//        String wirteToPath = "src/main/resources/org/example/BuildSelect.txt";
+//        for (int i=0;i<res.size();i++) {
+//            String s = res.get(i);
+//            try {
+//                buildSelect(s,env);
+//            } catch (Exception e) {
+//                StringWriter trace = new StringWriter();
+//                e.printStackTrace(new PrintWriter(trace));
+//                TxtWriter.writeTo(wirteToPath, "Attention!! " + (i+1) + "\n\n" +
+//                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
+//            }
+//        }
+
+        String sql = "select max(Salary) SecondHighestSalary\n" +
+                "from employee\n" +
+                "where\n" +
+                "salary<(select max(salary) from employee)";
+        Select s = buildSelect(sql,new Env(dbType,new ArrayList<>()));
+        System.out.println("end");
     }
 }

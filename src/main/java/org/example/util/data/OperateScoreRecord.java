@@ -16,22 +16,23 @@ import static org.example.util.Constants.PWD;
 public class OperateScoreRecord {
 
     public static void upsertScoreRecord(UpsertScoreRecordVO data) {
-        if (existRecord(data)) {
-            updateRecord(data);
-        }
-        else {
+        float score = existRecord(data);
+        if (score == 0) {
             insertRecord(data);
+        }
+        else if (score < data.getScore()) {
+            updateRecord(data);
         }
     }
 
-    private static boolean existRecord(UpsertScoreRecordVO data) {
-        boolean res = false;
+    private static float existRecord(UpsertScoreRecordVO data) {
+        float res = 0;
         Connection conn = null;
         PreparedStatement stmt = null;
         try{
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL,USER,PWD);
-            String sql = "SELECT * FROM score_record " +
+            String sql = "SELECT score FROM score_record " +
                     "where student_id=? and exam_id=? and main_id=? and sub_id=?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, data.getStudentId());
@@ -40,7 +41,7 @@ public class OperateScoreRecord {
             stmt.setInt(4, data.getSubId());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                res = true;
+                res = rs.getFloat(1);
             }
             // 完成后关闭
             rs.close();

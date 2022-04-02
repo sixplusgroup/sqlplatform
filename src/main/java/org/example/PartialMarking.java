@@ -90,12 +90,20 @@ public class PartialMarking {
     }
 
     public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
+        String instrSql = "select max(Salary) SecondHighestSalary\n" +
+                "from employee\n" +
+                "where\n" +
+                "salary<(select max(salary) from employee)";
+        String studentSql = "select max(Salary) SecondHighestSalary\n" +
+                "from employee\n" +
+                "where\n" +
+                "salary<all(select max(salary) from employee)";
 // PASS
-        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
-                "where u.uid=s.id and u.uid=l.sid";
+//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where u.uid=s.id and u.uid=l.sid";
 // PASS: selections等价类替换
-        String studentSql = "select l.sid from user u, student s, lesson l\n" +
-                "where u.uid=s.id and u.uid=l.sid";
+//        String studentSql = "select l.sid from user u, student s, lesson l\n" +
+//                "where u.uid=s.id and u.uid=l.sid";
 // PASS: AND展平
 //        String studentSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where u.uid=s.id and s.id=l.sid";

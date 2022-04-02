@@ -26,10 +26,10 @@ public class GradingController {
         return getScore(data.getMainId(), data.getSubId(), data.getStudentSql(), data.getMaxScore(), Constants.dbType);
     }
 
-    @GetMapping("/getCorrect")
-    public List<String> getScore(Integer mainId, Integer subId) {
-        return OperateAnswerSet.getAnswers(mainId, subId);
-    }
+//    @GetMapping("/getCorrect")
+//    public List<String> getScore(Integer mainId, Integer subId) {
+//        return OperateAnswerSet.getAnswers(mainId, subId);
+//    }
 
     public float getScore(Integer mainId, Integer subId, String studentSql, float maxScore, String dbType) {
         List<String> answers = OperateAnswerSet.getAnswers(mainId, subId);
@@ -58,23 +58,13 @@ public class GradingController {
     }
 
     public static void main(String[] args) {
-//        GetScoreVO data = new GetScoreVO();
+//        UpsertScoreRecordVO data = new UpsertScoreRecordVO();
+//        data.setExamId("haha");
+//        data.setStudentId("lala");
 //        data.setMainId(1);
-//        data.setSubId(10);
-//        data.setStudentSql("select w.eno \n" +
-//                "from works w\n" +
-//                "group by w.eno\n" +
-//                "having sum(hours) > 100;");
-//        data.setMaxScore(100.0f);
+//        data.setSubId(2);
+//        data.setScore(9.4f);
 //        GradingController controller = new GradingController();
-//        controller.getScore(data);
-        UpsertScoreRecordVO data = new UpsertScoreRecordVO();
-        data.setExamId("haha");
-        data.setStudentId("lala");
-        data.setMainId(1);
-        data.setSubId(2);
-        data.setScore(9.4f);
-        GradingController controller = new GradingController();
-        controller.upsertScoreRecord(data);
+//        controller.upsertScoreRecord(data);
     }
 }
