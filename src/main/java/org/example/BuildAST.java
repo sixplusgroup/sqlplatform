@@ -129,7 +129,6 @@ public class BuildAST {
         }
     }
 
-    // 可能不需要 todo 如果出现instr是alias但student不是的情况，在aliasMap里替换（while，迭代替换）
     private static void substituteAliasForPlainSelect(PlainSelect instr, PlainSelect stu) {
         // step 1: 处理 from 里的 subQueries
         List<Table> stuFromSubQs = new ArrayList<>();
@@ -349,8 +348,14 @@ public class BuildAST {
 
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;
+        Env env = new Env(dbType,new ArrayList<>());
+        String sql = "select departmentId, salary\n" +
+                "from b, c\n" +
+                "where b.rk in (cnt+1/2,cnt+1,cnt) or b.rk=cnt+0.6;";
+        Select s = buildSelect(sql, env);
+        System.out.println("success");
+
 //        List<String> res = CSVReader.readCsv("../../src/main/resources/org/example/sqls.csv");
-//        Env env = new Env(dbType,new ArrayList<>());
 //        String wirteToPath = "src/main/resources/org/example/BuildSelect.txt";
 //        for (int i=0;i<res.size();i++) {
 //            String s = res.get(i);
@@ -363,12 +368,5 @@ public class BuildAST {
 //                        s + "\n\n" + trace.toString() + "\n\n\n\n\n");
 //            }
 //        }
-
-        String sql = "select max(Salary) SecondHighestSalary\n" +
-                "from employee\n" +
-                "where\n" +
-                "salary<(select max(salary) from employee)";
-        Select s = buildSelect(sql,new Env(dbType,new ArrayList<>()));
-        System.out.println("end");
     }
 }

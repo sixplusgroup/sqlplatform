@@ -90,48 +90,16 @@ public class PartialMarking {
     }
 
     public static void main(String[] args) {
-        String instrSql = "select max(Salary) SecondHighestSalary\n" +
-                "from employee\n" +
-                "where\n" +
-                "salary<(select max(salary) from employee)";
-        String studentSql = "select max(Salary) SecondHighestSalary\n" +
-                "from employee\n" +
-                "where\n" +
-                "salary<all(select max(salary) from employee)";
 // PASS
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where u.uid=s.id and u.uid=l.sid";
-// PASS: selections等价类替换
+// PASS: selections等价类替换，AND展平
 //        String studentSql = "select l.sid from user u, student s, lesson l\n" +
-//                "where u.uid=s.id and u.uid=l.sid";
-// PASS: AND展平
-//        String studentSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where u.uid=s.id and s.id=l.sid";
 // PASS: alias替换、alias重名
-//        String studentSql = "select l.id from student l, user s, lesson r\n" +
+//        String studentSql = "select s.uid from student l, user s, lesson r\n" +
 //                "where s.uid=l.id and l.id=r.sid";
-// PASS: null
-//        String instrSql = "select s.id sid from student s";
-//        String studentSql = "select s.id from student s";
-// PASS: alias替换
-//        String instrSql = "select u.user_id, u.join_date, ifnull(num,0) orders_in_2019\n" +
-//                "from users u left join\n" +
-//                "  (select buyer_id, count(*) num\n" +
-//                "  from orders\n" +
-//                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o\n" +
-//                "on u.user_id=o.buyer_id\n" +
-//                "order by orders_in_2019 asc";
-//        String studentSql = "select u.user_id, u.join_date, ifnull(haha,0) orders_in_2019\n" +
-//                "from\n" +
-//                "  (select buyer_id, count(*) haha\n" +
-//                "  from orders\n" +
-//                "  where year(order_date)=2019\n" +
-//                "  group by buyer_id) as o1\n" +
-//                "  right join users u\n" +
-//                "on u.user_id=o1.buyer_id\n" +
-//                "order by orders_in_2019 asc";
-// PASS: 复杂Expr，List<Expr>的match （下面的例子里修改的是MAX里的distinct和order by的顺序）
+// PASS: 复杂Expr的match
 //        String instrSql = "select o.customer_id, max(distinct order_id) as order_num, sum(distinct order_id), abs(distinct order_id), if(favorite_brand = item_brand, 'yes', 'no'), ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate, date_add(l1.login_date,interval 1 day) as date\n" +
 //                "from orders o\n" +
 //                "where o.order_date BETWEEN '2020-08-01' and '2020-08-31' and year(order_date)=2019\n" +
@@ -144,7 +112,7 @@ public class PartialMarking {
 //                "GROUP BY o.customer_id\n" +
 //                "order by order_num DESC, customer_id asc\n" +
 //                "limit 1;";
-// PASS: 无from todo parameters顺序
+// PASS: 无from
 //        String instrSql = "select round(\n" +
 //                "ifnull(\n" +
 //                "      (select count(distinct requester_id ,accepter_id) from accepted_requests) /\n" +
@@ -203,21 +171,10 @@ public class PartialMarking {
 //                "group by group_id\n" +
 //                "order by group_id;";
 // PASS: not的等价，tables顺序、alias, 条件的顺序
-//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
-//                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
-//        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
-//                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
-// PASS: 带resolve随便测测
-//        String instrSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
-//                "FROM t_emp a\n" +
-//                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
-//                "group by emp_id order by emp_id,a.name";
-//        String studentSql = "SELECT emp_id, a.name AS emp_name, org_id, b.name AS org_name\n" +
-//                "FROM t_emp a\n" +
-//                "\tINNER JOIN t_org b ON table_a.emp_id = b.org_id " +
-//                "group by emp_id order by emp_id,a.name";
-//        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
-//        sqls.add("create table t_org(org_id bigint, name varchar(20));");
+        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
+        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
+                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
         PartialMarking marking = new PartialMarking(dbType, sqls);

@@ -15,6 +15,7 @@ import org.example.node.expr.ListExpr;
 import org.example.util.ErrorLogger;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author shenyichen
@@ -38,7 +39,7 @@ public abstract class Condition {
     public static Condition build(SQLExpr expr, Env env, HashMap<SQLTableSource, String> tableMapping){
         if (expr == null)
             return null;
-        if (expr instanceof SQLBinaryOpExpr){
+        if (expr instanceof SQLBinaryOpExpr) {
             SQLBinaryOpExpr biExpr = (SQLBinaryOpExpr) expr;
             SQLBinaryOperator operator = biExpr.getOperator();
             SQLExpr left = biExpr.getLeft();
@@ -49,12 +50,14 @@ public abstract class Condition {
                 subConds.add(build(left, env, tableMapping));
                 subConds.add(build(right, env, tableMapping));
                 return new CompoundCond(operator.name,subConds);
-            } else {// 单个条件
+            }
+            // 单个条件
+            else {
                 String op = getNormalizedOp(operator.name);
                 // some/any转exist
                 if (left instanceof SQLSomeExpr || left instanceof SQLAnyExpr
-                        || right instanceof SQLSomeExpr || right instanceof SQLAnyExpr){
-                    if (left instanceof SQLSomeExpr || left instanceof SQLAnyExpr){
+                        || right instanceof SQLSomeExpr || right instanceof SQLAnyExpr) {
+                    if (left instanceof SQLSomeExpr || left instanceof SQLAnyExpr) {
                         SQLExpr tmp = left;
                         left = right;
                         right = tmp;
@@ -72,9 +75,9 @@ public abstract class Condition {
                 }
                 // all转not exist
                 else if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr
-                        || right instanceof SQLAllExpr || right instanceof SQLQueryExpr){
+                        || right instanceof SQLAllExpr || right instanceof SQLQueryExpr) {
                     op = getComplementaryOp(op);
-                    if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr){
+                    if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr) {
                         SQLExpr tmp = left;
                         left = right;
                         right = tmp;
@@ -93,7 +96,7 @@ public abstract class Condition {
                     return new Exist(true,subQ);
                 }
                 // 普通运算符的情况
-                else if (isCommutative(op)){
+                else if (isCommutative(op)) {
                     return new CommutativeCond(op,
                             Arrays.asList(Expr.build(left, tableMapping), Expr.build(right, tableMapping)));
                 }
@@ -138,6 +141,28 @@ public abstract class Condition {
                 subConds.add(new UncommutativeCond(">=",testExpr,beginExpr));
                 subConds.add(new UncommutativeCond("<=",testExpr,endExpr));
                 return new CompoundCond("AND", subConds);
+            }
+        }
+        // inList 转 CompoundCond
+        else if (expr instanceof SQLInListExpr) {
+            SQLInListExpr inListExpr = (SQLInListExpr) expr;
+            Expr testExpr = Expr.build(inListExpr.getExpr(), tableMapping);
+            List<Expr> targetExprs = inListExpr.getTargetList()
+                    .stream()
+                    .map(e->Expr.build(e,tableMapping))
+                    .collect(Collectors.toList());
+            List<Condition> subConds = new ArrayList<>();
+            if (inListExpr.isNot()) {
+                for (Expr e: targetExprs) {
+                    subConds.add(new CommutativeCond("!=", Arrays.asList(testExpr, e)));
+                }
+                return new CompoundCond("AND", subConds);
+            }
+            else {
+                for (Expr e: targetExprs) {
+                    subConds.add(new CommutativeCond("=", Arrays.asList(testExpr, e)));
+                }
+                return new CompoundCond("OR", subConds);
             }
         }
         // 其他情况
@@ -326,12 +351,12 @@ public abstract class Condition {
      * 设置not
      * @param c
      */
-    public static void setNot(Condition c){
-        if (c instanceof CompoundCond){
+    public static void setNot(Condition c) {
+        if (c instanceof CompoundCond) {
             c.not = !c.not;
-            if (c.not){
+            if (c.not) {
                 c.not = false;
-                switch (c.operator){
+                switch (c.operator) {
                     case "AND":
                         c.operator = "OR";
                         break;
@@ -341,12 +366,12 @@ public abstract class Condition {
                     default:
                         break;
                 }
-                for (Condition cdt:((CompoundCond) c).getSubConds()){
+                for (Condition cdt:((CompoundCond) c).getSubConds()) {
                     setNot(cdt);
                 }
             }
         }
-        else if (c instanceof AtomCond){
+        else if (c instanceof AtomCond) {
             c.operator = getComplementaryOp(c.operator);
         }
         else {
