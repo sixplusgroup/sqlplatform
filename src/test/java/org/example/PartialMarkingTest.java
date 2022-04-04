@@ -86,13 +86,13 @@ public class PartialMarkingTest {
         // stack over flow: 第6个
         HashMap<Integer, List<String>> mainQData = getResFromMainQ();
         List<Triple<Integer, String, String>> myAnswer = CSVReader.readCsv4(read_csv_prefix + "my_answer.csv");
-        String wirteToPath = prefix + "PartialMarkingTestMyAnswer3.txt";
+        String wirteToPath = prefix + "TestMyAnswer2.txt";
         String writeToPath2 = prefix + "tp_my.txt";
         for (Triple<Integer, String, String> item: myAnswer) {
             Integer mainId = item.first;
             List<String> sqls = mainQData.get(mainId);
             PartialMarking marking = new PartialMarking(dbType, sqls);
-            System.out.println(item.first);
+//            System.out.println(item.first);
             try {
                 float score = marking.partialMark(item.second,item.third,100.0f);
                 if (score < 100.0f) {
@@ -113,16 +113,17 @@ public class PartialMarkingTest {
     }
 
     @Test
-    public void testCreateSql() {
+    public void testCanonicalizeOrderBy() {
         String path = "src/main/resources/org/example/examDataFiles/upload_c9c0c1f5ceb0443bf580e69f8deb8633.sql";
         List<String> sqls = new ArrayList<>();
 //        sqls.add(MyFileReader.readFile(path));
 //        String sql = "select name from (select name from customer c where name=\"John\")";
-        sqls.add("create table t_emp(emp_id bigint, name varchar(20), primary key(emp_id));");
+        sqls.add("create table t_emp(emp_id bigint, name varchar(20), gender boolean, primary key(emp_id));");
         sqls.add("create table t_org(org_id bigint, name varchar(20));");
-        String sql = "select t.* from t_emp t";
+        String sql = "select t.* from t_emp t order by emp_id, name";
         Env env = new Env(dbType, sqls);
         Select s = BuildAST.buildSelect(sql, env);
+        Canonicalizer.canonicalize(s, env);
         System.out.println(s.toString());
     }
 

@@ -175,7 +175,10 @@ public class PartialMarking {
 //                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
 //        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
 //                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
-        // 编辑距离的作用
+// PASS: not等价
+//        String instrSql = "select * from r where r.a>10";
+//        String studentSql = "select * from r where not (not (r.a>10))";
+// PASS: 编辑距离的作用
         String instrSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.A)\n" +
                 "WHERE r.A>10";
         String studentSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.B)\n" +

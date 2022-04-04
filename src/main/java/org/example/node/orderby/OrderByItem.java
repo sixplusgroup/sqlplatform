@@ -27,7 +27,7 @@ public class OrderByItem {
 
     public OrderByItem(SQLSelectOrderByItem item, HashMap<SQLTableSource, String> tableMapping){
         SQLSelectItem resolvedItem = item.getResolvedSelectItem();
-        if (resolvedItem != null) {
+        if (resolvedItem != null && (! resolvedItem.getExpr().toString().contains("*"))) {
             column = Expr.build(resolvedItem.getExpr(), tableMapping);
         }
         else {

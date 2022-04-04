@@ -1,7 +1,7 @@
 满分的见tp_my.txt
 下面的基本都是标准答案集问题
 
-[语义不一样，一个是=max，一个是>=max] Attention!! 评分50.625004 < 100 ！ 1
+[语义不一样，一个是=max，一个是>=max] Attention!! 评分31.25 < 100 ！ 1
 
 答案sql:
 select e1.dno,e1.eno, e1.salary
@@ -44,7 +44,7 @@ limit 1
 
 
 
-[（理论可解）count(distinct order_id)和count(*)本身即存在差异] Attention!! 评分91.0 < 100 ！ 3
+[count(distinct order_id)和count(*)本身即存在差异] Attention!! 评分84.90001 < 100 ！ 3
 
 答案sql:
 select o.customer_id, count(distinct order_id) as order_num
@@ -64,7 +64,7 @@ limit 1
 
 
 
-[同上，表位置问题] Attention!! 评分24.126986 < 100 ！ 3
+[同上，表位置问题] Attention!! 评分31.587303 < 100 ！ 3
 
 答案sql:
 SELECT c.name customer_name,o2.order_id,o2.order_date
@@ -132,7 +132,7 @@ where not exists
 
 
 
-[标准答案集问题] Attention!! 评分0.0 < 100 ！ 5
+[标准答案集问题] Attention!! 评分31.891895 < 100 ！ 5
 
 答案sql:
 select user_id, join_date, count(order_id) orders_in_2019
@@ -153,7 +153,7 @@ order by u.user_id asc
 
 
 
-[标准答案集问题] Attention!! 评分10.7941265 < 100 ！ 5
+[标准答案集问题] Attention!! 评分22.71605 < 100 ！ 5
 
 答案sql:
 select user_id seller_id, if(favorite_brand = item_brand, 'yes', 'no') if_fav_brand
@@ -214,7 +214,7 @@ order by mon asc
 
 
 
-[标准答案集问题] Attention!! 评分4.4444437 < 100 ！ 6
+[标准答案集问题] Attention!! 评分0.0 < 100 ！ 6
 
 答案sql:
 select user_id, count(*) friend_num
@@ -245,7 +245,7 @@ limit 1
 
 
 
-[有空考虑--是否可以怎么转换一下？][标准答案集问题] Attention!! 评分22.37289 < 100 ！ 8
+[标准答案集问题] Attention!! 评分48.1356 < 100 ！ 8
 
 答案sql:
 select 
@@ -253,24 +253,17 @@ count(distinct user_id)*1.0/(select count(distinct user_id) from logins) as rate
 from logins
 where (user_id,login_date)
 in (select user_id,DATE_ADD(min(login_date),INTERVAL 1 DAY) from logins group by user_id);
-->
-where exists select from logins where
-    user_id=user_id and login_date=DATE_ADD(min(login_date),INTERVAL 1 DAY) group by user_id
 学生sql:
 select count(l.user_id) * 1.0 /
   (select count(distinct user_id) from logins) rate
 from logins l,logins l1
 where l.user_id=l1.user_id and l.login_date=date_add(l1.login_date,interval 1 day)
-  and l1.login_date=(select min(login_date) from logins l1 where l1.user_id=l.user_id)
-->
-where exists select from logins where
-    l.user_id=l1.user_id and l.login_date=date_add(l1.login_date,interval 1 day)
-      and l1.login_date=(select min(login_date) from logins l1 where l1.user_id=l.user_id)
+  and l1.login_date=(select min(login_date) from logins l1 where l1.user_id=l.user_id) 
 
 
 
 
-[标准答案集问题] Attention!! 评分3.3766224 < 100 ！ 10
+[标准答案集问题] Attention!! 评分15.660376 < 100 ！ 10
 
 答案sql:
 select d.department_name as department,t.name,t.salary from 
@@ -293,7 +286,7 @@ order by department asc
 
 
 
-[标准答案集问题] Attention!! 评分0.0 < 100 ！ 10
+[标准答案集问题] Attention!! 评分12.465752 < 100 ！ 10
 
 答案sql:
 select d.department_name as department,e.name ,e.salary as salary
@@ -333,7 +326,6 @@ from
     HAVING count_temp>1
 )t, customers,contacts 
 where t.user_id=customers.customer_id and customers.customer_id=contacts.user_id
-【答案中customers表冗余？】
 学生sql:
 select * from contacts
 where user_id in
@@ -344,7 +336,7 @@ where user_id in
 
 
 
-[标准答案集问题] Attention!! 评分5.2941227 < 100 ！ 13
+[标准答案集问题] Attention!! 评分30.784317 < 100 ！ 13
 
 答案sql:
 select i.invoice_id, c1.customer_name, i.price, 
@@ -375,7 +367,7 @@ order by invoice_id asc
 
 
 
-[标准答案集问题] Attention!! 评分31.105036 < 100 ！ 18
+[标准答案集问题] Attention!! 评分38.142014 < 100 ！ 18
 
 答案sql:
 select a.c_id,b.c_name,MAX(s_score)as max_score,MIN(s_score) as min_score,
@@ -390,4 +382,7 @@ select s.c_id, c.c_name, max(s.s_score) max_score, min(s.s_score) min_score,
   round(sum(if(s.s_score>=90,1,0)) / count(*), 2) 优秀率
 from scores s join courses c on s.c_id=c.c_id
 group by s.c_id
+
+
+
 
