@@ -23,6 +23,7 @@ public class Canonicalizer {
         } else if (ast instanceof PlainSelect) {
             PlainSelect select = (PlainSelect) ast;
             canonicalizeOrderBy(select, env);
+            substituteEqualClass(select);
         }
     }
 
@@ -147,8 +148,8 @@ public class Canonicalizer {
                 substituteExprList(equalClasses, ((CommutativeCond) c).operands);
             }
         } else if (c instanceof UncommutativeCond) {
-            substituteExprs(equalClasses, ((UncommutativeCond) c).left);
-            substituteExprs(equalClasses, ((UncommutativeCond) c).right);
+            ((UncommutativeCond) c).left = substituteExprs(equalClasses, ((UncommutativeCond) c).left);
+            ((UncommutativeCond) c).right = substituteExprs(equalClasses, ((UncommutativeCond) c).right);
         } else if (c instanceof Exist) {
             substituteEqualClass(((Exist) c).subQuery, equalClasses);
         }

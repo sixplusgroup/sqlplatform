@@ -1,0 +1,128 @@
+2 joinType，between，s.sname & sname
+答案sql:
+select s.sname from sailors s
+where s.age > 35 and not exists (
+	select * 
+	from reserves r join boats b
+	on r.bid = b.bid 
+	where  
+	r.sid = s.sid and 
+	b.color = 'RED' and
+	(r.reserve_date between '2020-09-01' and '2020-09-30')
+);
+学生sql:
+select sname from sailors s
+where age > 35 and not exists
+  (select * from reserves r, boats b
+  where r.sid=s.sid and r.bid=b.bid and b.color='RED'
+  and r.reserve_date>='2020-09-01' and r.reserve_date<='2020-09-30')
+
+
+
+
+2 joinType，between，exist比较
+答案sql:
+select s.sname
+from sailors s
+where s.age > 35 and exists(
+	select * 
+	from reserves r join boats b
+	on r.bid = b.bid
+	where r.sid = s.sid and b.color = 'GREEN' and r.reserve_date between '2020-08-01' and '2020-08-31'
+) and exists (
+	select * 
+	from reserves r join boats b
+	on r.bid = b.bid
+	where r.sid = s.sid and b.color = 'RED' and r.reserve_date between '2020-08-01' and '2020-08-31'
+);
+学生sql:
+select sname from sailors s
+where age>35 and exists
+  (select * from boats b, reserves r
+  where s.sid=r.sid and b.bid=r.bid
+  and r.reserve_date>='2020-08-01' and r.reserve_date<='2020-08-31'
+  and b.color='RED') and exists
+  (select * from boats b, reserves r
+  where s.sid=r.sid and b.bid=r.bid
+  and r.reserve_date>='2020-08-01' and r.reserve_date<='2020-08-31'
+  and b.color='GREEN')
+
+
+
+
+4
+答案sql:
+select player_id, count(*) as match_num from 
+(
+	select p.player_id 
+	from players p join matches m
+	on p.player_id = m.first_player or p.player_id = m.second_player
+) tot_player
+group by player_id
+ORDER BY match_num DESC,player_id asc
+limit 1;
+学生sql:
+select player_id, count(*) match_num from
+  (select p.player_id from players p, matches m
+  where p.player_id=m.first_player or p.player_id=m.second_player) as t
+group by player_id
+order by match_num desc, player_id asc
+limit 1
+
+
+
+
+8 alias与对应PropertyExpr
+答案sql:
+select l.mdate as login_date,count(user_id) as new_user_num
+from (
+    select user_id,min(login_date) as mdate
+    from logins
+    group by user_id) as l
+group by l.mdate 
+having new_user_num >= 2
+order by login_date;
+学生sql:
+select login_date, count(*) new_user_num from
+  (select user_id, min(login_date) login_date from logins group by user_id) t
+group by login_date
+having new_user_num>=2
+order by login_date
+
+
+
+
+8
+答案sql:
+SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
+FROM (
+    SELECT user_id, MIN(login_date) AS date
+    FROM logins
+    GROUP BY user_id) a
+LEFT JOIN logins b
+ON a.user_id = b.user_id
+AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
+GROUP BY a.date
+UNION
+SELECT login_date date, 0.000 AS rate
+FROM logins
+WHERE login_date NOT IN (
+    SELECT MIN(login_date)
+    FROM logins
+    GROUP BY user_id)
+ORDER BY date;
+学生sql:
+select date, round(count(l.user_id)/count(nu.user_id), 3) rate from
+  (select user_id, min(login_date) date from logins group by user_id) nu
+  left join logins l
+  on l.user_id=nu.user_id and l.login_date=date_add(nu.date, interval 1 day)
+group by date
+union all
+select login_date date, 0.000 rate from logins
+where login_date not in
+  (select min(login_date) date from logins group by user_id)
+order by date asc
+
+
+
+

@@ -1,0 +1,385 @@
+Attention!! 评分50.625004 < 100 ！ 1
+
+答案sql:
+select e1.dno,e1.eno, e1.salary
+from employees e1
+where e1.salary in (
+ select MAX(salary)
+ from employees e2
+ where e1.dno = e2.dno
+ group by dno
+)
+order by dno;
+学生sql:
+select dno, eno, salary from employees e
+where salary >= all (select e1.salary from employees e1 where e1.dno=e.dno)
+order by dno asc
+
+
+
+
+Attention!! 评分0.0 < 100 ！ 2
+
+答案sql:
+select s.sname
+from sailors s
+where exists(
+	select *
+	from reserves r join boats b
+	on r.bid = b.bid
+	where b.color = 'GREEN' and r.sid = s.sid and r.reserve_date between '2020-05-01' and '2020-05-31'
+)
+order by rating DESC
+limit 1;
+学生sql:
+select s.sname from sailors s, boats b, reserves r
+where s.sid=r.sid and b.bid=r.bid
+and b.color='GREEN' and r.reserve_date>='2020-05-01' and r.reserve_date<='2020-05-31'
+order by s.rating desc
+limit 1
+
+
+
+
+Attention!! 评分84.90001 < 100 ！ 3
+
+答案sql:
+select o.customer_id, count(distinct order_id) as order_num
+from orders o
+where o.order_date BETWEEN '2020-08-01' and '2020-08-31'
+GROUP BY o.customer_id
+order by order_num DESC, customer_id asc
+limit 1;
+学生sql:
+select customer_id, count(*) order_num
+from orders
+where order_date>='2020-08-01' and order_date<='2020-08-31'
+group by customer_id
+order by order_num desc, customer_id asc
+limit 1
+
+
+
+
+Attention!! 评分31.587303 < 100 ！ 3
+
+答案sql:
+SELECT c.name customer_name,o2.order_id,o2.order_date
+FROM orders o1,orders o2,customers c
+WHERE o1.customer_id=o2.customer_id AND c.customer_id=o2.customer_id
+GROUP BY c.name,o2.order_id,o2.customer_id,o2.order_date
+HAVING SUM(o1.order_date>=o2.order_date)<=3
+ORDER BY c.name,o2.order_date desc;
+学生sql:
+select c.name as customer_name, o.order_id, o.order_date
+from customers c join orders o
+  on c.customer_id=o.customer_id
+where
+  (select count(*) from orders o1
+  where o1.customer_id=o.customer_id and o1.order_date>o.order_date)
+  < 3
+order by customer_name asc, order_date desc
+
+
+
+
+Attention!! 评分0.0 < 100 ！ 4
+
+答案sql:
+select group_id,min(player_id) as player_id
+from
+    (select player,sum(score) as score
+    from
+        ((select first_player player,first_score score from matches)
+        union all
+        (select second_player player,second_score score from matches)) t
+    group by player) a
+    right join players p on a.player=p.player_id
+where (group_id,score) in
+(select group_id,max(score) as mx
+from 
+    (select player,sum(score) as score
+    from
+        ((select first_player player,first_score score from matches)
+        union all
+        (select second_player player,second_score score from matches)) t
+    group by player) a
+    right join players p on a.player=p.player_id
+group by group_id)
+group by group_id
+order by group_id;
+学生sql:
+select group_id, player_id from
+  (select p.group_id, p.player_id,
+    sum(if(p.player_id=m.first_player, first_score, second_score)) score
+  from players p join matches m
+    on p.player_id=m.first_player or p.player_id=m.second_player
+  group by p.group_id, p.player_id
+  order by group_id) as t
+where not exists
+  (select * from
+    (select p.group_id, p.player_id,
+      sum(if(p.player_id=m.first_player, first_score, second_score)) score
+    from players p join matches m
+      on p.player_id=m.first_player or p.player_id=m.second_player
+    group by p.group_id, p.player_id
+    order by group_id) as t1
+  where t1.group_id=t.group_id and t1.score>t.score)
+
+
+
+
+Attention!! 评分31.891895 < 100 ！ 5
+
+答案sql:
+select user_id, join_date, count(order_id) orders_in_2019
+from users left join orders
+on user_id = buyer_id and year(order_date)='2019'
+group by user_id
+order by user_id;
+学生sql:
+select u.user_id, u.join_date, ifnull(num,0) orders_in_2019
+from users u left join
+  (select buyer_id, count(*) num
+  from orders
+  where year(order_date)=2019
+  group by buyer_id) as o
+on u.user_id=o.buyer_id
+order by u.user_id asc
+
+
+
+
+Attention!! 评分22.71605 < 100 ！ 5
+
+答案sql:
+select user_id seller_id, if(favorite_brand = item_brand, 'yes', 'no') if_fav_brand
+from users left join (
+    select seller_id, item_brand
+    from (
+        select o1.seller_id, o1.item_id
+        from orders o1 join orders o2
+        on o1.seller_id = o2.seller_id
+        group by o1.order_id
+        having sum(o1.order_date > o2.order_date) = 1
+    ) o join items i
+    on o.item_id = i.item_id
+) tmp
+on user_id = seller_id
+order by seller_id;
+学生sql:
+select user_id seller_id, if(favorite_brand=item_brand, 'yes', 'no') if_fav_brand
+from users left join
+  (select seller_id, item_brand
+  from orders o join items i on o.item_id=i.item_id
+  where
+    (select count(*) from orders o1
+    where o1.seller_id=o.seller_id and o1.order_date<o.order_date)
+    = 1) as t
+on user_id=seller_id
+order by seller_id asc
+
+
+
+
+Attention!! 评分0.0 < 100 ！ 6
+
+答案sql:
+select t1.m1 as mon, t1.accept/t2.alla accept_rate from
+(select month(accept_date) m1, count(distinct concat(requester_id, accepter_id)) accept
+from accepted_requests 
+group by month(accept_date)) t1
+inner join
+(select month(request_date) m2, count(distinct concat(sender_id, send_to_id)) alla
+from friend_requests 
+group by month(request_date)) t2
+on t1.m1=t2.m2
+order by mon;
+学生sql:
+select rt.mon, at.a / rt.r as accept_rate
+from
+  (select month(request_date) mon, count(*) r
+  from (select distinct * from friend_requests) as tmp1
+  group by mon) as rt
+join
+  (select month(accept_date) mon, count(*) a
+  from (select distinct * from accepted_requests) as tmp2
+  group by mon) as at
+on rt.mon=at.mon
+order by mon asc
+
+
+
+
+Attention!! 评分0.0 < 100 ！ 6
+
+答案sql:
+select user_id, count(*) friend_num
+from 
+((select requester_id user_id
+from accepted_requests
+)
+union all
+(select accepter_id user_id
+from accepted_requests)) t3
+group by user_id
+order by friend_num desc,user_id asc
+limit 1;
+学生sql:
+select user_id, sum(num) friend_num
+from
+  (select requester_id user_id, count(*) num
+  from (select distinct requester_id, accepter_id from accepted_requests) t1
+  group by requester_id
+  union all
+  select accepter_id user_id, count(*) num
+  from (select distinct requester_id, accepter_id from accepted_requests) t2
+  group by accepter_id) tmp
+group by user_id
+order by friend_num desc, user_id asc
+limit 1
+
+
+
+
+Attention!! 评分40.338985 < 100 ！ 8
+
+答案sql:
+select 
+count(distinct user_id)*1.0/(select count(distinct user_id) from logins) as rate
+from logins
+where (user_id,login_date)
+in (select user_id,DATE_ADD(min(login_date),INTERVAL 1 DAY) from logins group by user_id);
+学生sql:
+select count(l.user_id) * 1.0 /
+  (select count(distinct user_id) from logins) rate
+from logins l,logins l1
+where l.user_id=l1.user_id and l.login_date=date_add(l1.login_date,interval 1 day)
+  and l1.login_date=(select min(login_date) from logins l1 where l1.user_id=l.user_id) 
+
+
+
+
+Attention!! 评分15.660376 < 100 ！ 10
+
+答案sql:
+select d.department_name as department,t.name,t.salary from 
+departments d join 
+(select name,salary,department_id from employees e1 where 1 = 
+(select count(distinct(salary)) from employees e2 
+where e1.department_id = e2.department_id 
+and e1.salary < e2.salary)) t
+on d.department_id = t.department_id
+order by department;
+学生sql:
+select d.department_name department, e.name, e.salary
+from employees e join departments d on e.department_id=d.department_id
+where 
+  (select count(*) from employees e1
+  where e1.department_id=e.department_id and e1.salary>e.salary)
+  = 1
+order by department asc
+
+
+
+
+Attention!! 评分12.465752 < 100 ！ 10
+
+答案sql:
+select d.department_name as department,e.name ,e.salary as salary
+from employees as e left join departments as d 
+on e.department_id = d.department_id
+where e.id in
+(
+    select e1.id
+    from employees as e1 left join employees as e2
+    on e1.department_id = e2.department_id and e1.salary < e2.salary
+    group by e1.id
+    having count(distinct e2.salary) <= 2
+)
+and e.department_id in (select department_id from departments)
+order by d.department_name asc,e.salary desc;
+学生sql:
+select d.department_name department, e.name, e.salary
+from employees e join departments d on e.department_id=d.department_id
+where
+  (select count(*) from employees e1
+  where e1.department_id=e.department_id and e1.salary>e.salary)
+  < 3
+order by department asc, salary desc
+
+
+
+
+Attention!! 评分0.0 < 100 ！ 13
+
+答案sql:
+select t.user_id,contact_name,contact_email
+from
+(
+    SELECT user_id,count(*) count_temp
+    FROM invoices
+    GROUP BY user_id  
+    HAVING count_temp>1
+)t, customers,contacts 
+where t.user_id=customers.customer_id and customers.customer_id=contacts.user_id
+学生sql:
+select * from contacts
+where user_id in
+  (select user_id from invoices
+  group by user_id
+  having count(*)>1)
+
+
+
+
+Attention!! 评分30.784317 < 100 ！ 13
+
+答案sql:
+select i.invoice_id, c1.customer_name, i.price, 
+    count(ct.contact_name) contacts_cnt ,
+    count(c2.customer_name) trusted_contacts_cnt 
+from invoices i join customers c1 on i.user_id=c1.customer_id
+    left join contacts ct on i.user_id=ct.user_id
+    left join customers c2 on ct.contact_email=c2.email
+group by i.invoice_id
+order by i.invoice_id
+学生sql:
+select invoice_id, customer_name, price,
+  ifnull(contacts_cnt,0) contacts_cnt,
+  ifnull(trusted_contacts_cnt,0) trusted_contacts_cnt
+from invoices i join customers c on i.user_id=c.customer_id
+  left join
+    (select user_id, count(*) contacts_cnt from contacts group by user_id) t1
+  on t1.user_id=c.customer_id
+  left join
+    (select user_id, count(*) trusted_contacts_cnt
+    from contacts
+    where
+      contact_email in (select email from customers)
+    group by user_id) t2
+  on t2.user_id=c.customer_id
+order by invoice_id asc
+
+
+
+
+Attention!! 评分38.142014 < 100 ！ 18
+
+答案sql:
+select a.c_id,b.c_name,MAX(s_score)as max_score,MIN(s_score) as min_score,
+    ROUND(SUM(case when a.s_score<60 then 1 else 0 end)/SUM(case when a.s_score then 1 else 0 end),2) as '��������',
+    ROUND(SUM(case when a.s_score>=60 and a.s_score<90 then 1 else 0 end)/SUM(case when a.s_score then 1 else 0 end),2) as '�е���',
+    ROUND(SUM(case when a.s_score>=90 then 1 else 0 end)/SUM(case when a.s_score then 1 else 0 end),2) as '������'
+    from scores a left join courses b on a.c_id = b.c_id GROUP BY a.c_id,b.c_name
+学生sql:
+select s.c_id, c.c_name, max(s.s_score) max_score, min(s.s_score) min_score,
+  round(sum(if(s.s_score<60,1,0)) / count(*), 2) ��������,
+  round(sum(if(s.s_score>=60 and s.s_score<90,1,0)) / count(*), 2) �е���,
+  round(sum(if(s.s_score>=90,1,0)) / count(*), 2) ������
+from scores s join courses c on s.c_id=c.c_id
+group by s.c_id
+
+
+
+

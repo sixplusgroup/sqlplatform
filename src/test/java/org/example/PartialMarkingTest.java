@@ -86,7 +86,8 @@ public class PartialMarkingTest {
         // stack over flow: 第6个
         HashMap<Integer, List<String>> mainQData = getResFromMainQ();
         List<Triple<Integer, String, String>> myAnswer = CSVReader.readCsv4(read_csv_prefix + "my_answer.csv");
-        String wirteToPath = prefix + "PartialMarkingTestMyAnswer2.txt";
+        String wirteToPath = prefix + "PartialMarkingTestMyAnswer3.txt";
+        String writeToPath2 = prefix + "tp_my.txt";
         for (Triple<Integer, String, String> item: myAnswer) {
             Integer mainId = item.first;
             List<String> sqls = mainQData.get(mainId);
@@ -94,8 +95,12 @@ public class PartialMarkingTest {
             System.out.println(item.first);
             try {
                 float score = marking.partialMark(item.second,item.third,100.0f);
-//                if (score < 100.0f) {
-//                    TxtWriter.writeTo(wirteToPath, "Attention!! 评分" + score + " < 100 ！ " + mainId + "\n\n" +
+                if (score < 100.0f) {
+                    TxtWriter.writeTo(wirteToPath, "Attention!! 评分" + score + " < 100 ！ " + mainId + "\n\n" +
+                            "答案sql:\n" + item.second + "\n学生sql:\n" + item.third + "\n\n\n\n\n");
+                }
+//                else {
+//                    TxtWriter.writeTo(writeToPath2, mainId + "\n" +
 //                            "答案sql:\n" + item.second + "\n学生sql:\n" + item.third + "\n\n\n\n\n");
 //                }
             } catch (Exception e) {

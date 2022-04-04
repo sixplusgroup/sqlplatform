@@ -1,6 +1,7 @@
-满分的：2个2, 1个4
+满分的见tp_my.txt
+下面的基本都是标准答案集问题
 
-[标准答案集问题] Attention!! 评分50.625004 < 100 ！ 1
+[语义不一样，一个是=max，一个是>=max] Attention!! 评分50.625004 < 100 ！ 1
 
 答案sql:
 select e1.dno,e1.eno, e1.salary
@@ -20,7 +21,7 @@ order by dno asc
 
 
 
-[标准答案集问题] Attention!! 评分0.0 < 100 ！ 2
+[表的组合结构不一样，一个放在from，一个在exist] Attention!! 评分0.0 < 100 ！ 2
 
 答案sql:
 select s.sname
@@ -43,7 +44,7 @@ limit 1
 
 
 
-[解决，但count(distinct order_id)本身即存在差异] Attention!! 评分91.0 < 100 ！ 3
+[（理论可解）count(distinct order_id)和count(*)本身即存在差异] Attention!! 评分91.0 < 100 ！ 3
 
 答案sql:
 select o.customer_id, count(distinct order_id) as order_num
@@ -63,7 +64,7 @@ limit 1
 
 
 
-[标准答案集问题] Attention!! 评分24.126986 < 100 ！ 3
+[同上，表位置问题] Attention!! 评分24.126986 < 100 ！ 3
 
 答案sql:
 SELECT c.name customer_name,o2.order_id,o2.order_date
@@ -269,62 +270,6 @@ where exists select from logins where
 
 
 
-【Done】Attention!! 评分70.344826 < 100 ！ 8
-
-答案sql:
-select l.mdate as login_date,count(user_id) as new_user_num
-from (
-    select user_id,min(login_date) as mdate
-    from logins
-    group by user_id) as l
-group by l.mdate 
-having new_user_num >= 2
-order by login_date;
-学生sql:
-select login_date, count(*) new_user_num from
-  (select user_id, min(login_date) login_date from logins group by user_id) t
-group by login_date
-having new_user_num>=2
-order by login_date
-
-
-
-
-【Done】Attention!! 评分56.973255 < 100 ！ 8
-
-答案sql:
-SELECT a.date, ROUND(COUNT(b.user_id) * 1.0/COUNT(a.user_id), 3) AS rate
-FROM (
-    SELECT user_id, MIN(login_date) AS date
-    FROM logins
-    GROUP BY user_id) a
-LEFT JOIN logins b
-ON a.user_id = b.user_id
-AND b.login_date = DATE_ADD(a.date,INTERVAL 1 day)
-GROUP BY a.date
-UNION
-SELECT login_date date, 0.000 AS rate
-FROM logins
-WHERE login_date NOT IN (
-    SELECT MIN(login_date)
-    FROM logins
-    GROUP BY user_id)
-ORDER BY date;
-学生sql:
-select date, round(count(l.user_id)/count(nu.user_id), 3) rate from
-  (select user_id, min(login_date) date from logins group by user_id) nu
-  left join logins l
-  on l.user_id=nu.user_id and l.login_date=date_add(nu.date, interval 1 day)
-group by date
-union all
-select login_date date, 0.000 rate from logins
-where login_date not in
-  (select min(login_date) date from logins group by user_id)
-order by date asc
-
-
-
-
 [标准答案集问题] Attention!! 评分3.3766224 < 100 ！ 10
 
 答案sql:
@@ -376,7 +321,7 @@ order by department asc, salary desc
 
 
 
-[*]【能不能转换？】[标准答案集问题] Attention!! 评分0.0 < 100 ！ 13
+[标准答案集问题] Attention!! 评分0.0 < 100 ！ 13
 
 答案sql:
 select t.user_id,contact_name,contact_email
@@ -430,7 +375,7 @@ order by invoice_id asc
 
 
 
-【能不能转换？】[标准答案集问题] Attention!! 评分31.105036 < 100 ！ 18
+[标准答案集问题] Attention!! 评分31.105036 < 100 ！ 18
 
 答案sql:
 select a.c_id,b.c_name,MAX(s_score)as max_score,MIN(s_score) as min_score,

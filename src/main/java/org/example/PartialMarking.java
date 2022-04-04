@@ -171,10 +171,15 @@ public class PartialMarking {
 //                "group by group_id\n" +
 //                "order by group_id;";
 // PASS: not的等价，tables顺序、alias, 条件的顺序
-        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
-                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
-        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
-                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
+//        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
+//                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
+//        String studentSql = "select u.id sid from user l, student u, lesson s\n" +
+//                "where l.uid>s.sid and l.uid>='0' and l.uid<u.id";
+        // 编辑距离的作用
+        String instrSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.A)\n" +
+                "WHERE r.A>10";
+        String studentSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.B)\n" +
+                "WHERE s.A>10";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
         PartialMarking marking = new PartialMarking(dbType, sqls);
