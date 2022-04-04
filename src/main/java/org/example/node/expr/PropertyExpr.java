@@ -44,6 +44,9 @@ public class PropertyExpr extends Expr {
     @Override
     public float score(Expr e) {
         float score = 0;
+        if (equals(e)) {
+            return score();
+        }
         // case 1: this equals e
         if (e instanceof PropertyExpr) {
             PropertyExpr pe = (PropertyExpr) e;

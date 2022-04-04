@@ -179,10 +179,19 @@ public class PartialMarking {
 //        String instrSql = "select * from r where r.a>10";
 //        String studentSql = "select * from r where not (not (r.a>10))";
 // PASS: 编辑距离的作用
-        String instrSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.A)\n" +
-                "WHERE r.A>10";
-        String studentSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.B)\n" +
-                "WHERE s.A>10";
+//        String instrSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.A)\n" +
+//                "WHERE r.A>10";
+//        String studentSql = "SELECT * FROM r INNER JOIN s ON (r.A=s.B)\n" +
+//                "WHERE s.A>10";
+// PASS: 等价类，joinType
+//        String instrSql = "select a.id from a join b on a.id=b.id";
+//        String studentSql = "select b.id from b,a on a.id=b.id";
+// PASS: 带不带表名
+//        String instrSql = "select u.uid from u, t order by tname";
+//        String studentSql = "select uid from u, t order by t.tname";
+// PASS: Condition.merge
+        String instrSql = "select u.uid from u,t where u.uid=t.tid and (u.uid=10 or u.uid=7)";
+        String studentSql = "select t.tid from u, t where (u.uid=t.tid and t.tid=10) or (u.uid=t.tid and t.tid=7)";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
         PartialMarking marking = new PartialMarking(dbType, sqls);

@@ -128,6 +128,7 @@ public class Canonicalizer {
         if (c instanceof CompoundCond) {
             List<List<Expr>> newEqualClasses = equalClasses;
             // additional equal classes
+            // 父节点OR，本节点AND，直接加入等价类
             if (c.operator.equals("AND") && c.father != null && c.father.operator.equals("OR")) {
                 List<List<Expr>> additionalEquals = new ArrayList<>();
                 for (Condition subCond: ((CompoundCond) c).getSubConds()) {
@@ -144,7 +145,10 @@ public class Canonicalizer {
                 substituteCondition(newEqualClasses, subCond);
             }
         } else if (c instanceof CommutativeCond) {
-            if (!c.operator.equals("=")) {
+            // hasDiffrent处理了如下情况：
+            // u.uid=t.tid and (u.uid=10 or u.uid=7) 转换为
+            // u.uid=t.tid and (t.tid=10 or t.tid=7)
+            if (!c.operator.equals("=") || hasDifferent(equalClasses, ((CommutativeCond) c).operands)) {
                 substituteExprList(equalClasses, ((CommutativeCond) c).operands);
             }
         } else if (c instanceof UncommutativeCond) {
@@ -153,6 +157,28 @@ public class Canonicalizer {
         } else if (c instanceof Exist) {
             substituteEqualClass(((Exist) c).subQuery, equalClasses);
         }
+    }
+
+    /**
+     * “||” 保证了执行到这个方法时 operator 一定是 =
+     * @param equalClasses
+     * @param operands
+     * @return
+     */
+    private static boolean hasDifferent(List<List<Expr>> equalClasses, List<Expr> operands) {
+        for (Expr e: operands) {
+            if (!isIn(e, equalClasses))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean isIn(Expr e, List<List<Expr>> equalClasses) {
+        for (List<Expr> equalClass: equalClasses) {
+            if (Expr.isDirectlyStrictlyIn(e, equalClass))
+                return true;
+        }
+        return false;
     }
 
     public static void substituteExprList(List<List<Expr>> equalClasses, List<Expr> l) {

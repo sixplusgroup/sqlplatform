@@ -41,16 +41,17 @@ public class CompoundCond extends Condition {
 
     @Override
     public Condition rearrange() {
-        List<Condition> subConds_new = new ArrayList<>();
-        for (Condition c: subConds){
-            subConds_new.add(c.rearrange());
-        }
-        subConds = subConds_new;
-        mergeNot();
         Condition c = merge();
         if (c instanceof CompoundCond) {
-            ((CompoundCond)c).flatten();
-            c = ((CompoundCond)c).flattenEquals();
+            CompoundCond cc = (CompoundCond) c;
+            List<Condition> subConds_new = new ArrayList<>();
+            for (Condition item: cc.subConds){
+                subConds_new.add(item.rearrange());
+            }
+            cc.subConds = subConds_new;
+            cc.mergeNot();
+            cc.flatten();
+            c = cc.flattenEquals();
         }
         return c;
     }
