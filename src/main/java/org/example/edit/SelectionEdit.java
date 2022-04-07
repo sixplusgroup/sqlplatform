@@ -66,7 +66,9 @@ public class SelectionEdit implements Edit {
         List<Expr> instr_clone = new ArrayList<>(now.selections);
         Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(now.selections, prev.selections);
         instr_clone.removeAll(matches.getKey());
-        res.add("请尝试在selections中增加内容");
+        if (instr_clone.size() > 0) {
+            res.add("请尝试在selections中增加内容");
+        }
         return res;
     }
 

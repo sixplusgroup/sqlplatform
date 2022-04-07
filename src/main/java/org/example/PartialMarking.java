@@ -160,50 +160,50 @@ public class PartialMarking {
 //                ",0)\n" +
 //                ",2) as accept_rate ;";
 // PASS: union all连接的两个Select的顺序，alias，省略alias
-        String instrSql = "select group_id,min(player_id) as player_id\n" +
-                "from\n" +
-                "    (select player,sum(score)\n" +
-                "    from\n" +
-                "        ((select first_player player,first_score score from matches)\n" +
-                "        union all\n" +
-                "        (select second_player player,second_score score from matches)) t\n" +
-                "    group by player) a\n" +
-                "    right join players p on a.player=p.player_id\n" +
-                "where (group_id,score) in\n" +
-                "(select group_id,max(score) as mx\n" +
-                "from \n" +
-                "    (select player,sum(score) as score\n" +
-                "    from\n" +
-                "        ((select first_player player,first_score score from matches)\n" +
-                "        union all\n" +
-                "        (select second_player player,second_score score from matches)) t\n" +
-                "    group by player) a\n" +
-                "    right join players p on a.player=p.player_id\n" +
-                "group by group_id)\n" +
-                "group by group_id\n" +
-                "order by group_id;";
-        String studentSql = "select group_id,min(player_id) as player_id\n" +
-                "from\n" +
-                "    (select player,sum(marks) as mark\n" +
-                "    from\n" +
-                "       (select second_player player,second_score marks from matches) \n" +
-                "        union all\n" +
-                "        ((select first_player player,first_score marks from matches)) haha\n" +
-                "    group by player) lala\n" +
-                "    right join players wa on lala.player=wa.player_id\n" +
-                "where (group_id,mark) in\n" +
-                "(select group_id,max(haha)\n" +
-                "from \n" +
-                "    (select gamer,sum(lala) as haha\n" +
-                "    from\n" +
-                "        ((select first_player gamer,first_score lala from matches)\n" +
-                "        union all\n" +
-                "        (select second_player gamer,second_score lala from matches))\n" +
-                "    group by player) a\n" +
-                "    right join players p on a.gamer=p.player_id\n" +
-                "group by group_id)\n" +
-                "group by group_id\n" +
-                "order by group_id;";
+//        String instrSql = "select group_id,min(player_id) as player_id\n" +
+//                "from\n" +
+//                "    (select player,sum(score)\n" +
+//                "    from\n" +
+//                "        ((select first_player player,first_score score from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player player,second_score score from matches)) t\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.player=p.player_id\n" +
+//                "where (group_id,score) in\n" +
+//                "(select group_id,max(score) as mx\n" +
+//                "from \n" +
+//                "    (select player,sum(score) as score\n" +
+//                "    from\n" +
+//                "        ((select first_player player,first_score score from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player player,second_score score from matches)) t\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.player=p.player_id\n" +
+//                "group by group_id)\n" +
+//                "group by group_id\n" +
+//                "order by group_id;";
+//        String studentSql = "select group_id,min(player_id) as player_id\n" +
+//                "from\n" +
+//                "    (select player,sum(marks) as mark\n" +
+//                "    from\n" +
+//                "       (select second_player player,second_score marks from matches) \n" +
+//                "        union all\n" +
+//                "        ((select first_player player,first_score marks from matches)) haha\n" +
+//                "    group by player) lala\n" +
+//                "    right join players wa on lala.player=wa.player_id\n" +
+//                "where (group_id,mark) in\n" +
+//                "(select group_id,max(haha)\n" +
+//                "from \n" +
+//                "    (select gamer,sum(lala) as haha\n" +
+//                "    from\n" +
+//                "        ((select first_player gamer,first_score lala from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player gamer,second_score lala from matches))\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.gamer=p.player_id\n" +
+//                "group by group_id)\n" +
+//                "group by group_id\n" +
+//                "order by group_id;";
 // PASS: not的等价，tables顺序、alias, 条件的顺序
 //        String instrSql = "select s.id sid from student s, user u, lesson l\n" +
 //                "where not u.uid>=s.id and not(u.uid<=l.sid or u.uid<'0')";
@@ -229,6 +229,14 @@ public class PartialMarking {
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
         PartialMarking marking = new PartialMarking(dbType, sqls);
-        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
+//        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
+        String instrSql = "select max(Salary) SecondHighestSalary\n" +
+                "from employee\n" +
+                "where\n" +
+                "salary<(select max(salary) from employee)";
+        String studentSql = "select max(Salary) SecondHighestSalary\n" +
+                "from employee\n";
+        List<String> hints = marking.getHints(instrSql, studentSql);
+        System.out.println(String.join("\n", hints));
     }
 }

@@ -44,6 +44,7 @@ public class SingleEdit {
             edits.addAll(hintLimit(now, prev));
         }
         catch (Exception e) {
+            e.printStackTrace();
             return edits;
         }
         return edits;

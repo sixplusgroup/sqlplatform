@@ -67,7 +67,7 @@ public class JoinTypeEdit {
             }
         }
         if (toAdd == 0 && toDel == 0)
-            return null;
+            return res;
         int editNum = Math.min(toAdd, toDel);
         float cost = editNum;
         if (toAdd > editNum) {
