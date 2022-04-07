@@ -50,6 +50,26 @@ public class ConditionEdit {
             return edits(instrC, stuC);
     }
 
+    public List<String> hint() throws Exception {
+        List<String> res = new ArrayList<>();
+        Condition instrC = instr.where;
+        Condition stuC = stu.where;
+        // 至少一个为 null 的情况
+        if (instrC == null) {
+            if (stuC != null) {
+                res.add("请删去where语句");
+            }
+            return res;
+        }
+        else if (stuC == null) {
+            res.add("请加入where语句");
+            return res;
+        }
+        // 都不为 null 的情况
+        else
+            return hints(instrC, stuC);
+    }
+
     private List<Pair<PlainSelect, Float>> edits(Condition instrC, Condition stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>();
         if (instrC.equals(stuC))
@@ -158,6 +178,115 @@ public class ConditionEdit {
         return res;
     }
 
+    private List<String> hints(Condition instrC, Condition stuC) throws Exception {
+        List<String> res = new ArrayList<>();
+        if (instrC.equals(stuC))
+            return res;
+        // case 1: 两者都是简单 Condition
+        if ((!(instrC instanceof CompoundCond)) && (!(stuC instanceof CompoundCond))) {
+            if (instrC instanceof CommutativeCond && stuC instanceof CommutativeCond) {
+                if (!instrC.equals(stuC))
+                    res.add("请检查condition: " + stuC.toString());
+            }
+            else if (instrC instanceof UncommutativeCond && stuC instanceof UncommutativeCond) {
+                if (!instrC.equals(stuC))
+                    res.add("请检查condition: " + stuC.toString());
+            }
+            else if (instrC instanceof CommutativeCond && stuC instanceof UncommutativeCond
+                    && canDoUn2Comm((CommutativeCond) instrC, (UncommutativeCond) stuC)) {
+                res.add("请检查condition: " + stuC.toString());
+            }
+            else if (instrC instanceof UncommutativeCond && stuC instanceof CommutativeCond
+                    && canDoComm2Un((UncommutativeCond) instrC, (CommutativeCond) stuC)) {
+                res.add("请检查condition: " + stuC.toString());
+            }
+            else if (instrC instanceof Exist && stuC instanceof Exist) {
+                if (! instrC.equals(stuC))
+                    res.add("请检查exist语句: " + stuC.toString());
+            }
+            else if (instrC instanceof OtherCond && stuC instanceof OtherCond) {
+                if (! instrC.equals(stuC))
+                    res.add("请检查condition: " + stuC.toString());
+            }
+            // 不同类型，add / remove
+            else {
+                res.add("请删去condition: " + stuC.toString());
+                res.add("请给condition加上一些内容");
+            }
+        }
+        // case 2: 至少一个是 CompoundCond
+        else {
+            // case 2.1: 两者都是 CompoundCond
+            if (instrC instanceof CompoundCond && stuC instanceof CompoundCond) {
+                Condition match_instr = Condition.findEqual(instrC, stuC);
+                Condition match_stu = Condition.findEqual(stuC, instrC);
+                // case 1) 不匹配
+                if (match_instr == null && match_stu == null) {
+                    res.add("请删去condition: " + stuC.toString());
+                    res.add("请给condition加上一些内容");
+                    return res;
+                }
+                // 加上 instrC 多出来的部分
+                if (match_instr != null) {
+                    if (!(match_instr.equals(instrC))) {
+                        res.add("请给condition加上一些内容");
+                    }
+                }
+                // 减去 stuC 多出来的部分
+                if (match_stu != null) {
+                    if (!(match_stu.equals(stuC))) {
+                        res.add("请删去condition: " + stuC.toString() + "中多余的部分");
+                    }
+                }
+                // 同级比较
+                if (match_instr == null)
+                    match_instr = instrC;
+                if (match_stu == null)
+                    match_stu = stuC;
+                // case 2) 同级比较：不都是 CompoundCond，递归
+                if (!(match_instr instanceof CompoundCond && match_stu instanceof CompoundCond)) {
+                    res.addAll(hints(match_instr, match_stu));
+                    return res;
+                }
+                // case 3) 同级比较：都是 CompoundCond
+                CompoundCond match_cc = (CompoundCond) match_instr;
+                CompoundCond stu_cc = (CompoundCond) match_stu;
+                // case 3.1) 可展平 暂不考虑
+                // case 3.2) 正常情况
+                res.addAll(hintCompound(match_cc, stu_cc));
+            }
+            // case 2.2: 只有 instrC 是 CompoundCond
+            else if (instrC instanceof CompoundCond) {
+                Condition match = Condition.findEqual(instrC, stuC);
+                if (match == null || match instanceof CompoundCond) {
+                    res.add("请删去condition: " + stuC.toString());
+                    res.add("请给condition加上一些内容");
+                }
+                else {
+                    // 加上 instr 多出来的部分
+                    res.add("请给condition加上一些内容");
+                    // 同级比较
+                    res.addAll(hints(match, stuC));
+                }
+            }
+            // case 2.3: 只有 stuC 是 CompoundCond
+            else {
+                Condition match = Condition.findEqual(stuC, instrC);
+                if (match == null || match instanceof CompoundCond) {
+                    res.add("请删去condition: " + stuC.toString());
+                    res.add("请给condition加上一些内容");
+                }
+                else {
+                    // 减去 stuC 多出来的部分
+                    res.add("请删去condition: " + stuC.toString() + "中多余的部分");
+                    // 同级比较
+                    res.addAll(hints(instrC, match));
+                }
+            }
+        }
+        return res;
+    }
+
     private List<Pair<PlainSelect, Float>> editCompound(CompoundCond instrC, CompoundCond stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         List<Condition> stuC_clone = new ArrayList<>(stuC.getSubConds());
@@ -196,6 +325,28 @@ public class ConditionEdit {
             CompoundCond stu_edited_cc = (CompoundCond) stuC_edited;
             stu_edited_cc.remove(item);
             res.add(new Pair<>(edited, item.score() * CostConfig.delete_cost_rate));
+        }
+        return res;
+    }
+
+    private List<String> hintCompound(CompoundCond instrC, CompoundCond stuC) throws Exception {
+        List<String> res = new ArrayList<>(hintNormal(instrC, stuC));
+        List<Condition> stuC_clone = new ArrayList<>(stuC.getSubConds());
+        for (Condition item: instrC.getSubConds()) {
+            Condition match = Condition.isIn(item,stuC_clone);
+            // 匹配上了，edit
+            if (match != null) {
+                res.addAll(hints(item, match));
+                stuC_clone.remove(match);
+            }
+            // add
+            else {
+                res.add("请尝试加上一些condition");
+            }
+        }
+        // remove
+        for (Condition item: stuC_clone) {
+            res.add("请尝试删去condition: " + item.toString());
         }
         return res;
     }
@@ -417,6 +568,19 @@ public class ConditionEdit {
                 } else {
                     res.add(new Pair<>(edited, CostConfig.math_operator));
                 }
+            }
+        }
+        return res;
+    }
+
+    private List<String> hintNormal(Condition instrC, Condition stuC) {
+        List<String> res = new ArrayList<>();
+        if ((!(instrC instanceof AtomCond)) && instrC.getNot() != stuC.getNot()) {
+            res.add("请尝试为" + stuC.toString() + "加上/删除not");
+        }
+        if (instrC instanceof CompoundCond || instrC instanceof AtomCond) {
+            if (!(instrC.operator.equals(stuC.operator))) {
+                res.add("请尝试修改" + stuC.toString() + "的" + stuC.operator);
             }
         }
         return res;

@@ -59,4 +59,42 @@ public class SelectionEdit implements Edit {
         }
         return res;
     }
+
+    @Override
+    public List<String> hintAdd(PlainSelect now, PlainSelect prev, Env env) {
+        List<String> res = new ArrayList<>();
+        List<Expr> instr_clone = new ArrayList<>(now.selections);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(now.selections, prev.selections);
+        instr_clone.removeAll(matches.getKey());
+        res.add("请尝试在selections中增加内容");
+        return res;
+    }
+
+    @Override
+    public List<String> hintRemove(PlainSelect now, PlainSelect prev, Env env) {
+        List<String> res = new ArrayList<>();
+        List<Expr> stu_clone = new ArrayList<>(prev.selections);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(now.selections, prev.selections);
+        stu_clone.removeAll(matches.getValue());
+        for (Expr e: stu_clone) {
+            res.add("请尝试在selections中删除" + e.toString());
+        }
+        return res;
+    }
+
+    @Override
+    public List<String> hintEdit(PlainSelect now, PlainSelect prev, Env env) {
+        List<String> res = new ArrayList<>();
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(now.selections, prev.selections);
+        List<Expr> match_instr = matches.getKey();
+        List<Expr> match_stu = matches.getValue();
+        for (int i=0; i<match_instr.size(); i++) {
+            Expr item = match_instr.get(i);
+            Expr match = match_stu.get(i);
+            if (!(match.equals(item))) {
+                res.add("请尝试在selections中修改" + match.toString());
+            }
+        }
+        return res;
+    }
 }

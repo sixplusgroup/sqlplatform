@@ -349,9 +349,10 @@ public class BuildAST {
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;
         Env env = new Env(dbType,new ArrayList<>());
-        String sql = "select departmentId, salary\n" +
-                "from b, c\n" +
-                "where b.rk in (cnt+1/2,cnt+1,cnt) or b.rk=cnt+0.6;";
+//        String sql = "select departmentId, salary\n" +
+//                "from b, c\n" +
+//                "where b.rk in (cnt+1/2,cnt+1,cnt) or b.rk=cnt+0.6;";
+        String sql = "select u.uid from u, t where not (not(u.id=t.id) and not(u.name!=t.name))";
         Select s = buildSelect(sql, env);
         System.out.println("success");
 

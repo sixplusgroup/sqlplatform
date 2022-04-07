@@ -108,7 +108,7 @@ public class SetOpSelect extends Select {
         if (!(t instanceof SetOpSelect))
             return false;
         SetOpSelect ss = (SetOpSelect) t;
-        return ss.operator.equals(operator) && ss.left.equals(left) && ss.right.equals(right)
+        return ss.operator.equals(operator) && ((ss.left.equals(left) && ss.right.equals(right)) || (ss.left.equals(right) && ss.right.equals(left)))
                 && ((ss.orderBy == null && orderBy == null) || (ss.orderBy != null && ss.orderBy.equals(orderBy)));
     }
 

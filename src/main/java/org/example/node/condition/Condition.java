@@ -63,15 +63,15 @@ public abstract class Condition {
                         right = tmp;
                         op = getOppositeOp(op);
                     }
-                    SQLSelectQuery selectQuery = null;
+                    SQLSelectQuery selectQuery;
                     if (right instanceof SQLSomeExpr)
                         selectQuery = ((SQLSomeExpr) right).subQuery.getQuery();
-                    if (right instanceof SQLAnyExpr)
+                    else
                         selectQuery = ((SQLAnyExpr) right).subQuery.getQuery();
+                    Select subQ = BuildAST.buildSelect(selectQuery, env);
                     Expr expr_some = Expr.build(left, tableMapping);
-                    Select subQ = BuildAST.buildSelect(selectQuery,env);
-                    toExist(expr_some,subQ,op);
-                    return new Exist(false,subQ);
+                    toExist(expr_some, subQ, op);
+                    return new Exist(false, subQ);
                 }
                 // all转not exist
                 else if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr
@@ -91,9 +91,9 @@ public abstract class Condition {
                     else {
                         selectQuery = ((SQLQueryExpr)right).subQuery.getQuery();
                     }
-                    Select subQ = BuildAST.buildSelect(selectQuery,env);
-                    toExist(expr_all,subQ,op);
-                    return new Exist(true,subQ);
+                    Select subQ = BuildAST.buildSelect(selectQuery, env);
+                    toExist(expr_all, subQ, op);
+                    return new Exist(true, subQ);
                 }
                 // 普通运算符的情况
                 else if (isCommutative(op)) {
@@ -114,14 +114,14 @@ public abstract class Condition {
         // exist
         else if (expr instanceof SQLExistsExpr) {
             SQLExistsExpr existsExpr = (SQLExistsExpr) expr;
-            Select subQ = BuildAST.buildSelect(existsExpr.subQuery.getQuery(),env);
+            Select subQ = BuildAST.buildSelect(existsExpr.subQuery.getQuery(), env);
             return new Exist(existsExpr.not, subQ);
         }
         // in转exist
         else if (expr instanceof SQLInSubQueryExpr) {
             SQLInSubQueryExpr inExpr = (SQLInSubQueryExpr) expr;
             Expr expr_in = Expr.build(inExpr.getExpr(), tableMapping);
-            Select subQ = BuildAST.buildSelect(inExpr.subQuery.getQuery(),env);
+            Select subQ = BuildAST.buildSelect(inExpr.subQuery.getQuery(), env);
             toExist(expr_in, subQ, "=");
             return new Exist(inExpr.isNot(),subQ);
         }

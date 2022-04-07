@@ -8,6 +8,7 @@ import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
 import org.example.util.ErrorLogger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,10 +27,6 @@ public class CalculateScore {
 
     /**
      * 贪心，计算 edit score
-     * @param instrAST
-     * @param studentAST
-     * @param totalScore 总分
-     * @return
      */
     public static float editScore(Select instrAST, Select studentAST, float totalScore, Env env) throws Exception {
         boolean instrIsSetOp = instrAST instanceof SetOpSelect;
@@ -40,7 +37,7 @@ public class CalculateScore {
             // 如果不是except，匹配左右子树两种情况取最大
             //     * 左子树分数计算：左子树edit score 【减去】 右子树totalNodes 【减去】set operator不匹配的cost 1
             // 如果是except，匹配左子树（因为右子树的元素被剔除了，没有匹配它的必要）
-            if (!instrIsSetOp){
+            if (!instrIsSetOp) {
                 SetOpSelect student = (SetOpSelect) studentAST;
                 if (student.operator == SetOp.EXCEPT) {
                     return editScore(instrAST, student.left, totalScore, env) - totalScore(student.right) - 1;
@@ -133,6 +130,117 @@ public class CalculateScore {
             }
             return editScore(instr, bestMatch, newTotalScore, env);
         }
+    }
+
+    /**
+     * 获得对学生的提示
+     */
+    public static List<String> hintsFromEdits(Select instrAST, Select studentAST, float totalScore, Env env) throws Exception {
+        List<String> hints = new ArrayList<>();
+        boolean instrIsSetOp = instrAST instanceof SetOpSelect;
+        boolean studentIsSetOp = studentAST instanceof SetOpSelect;
+        // case 1: 学生sql和正确sql中至少有一个是set operator
+        if (instrIsSetOp || studentIsSetOp) {
+            // case 1.1: Only student has a set op
+            if (!instrIsSetOp){
+                SetOpSelect student = (SetOpSelect) studentAST;
+                if (student.operator == SetOp.EXCEPT) {
+                    hints.add("请尝试去掉except后面的内容");
+                    hints.addAll(hintsFromEdits(instrAST, student.left, totalScore, env));
+                } else {
+                    float left = instrAST.score(student.left) - totalScore(student.right) - 1;
+                    float right = instrAST.score(student.right) - totalScore(student.left) - 1;
+                    if (left > right) {
+                        hints.add("请尝试去掉" + student.operator.toString() + "后面的内容");
+                        hints.addAll(hintsFromEdits(instrAST, student.left, totalScore, env));
+                    }
+                    else {
+                        hints.add("请尝试去掉" + student.operator.toString() + "前面的内容");
+                        hints.addAll(hintsFromEdits(instrAST, student.right, totalScore, env));
+                    }
+                }
+            }
+            // case 1.2: Only instructor has a set op
+            else if (!studentIsSetOp){
+                SetOpSelect instr = (SetOpSelect) instrAST;
+                hints.add("请考虑使用" + instr.operator.toString() + "操作符");
+                if (instr.operator == SetOp.EXCEPT) {
+                    hints.addAll(hintsFromEdits(instr.left, studentAST, totalScore(instr.left), env));
+                } else {
+                    float left = instr.left.score(studentAST);
+                    float right = instr.right.score(studentAST);
+                    if (left > right) {
+                        hints.addAll(hintsFromEdits(instr.left, studentAST, totalScore(instr.left), env));
+                    }
+                    else {
+                        hints.addAll(hintsFromEdits(instr.right, studentAST, totalScore(instr.right), env));
+                    }
+                }
+            }
+            // case 1.3: 两个都是 set operator
+            else {
+                SetOpSelect instr = (SetOpSelect) instrAST;
+                SetOpSelect student = (SetOpSelect) studentAST;
+                if (instr.operator == student.operator) {
+                    hints.add("请考虑将" + student.operator.toString() + "改为" + instr.operator.toString());
+                }
+                if (instr.orderBy != null && instr.orderBy.score(student.orderBy) < instr.orderBy.score()) {
+                    hints.add("请检查orderBy部分");
+                }
+                if (instr.operator == SetOp.EXCEPT) {
+                    hints.addAll(hintsFromEdits(instr.left, student.left, totalScore(instr.left), env));
+                    hints.addAll(hintsFromEdits(instr.right, student.right, totalScore(instr.right), env));
+                } else {
+                    float score1 = instr.left.score(student.left) + instr.right.score(student.right);
+                    float score2 = instr.left.score(student.right) + instr.right.score(student.left);
+                    if (score1 > score2) {
+                        hints.addAll(hintsFromEdits(instr.left, student.left, totalScore(instr.left), env));
+                        hints.addAll(hintsFromEdits(instr.right, student.right, totalScore(instr.right), env));
+                    }
+                    else {
+                        hints.addAll(hintsFromEdits(instr.left, student.right, totalScore(instr.left), env));
+                        hints.addAll(hintsFromEdits(instr.right, student.left, totalScore(instr.right), env));
+                    }
+                }
+            }
+        }
+        // case 2: 都是 plain select，走编辑路径
+        else {
+            PlainSelect instr = (PlainSelect) instrAST;
+            PlainSelect student = (PlainSelect) studentAST;
+            List<Pair<PlainSelect,Float>> singleEdits;
+            try {
+                singleEdits = SingleEdit.singleEdit(instr,student,env);
+            } catch (Exception e){
+                ErrorLogger.logSevere("Exception when calculating eidtScore:\ninstrSql:\n"
+                        + instr.toString() + "\nstudentSql:\n" + student.toString(), e);
+                throw e;
+            }
+            if (singleEdits.size()==0) {
+                return hints;
+            }
+            float maxScore = -2.0f * (instr.score() + student.score());
+            float cost = 0.0f;
+            PlainSelect bestMatch = null;
+            for (Pair<PlainSelect,Float> edit: singleEdits) {
+                float tmpCost = edit.getValue();
+                float tmpScore = instr.score(edit.getKey()) - tmpCost;
+                if (tmpScore > maxScore) {
+                    maxScore = tmpScore;
+                    cost = tmpCost;
+                    bestMatch = edit.getKey();
+                }
+            }
+            if (cost == 0.0f || bestMatch == null)
+                return hints;
+            hints.addAll(SingleEdit.hint(bestMatch, student, env));
+            float newTotalScore = totalScore - cost;
+            if (newTotalScore <= 0) {
+                return hints;
+            }
+            hints.addAll(hintsFromEdits(instr, bestMatch, newTotalScore, env));
+        }
+        return hints;
     }
 
     /**

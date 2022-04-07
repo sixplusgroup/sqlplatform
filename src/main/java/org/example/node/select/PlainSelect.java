@@ -7,6 +7,7 @@ import org.example.node.From;
 import org.example.node.GroupBy;
 import org.example.node.Limit;
 import org.example.node.expr.AtomExpr;
+import org.example.node.expr.FuncExpr;
 import org.example.node.expr.PropertyExpr;
 import org.example.node.orderby.OrderBy;
 import org.example.node.condition.CompoundCond;
@@ -22,18 +23,7 @@ import java.util.stream.Collectors;
  * @date 2021/12/7
  **/
 public class PlainSelect extends Select {
-    // TODO LIST:
-    //  规范化
-    //  复杂Compound，因为做了merge导致cost增加
-    //  解决：建树后不做merge，merge放到规范化里去
     public boolean distinct;
-    /**
-     * SQLBinaryOpExpr[operator, left, right]
-     * select: 属性, 表.属性，聚合函数count，rank()，sum(if(p.player_id=m.first_player, first_score, second_score))
-     * ifnull(num,0), a/b, month(request_date), min(date), sum(date), count(date), 0.000, ifnull(contacts_cnt,0)
-     * count(l.user_id) * 1.0 / (select count(distinct user_id) from logins) rate,
-     * round(sum(if(s.s_score<60,1,0)) / count(*), 2)
-     */
     public List<Expr> selections; // empty
     public From from; // from.joinTypes empty
     public Condition where; // null
@@ -78,7 +68,17 @@ public class PlainSelect extends Select {
         }
         for (int i=0;i<selections.size();i++) {
             String alias = query.getSelectList().get(i).getAlias();
-            if (alias != null){
+            if (alias != null) {
+                attrAliasMap.put(alias, selections.get(i));
+            }
+            else if (selections.get(i) instanceof FuncExpr
+                    && ((FuncExpr) selections.get(i)).parameters.size() == 1
+            && (!(((FuncExpr) selections.get(i)).parameters.get(0) instanceof FuncExpr))) {
+                Expr e = ((FuncExpr) selections.get(i)).parameters.get(0);
+                if (e instanceof PropertyExpr)
+                    alias = ((PropertyExpr) e).attribute.value;
+                else
+                    alias = e.toString();
                 attrAliasMap.put(alias, selections.get(i));
             }
         }
@@ -191,10 +191,17 @@ public class PlainSelect extends Select {
         if (!(t instanceof PlainSelect))
             return false;
         PlainSelect ps = (PlainSelect) t;
-        return ps.distinct==distinct && ps.selections.equals(selections)
+        boolean res =  ps.distinct==distinct && ps.selections.size()==selections.size()
                 && ((from==null && ps.from==null) || (from!=null && from.equals(ps.from)))
                 && ((where==null && ps.where==null) || (where!=null && where.equals(ps.where)))
                 && ps.groupBy.equals(groupBy) && ps.orderBy.equals(orderBy) && ps.limit.equals(limit);
+        if (!res)
+            return res;
+        for (Expr e: selections) {
+            if (!Expr.isDirectlyStrictlyIn(e, ps.selections))
+                return false;
+        }
+        return true;
     }
 
     @Override

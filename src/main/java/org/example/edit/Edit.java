@@ -14,4 +14,7 @@ public interface Edit {
     List<Pair<PlainSelect,Float>> add(PlainSelect instr, PlainSelect stu, Env env);
     List<Pair<PlainSelect,Float>> remove(PlainSelect instr, PlainSelect stu, Env env);
     List<Pair<PlainSelect,Float>> edit(PlainSelect instr, PlainSelect stu, Env env) throws Exception;
+    List<String> hintAdd(PlainSelect now, PlainSelect prev, Env env);
+    List<String> hintRemove(PlainSelect now, PlainSelect prev, Env env);
+    List<String> hintEdit(PlainSelect now, PlainSelect prev, Env env) throws Exception;
 }

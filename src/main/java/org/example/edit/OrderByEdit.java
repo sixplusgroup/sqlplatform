@@ -92,4 +92,73 @@ public class OrderByEdit implements Edit {
         }
         return res;
     }
+
+    @Override
+    public List<String> hintAdd(PlainSelect now, PlainSelect prev, Env env) {
+        List<String> res = new ArrayList<>();
+        List<OrderByItem> items_clone = new ArrayList<>(prev.orderBy.items);
+        for (OrderByItem e: now.orderBy.items) {
+            OrderByItem tmp = OrderByItem.isIn(e,items_clone);
+            if (tmp == null) {
+                res.add("请尝试在orderBy语句中增加" + e.toString());
+            } else {
+                items_clone.remove(tmp);
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public List<String> hintRemove(PlainSelect now, PlainSelect prev, Env env) {
+        List<String> res = new ArrayList<>();
+        List<OrderByItem> items_clone = new ArrayList<>(prev.orderBy.items);
+        for (OrderByItem e: now.orderBy.items) {
+            OrderByItem tmp = OrderByItem.isIn(e,items_clone);
+            if (tmp != null) {
+                items_clone.remove(tmp);
+            }
+        }
+        for (OrderByItem e: items_clone) {
+            res.add("请尝试在orderBy语句中删去" + e.toString());
+        }
+        return res;
+    }
+
+    @Override
+    public List<String> hintEdit(PlainSelect now, PlainSelect prev, Env env) throws Exception {
+        List<String> res = new ArrayList<>();
+        boolean sameItems = true;
+        List<OrderByItem> items_clone = new ArrayList<>(prev.orderBy.items);
+        for (OrderByItem e: now.orderBy.items) {
+            OrderByItem tmp = OrderByItem.isIn(e,items_clone);
+            if (tmp != null) {
+                items_clone.remove(tmp);
+                if (!(e.equals(tmp))) {
+                    sameItems = false;
+                    res.add("请尝试在orderBy语句中将" + tmp.toString() + "改为" + e.toString());
+                }
+            }
+        }
+        sameItems &= (items_clone.size() == 0);
+        // items 都一样，可以调整顺序
+        if (sameItems) {
+            float cost = 0;
+            int idx = -1;
+            items_clone = new ArrayList<>(prev.orderBy.items);
+            for (OrderByItem e: now.orderBy.items) {
+                OrderByItem tmp = OrderByItem.isIn(e,items_clone);
+                if (tmp != null) {
+                    items_clone.remove(tmp);
+                    int curIdx = prev.orderBy.items.indexOf(tmp);
+                    if (curIdx < idx)
+                        cost += CostConfig.sequence_penalty;
+                    idx = curIdx;
+                }
+            }
+            if (cost != 0) {
+                res.add("请尝试调整orderBy语句中各项的顺序");
+            }
+        }
+        return res;
+    }
 }
