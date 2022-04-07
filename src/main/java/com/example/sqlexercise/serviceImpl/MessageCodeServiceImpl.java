@@ -1,6 +1,10 @@
 package com.example.sqlexercise.serviceImpl;
 
+import com.example.sqlexercise.data.CodeMapper;
+import com.example.sqlexercise.po.Cache;
 import com.example.sqlexercise.service.MessageCodeService;
+import com.example.sqlexercise.vo.ResponseVO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
@@ -8,20 +12,19 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
 @Service
 public class MessageCodeServiceImpl implements MessageCodeService {
 
+    @Autowired
+    CodeMapper codeMapper;
+
     @Override
-    public String generateTextMessageCode(String email){
-        StringBuilder newCode= new StringBuilder();
-        String all="0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        for (int i=0;i<6;i++){
-            int num=(int)(Math.random()*82);
-            newCode.append(all.charAt(num));
-        }
+    public ResponseVO sendMessageCode(String email, String code){
+
         Properties properties = new Properties();
         //设置发送邮件的基本参数
         properties.put("mail.transport.protocol", "smtp");//协议
@@ -48,7 +51,7 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             message.setContent("\n\n" +
                     "            <p>欢迎来到 SQL Exercise</p>\n" +
                     "            <p>您的网站账户注册验证码是：</p>\n" +
-                    "        <span style=\"font-size: 24px; color: red\">" + newCode + "</span>", "text/html;charset=UTF-8");
+                    "        <span style=\"font-size: 24px; color: red\">" + code + "</span>", "text/html;charset=UTF-8");
             message.setSentDate(new Date());
             Transport transport = session.getTransport();
             transport.connect("wenbing.he@qq.com", "rzljkrkpwkxqbfbd");
@@ -56,6 +59,28 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             transport.close();
         }catch (Exception e){
             System.out.println(e.getMessage());
+        }
+        return ResponseVO.success("发送成功");
+    }
+
+    @Override
+    public String generateMessageCode(String email){
+        StringBuilder newCode = new StringBuilder();
+        String all = "0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        for (int i = 0; i < 6; i++) {
+            int num = (int) (Math.random() * 82);
+            newCode.append(all.charAt(num));
+        }
+        Cache cache = new Cache();
+        cache.setCode(newCode.toString());
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime()+5*60*1000);
+        cache.setCreatedAt(now);
+        cache.setExpiryDate(expiryDate);
+        if(codeMapper.getCacheByEmail(email)!=null){
+            codeMapper.update(cache);
+        }else {
+            codeMapper.create(cache);
         }
         return newCode.toString();
     }
