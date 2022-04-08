@@ -71,9 +71,7 @@ public class UncommutativeCond extends AtomCond {
 
     @Override
     public String toString() {
-        return operator + "(" +
-                left.toString() + "," +
-                right.toString() + ")";
+        return left.toString() + " " + operator + " " + right.toString();
     }
 
 }

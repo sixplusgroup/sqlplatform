@@ -392,14 +392,14 @@ public class CompoundCond extends Condition {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         if (not)
-            sb.append("not ");
-        sb.append(operator).append("(");
+            sb.append("not (");
         List<String> subConds_s = subConds.stream()
                 .map(Condition::toString)
                 .collect(Collectors.toList());
         Collections.sort(subConds_s);
-        sb.append(String.join(",",subConds_s));
-        sb.append(")");
+        sb.append(String.join(" " + operator + " ", subConds_s));
+        if (not)
+            sb.append(")");
         return sb.toString();
     }
 

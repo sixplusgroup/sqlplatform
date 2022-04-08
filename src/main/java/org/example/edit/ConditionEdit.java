@@ -185,12 +185,10 @@ public class ConditionEdit {
         // case 1: 两者都是简单 Condition
         if ((!(instrC instanceof CompoundCond)) && (!(stuC instanceof CompoundCond))) {
             if (instrC instanceof CommutativeCond && stuC instanceof CommutativeCond) {
-                if (!instrC.equals(stuC))
-                    res.add("请检查condition: " + stuC.toString());
+                res.addAll(hintCommutative((CommutativeCond) instrC, (CommutativeCond) stuC));
             }
             else if (instrC instanceof UncommutativeCond && stuC instanceof UncommutativeCond) {
-                if (!instrC.equals(stuC))
-                    res.add("请检查condition: " + stuC.toString());
+                res.addAll(hintUncommutative((UncommutativeCond) instrC, (UncommutativeCond) stuC));
             }
             else if (instrC instanceof CommutativeCond && stuC instanceof UncommutativeCond
                     && canDoUn2Comm((CommutativeCond) instrC, (UncommutativeCond) stuC)) {
@@ -201,8 +199,14 @@ public class ConditionEdit {
                 res.add("请检查condition: " + stuC.toString());
             }
             else if (instrC instanceof Exist && stuC instanceof Exist) {
-                if (! instrC.equals(stuC))
-                    res.add("请检查exist语句: " + stuC.toString());
+                if (! instrC.equals(stuC)) {
+                    List<String> hints = CalculateScore.hintsFromEdits(
+                            ((Exist) instrC).subQuery, ((Exist) stuC).subQuery,
+                            CalculateScore.totalScore(((Exist) instrC).subQuery), env);
+                    for (String s: hints) {
+                        res.add("请在subquery语句中检查如下内容: " + s);
+                    }
+                }
             }
             else if (instrC instanceof OtherCond && stuC instanceof OtherCond) {
                 if (! instrC.equals(stuC))
@@ -410,6 +414,34 @@ public class ConditionEdit {
         return res;
     }
 
+    private List<String> hintCommutative(CommutativeCond instrC, CommutativeCond stuC) {
+        List<String> res = new ArrayList<>(hintNormal(instrC, stuC));
+        List<Expr> instrC_clone = new ArrayList<>(instrC.operands);
+        List<Expr> stuC_clone = new ArrayList<>(stuC.operands);
+        Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(instrC.operands, stuC.operands);
+        List<Expr> match_instr = matches.getKey();
+        List<Expr> match_stu = matches.getValue();
+        // 匹配上的，edit
+        for (int i=0; i<match_instr.size(); i++) {
+            Expr item = match_instr.get(i);
+            Expr match = match_stu.get(i);
+            instrC_clone.remove(item);
+            stuC_clone.remove(match);
+            if (!(match.equals(item))) {
+                res.add("请尝试将" + stuC.toString() + "的" + match.toString() + "改为" + item.toString());
+            }
+        }
+        // add
+        for (Expr item: instrC_clone) {
+            res.add("请尝试加上" + stuC.operands.get(0) + " " + stuC.operator + " " + item.toString());
+        }
+        // remove
+        for (Expr item: stuC_clone) {
+            res.add("请尝试删去" + stuC.toString() + "中有关" + item.toString() + "的内容");
+        }
+        return res;
+    }
+
     private List<Pair<PlainSelect, Float>> editUncommutative(UncommutativeCond instrC, UncommutativeCond stuC) throws Exception {
         List<Pair<PlainSelect, Float>> res = new ArrayList<>(editNormal(instrC, stuC));
         if (!(instrC.left.equals(stuC.left))) {
@@ -437,6 +469,17 @@ public class ConditionEdit {
             UncommutativeCond stu_edited_uc = (UncommutativeCond) stuC_edited;
             stu_edited_uc.right = instrC.right.clone();
             res.add(new Pair<>(edited, instrC.right.score() - instrC.right.score(stuC.right)));
+        }
+        return res;
+    }
+
+    private List<String> hintUncommutative(UncommutativeCond instrC, UncommutativeCond stuC) {
+        List<String> res = new ArrayList<>(hintNormal(instrC, stuC));
+        if (!(instrC.left.equals(stuC.left))) {
+            res.add("请尝试将" + stuC.toString() + "的" + stuC.left + "改为" + instrC.left);
+        }
+        if (!(instrC.right.equals(stuC.right))) {
+            res.add("请尝试将" + stuC.toString() + "的" + stuC.right + "改为" + instrC.right);
         }
         return res;
     }
@@ -575,13 +618,11 @@ public class ConditionEdit {
 
     private List<String> hintNormal(Condition instrC, Condition stuC) {
         List<String> res = new ArrayList<>();
-        if ((!(instrC instanceof AtomCond)) && instrC.getNot() != stuC.getNot()) {
+        if (instrC.getNot() != stuC.getNot()) {
             res.add("请尝试为" + stuC.toString() + "加上/删除not");
         }
-        if (instrC instanceof CompoundCond || instrC instanceof AtomCond) {
-            if (!(instrC.operator.equals(stuC.operator))) {
-                res.add("请尝试修改" + stuC.toString() + "的" + stuC.operator);
-            }
+        if (!(instrC.operator.equals(stuC.operator))) {
+            res.add("请尝试修改" + stuC.toString() + "的" + stuC.operator);
         }
         return res;
     }

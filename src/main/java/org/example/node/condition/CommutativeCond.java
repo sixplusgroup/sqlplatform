@@ -94,13 +94,15 @@ public class CommutativeCond extends AtomCond {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(operator).append("(");
         List<String> operands_s = operands.stream()
                 .map(Expr::toString)
                 .collect(Collectors.toList());
         Collections.sort(operands_s);
-        sb.append(String.join(",",operands_s));
-        sb.append(")");
+        List<String> conds = new ArrayList<>();
+        for (int i=1;i<operands.size();i++) {
+            conds.add(operands_s.get(0) + " " + operator + " " + operands_s.get(i));
+        }
+        sb.append(String.join(" AND ", conds));
         return sb.toString();
     }
 
