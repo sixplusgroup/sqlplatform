@@ -233,11 +233,13 @@ public class PartialMarking {
         String instrSql = "select max(Salary) SecondHighestSalary\n" +
                 "from employee\n" +
                 "where\n" +
-                "salary<(select max(salary) from employee)";
+                "salary<(select max(salary) from employee)" +
+                "group by salary";
         String studentSql = "select max(Salary) SecondHighestSalary\n" +
                 "from employee\n" +
                 "where\n" +
-                "salary<(select min(salary) from employee)";
+                "salary<(select max(salary) from employee)" +
+                "order by salary";
         List<String> hints = marking.getHints(instrSql, studentSql);
         System.out.println(String.join("\n", hints));
     }

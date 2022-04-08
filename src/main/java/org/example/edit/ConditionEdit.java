@@ -204,7 +204,7 @@ public class ConditionEdit {
                             ((Exist) instrC).subQuery, ((Exist) stuC).subQuery,
                             CalculateScore.totalScore(((Exist) instrC).subQuery), env);
                     for (String s: hints) {
-                        res.add("请在subquery语句中检查如下内容: " + s);
+                        res.add("请在subquery语句中检查类似如下内容: " + s);
                     }
                 }
             }
