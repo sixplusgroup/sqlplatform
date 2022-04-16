@@ -109,13 +109,13 @@ public class Canonicalizer {
     public static List<List<Expr>> getEqualClasses(Condition where) {
         List<List<Expr>> equalClasses = new ArrayList<>();
         if (where instanceof CompoundCond) {
-            if (where.operator.equals("AND")) {
+            if (((CompoundCond) where).operator.equals("AND")) {
                 List<Condition> subConds = ((CompoundCond) where).getSubConds();
                 for (Condition c: subConds) {
                     equalClasses.addAll(getEqualClasses(c));
                 }
             }
-        } else if (where instanceof CommutativeCond && where.operator.equals("=")) {
+        } else if (where instanceof CommutativeCond && ((CommutativeCond) where).operator.equals("=")) {
             equalClasses.add(((CommutativeCond) where).operands);
         }
         for (List<Expr> equalClass: equalClasses) {
@@ -129,10 +129,10 @@ public class Canonicalizer {
             List<List<Expr>> newEqualClasses = equalClasses;
             // additional equal classes
             // 父节点OR，本节点AND，直接加入等价类
-            if (c.operator.equals("AND") && c.father != null && c.father.operator.equals("OR")) {
+            if (((CompoundCond) c).operator.equals("AND") && c.father != null && c.father.operator.equals("OR")) {
                 List<List<Expr>> additionalEquals = new ArrayList<>();
                 for (Condition subCond: ((CompoundCond) c).getSubConds()) {
-                    if (subCond instanceof CommutativeCond && subCond.operator.equals("=")) {
+                    if (subCond instanceof CommutativeCond && ((CommutativeCond) subCond).operator.equals("=")) {
                         additionalEquals.add(((CommutativeCond) subCond).operands);
                     }
                 }
@@ -148,7 +148,7 @@ public class Canonicalizer {
             // hasDiffrent处理了如下情况：
             // u.uid=t.tid and (u.uid=10 or u.uid=7) 转换为
             // u.uid=t.tid and (t.tid=10 or t.tid=7)
-            if (!c.operator.equals("=") || hasDifferent(equalClasses, ((CommutativeCond) c).operands)) {
+            if (!((CommutativeCond) c).operator.equals("=") || hasDifferent(equalClasses, ((CommutativeCond) c).operands)) {
                 substituteExprList(equalClasses, ((CommutativeCond) c).operands);
             }
         } else if (c instanceof UncommutativeCond) {
