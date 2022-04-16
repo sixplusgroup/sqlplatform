@@ -651,12 +651,12 @@ public class ConditionEdit {
         }
         if (instrC instanceof CompoundCond && stuC instanceof CompoundCond) {
             if (!(((CompoundCond) instrC).operator.equals(((CompoundCond) stuC).operator))) {
-                res.add("请尝试修改" + stuC.getOriginStr() + "的" + ((CompoundCond) stuC).operator);
+                res.add("请尝试修改" + stuC.getOriginStr() + "的" + ((CompoundCond) stuC).opOriginStr);
             }
         }
         else if (instrC instanceof AtomCond && stuC instanceof AtomCond) {
             if (!(((AtomCond) instrC).operator.equals(((AtomCond) stuC).operator))) {
-                res.add("请尝试修改" + stuC.getOriginStr() + "的" + ((AtomCond) stuC).operator);
+                res.add("请尝试修改" + stuC.getOriginStr() + "的" + ((AtomCond) stuC).opOriginStr);
             }
         }
         return res;
