@@ -23,8 +23,13 @@ public class GradingController {
 
     @PostMapping("/getScore")
     public float getScore(@RequestBody GetScoreVO data) {
-        System.out.println("get score...");
-        return getScore(data.getMainId(), data.getSubId(), data.getStudentSql(), data.getMaxScore(), Constants.dbType);
+//        System.out.println("get score...");
+//        System.out.println("mainId " + data.getMainId());
+//        System.out.println("subId " + data.getSubId());
+//        System.out.println("maxScore " + data.getMaxScore());
+        float res = getScore(data.getMainId(), data.getSubId(), data.getStudentSql(), data.getMaxScore(), Constants.dbType);
+//        System.out.println("score " + res);
+        return res;
     }
 
     public float getScore(Integer mainId, Integer subId, String studentSql, float maxScore, String dbType) {

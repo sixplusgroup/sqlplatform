@@ -136,7 +136,7 @@ public class GroupByEdit implements Edit {
         Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(now.groupBy.items, prev.groupBy.items);
         stu_clone.removeAll(matches.getValue());
         for (Expr e: stu_clone) {
-            res.add("请尝试在groupBy语句中删去" + e.toString());
+            res.add("请尝试在groupBy语句中删去" + e.originStr);
         }
         // having
         if (now.groupBy.having == null && prev.groupBy.having != null) {
@@ -158,7 +158,7 @@ public class GroupByEdit implements Edit {
             Expr match = match_stu.get(i);
             if (!(match.equals(item))) {
                 sameItems = false;
-                res.add("请尝试在groupBy语句中将" + match.toString() + "改为" + item.toString());
+                res.add("请尝试在groupBy语句中将" + match.originStr + "改为" + item.toString());
             }
         }
         sameItems &= (now.groupBy.items.size() == match_instr.size());

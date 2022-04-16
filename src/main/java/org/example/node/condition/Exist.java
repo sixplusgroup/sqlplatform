@@ -12,12 +12,12 @@ import org.example.node.select.SetOpSelect;
 public class Exist extends Condition {
     public Select subQuery;
 
-    public Exist(){
-
+    public Exist(String originStr){
+        super(originStr);
     }
 
-    public Exist(boolean not, Select subQuery) {
-        super();
+    public Exist(boolean not, Select subQuery, String originStr) {
+        this(originStr);
         this.not = not;
         this.subQuery = subQuery;
         Select.subQueryProcess(this.subQuery);
@@ -71,7 +71,7 @@ public class Exist extends Condition {
 
     @Override
     public Exist clone() {
-        return new Exist(not,subQuery.clone());
+        return new Exist(not, subQuery.clone(), originStr);
     }
 
     @Override

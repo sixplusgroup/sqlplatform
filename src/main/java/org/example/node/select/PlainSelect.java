@@ -33,7 +33,9 @@ public class PlainSelect extends Select {
 
     private PlainSelect outerSelect;
 
-    public PlainSelect(){}
+    public PlainSelect(String originStr) {
+        super(originStr);
+    }
 
     public PlainSelect getOuterSelect() {
         return outerSelect;
@@ -44,8 +46,8 @@ public class PlainSelect extends Select {
         this.outerSelect = outerSelect;
     }
 
-    public PlainSelect(SQLSelectQueryBlock query, Env env){
-        super();
+    public PlainSelect(SQLSelectQueryBlock query, Env env, String originStr){
+        super(originStr);
         distinct = query.getDistionOption()!=0;
         if(query.getFrom() != null) {
             from = new From(query.getFrom(), env, this);
@@ -86,7 +88,7 @@ public class PlainSelect extends Select {
         where = Condition.build(query.getWhere(), env, from.tableMapping);
         if (from != null && from.joinCondition != null) {
             if (where != null){
-                where = new CompoundCond("AND", Arrays.asList(where,from.joinCondition));
+                where = new CompoundCond("AND", Arrays.asList(where,from.joinCondition), null);
             } else {
                 where = from.joinCondition;
             }
@@ -163,7 +165,7 @@ public class PlainSelect extends Select {
 
     @Override
     public PlainSelect clone() {
-        PlainSelect select = new PlainSelect();
+        PlainSelect select = new PlainSelect(originStr);
         select.distinct = distinct;
         select.selections = selections.stream()
                 .map(Expr::clone)

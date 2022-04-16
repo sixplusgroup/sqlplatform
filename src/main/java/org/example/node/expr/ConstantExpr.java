@@ -9,9 +9,13 @@ import org.example.edit.CostConfig;
 public class ConstantExpr extends Expr {
     public String value;
 
-    public ConstantExpr(){}
+    public ConstantExpr(String originStr){
+        super(originStr);
+        this.value = originStr;
+    }
 
-    public ConstantExpr(String value) {
+    public ConstantExpr(String value, String originStr) {
+        this(originStr);
         this.value = value;
     }
 
@@ -38,7 +42,7 @@ public class ConstantExpr extends Expr {
 
     @Override
     public Expr clone() {
-        return new ConstantExpr(value);
+        return new ConstantExpr(value, originStr);
     }
 
     @Override

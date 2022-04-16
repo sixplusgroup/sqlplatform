@@ -1,6 +1,5 @@
 package org.example.node.expr;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,11 +10,8 @@ import java.util.stream.Collectors;
 public class ListExpr extends Expr {
     public List<Expr> exprs;
 
-    public ListExpr(){
-        exprs = new ArrayList<>();
-    }
-
-    public ListExpr(List<Expr> exprs) {
+    public ListExpr(List<Expr> exprs, String originStr) {
+        this.originStr = originStr;
         this.exprs = exprs;
     }
 
@@ -47,7 +43,7 @@ public class ListExpr extends Expr {
     public Expr clone() {
         return new ListExpr(exprs.stream()
         .map(Expr::clone)
-        .collect(Collectors.toList()));
+        .collect(Collectors.toList()), originStr);
     }
 
     @Override

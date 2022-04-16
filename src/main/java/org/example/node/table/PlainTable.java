@@ -10,13 +10,13 @@ import org.example.node.expr.AtomExpr;
 public class PlainTable extends Table {
     public AtomExpr name;
 
-    public PlainTable(){}
-
-    public PlainTable(String name) {
-        this.name = new AtomExpr(name);
+    public PlainTable(String originStr) {
+        super(originStr);
+        this.name = new AtomExpr(originStr);
     }
 
-    public PlainTable(AtomExpr name) {
+    public PlainTable(AtomExpr name, String originStr) {
+        this(originStr);
         this.name = name;
     }
 
@@ -35,7 +35,7 @@ public class PlainTable extends Table {
 
     @Override
     public Table clone() {
-        return new PlainTable(name);
+        return new PlainTable(name, originStr);
     }
 
     @Override

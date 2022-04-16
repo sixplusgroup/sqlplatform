@@ -64,7 +64,7 @@ public class From {
             Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env, outerSelect);
             JoinType type = handleJoinType(((SQLJoinTableSource) tableSource).getJoinType());
             handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition(), env, tableMapping);
-            t = new JoinTable(left,right,type);
+            t = new JoinTable(left, right, type, tableSource.toString());
         }
         else if (tableSource instanceof SQLUnionQueryTableSource) {
             SQLUnionQuery query = ((SQLUnionQueryTableSource) tableSource).getUnion();
@@ -160,7 +160,7 @@ public class From {
         }
         Condition c = Condition.build(conds, env, tableMapping);
         if (joinCondition != null){
-            joinCondition = new CompoundCond("AND", Arrays.asList(joinCondition,c));
+            joinCondition = new CompoundCond("AND", Arrays.asList(joinCondition,c), conds.toString());
         }else {
             joinCondition = c;
         }

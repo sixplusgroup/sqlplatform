@@ -15,17 +15,19 @@ public class AtomExpr extends Expr {
     public List<PropertyExpr> allColumnValue;
     public boolean substituted;
 
-    public AtomExpr() {
+    public AtomExpr(String originStr) {
+        super(originStr);
         substituted = false;
+        this.value = originStr;
     }
 
-    public AtomExpr(String value) {
-        this();
+    public AtomExpr(String value, String originStr) {
+        this(originStr);
         this.value = value;
     }
 
-    public AtomExpr(String value, SQLTableSource tableSource) {
-        this();
+    public AtomExpr(String value, SQLTableSource tableSource, String originStr) {
+        this(originStr);
         this.value = value;
         this.allColumnValue = new ArrayList<>();
         if (tableSource instanceof SQLExprTableSource) {
@@ -37,7 +39,7 @@ public class AtomExpr extends Expr {
                     && t.getSchemaObject().getStatement() instanceof SQLCreateTableStatement) {
                 for (SQLTableElement item: ((SQLCreateTableStatement) t.getSchemaObject().getStatement()).getTableElementList()) {
                     if (item instanceof SQLColumnDefinition) {
-                        allColumnValue.add(new PropertyExpr(table, ((SQLColumnDefinition) item).getNameAsString()));
+                        allColumnValue.add(new PropertyExpr(table, ((SQLColumnDefinition) item).getNameAsString(), item.toString()));
                     }
                 }
             }
@@ -62,7 +64,7 @@ public class AtomExpr extends Expr {
 
     @Override
     public Expr clone() {
-        return new AtomExpr(value);
+        return new AtomExpr(value, originStr);
     }
 
     @Override

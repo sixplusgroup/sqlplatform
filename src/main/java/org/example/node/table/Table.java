@@ -9,6 +9,11 @@ import java.util.List;
  * @date 2021/12/8
  **/
 public abstract class Table {
+    public String originStr;
+
+    public Table(String originStr) {
+        this.originStr = originStr;
+    }
 
     public abstract float score();
 

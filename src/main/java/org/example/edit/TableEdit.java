@@ -117,7 +117,7 @@ public class TableEdit implements Edit {
             }
         }
         for (Table item: stu_clone) {
-            res.add("请尝试在from语句中删除" + item.toString());
+            res.add("请尝试在from语句中删除" + item.originStr);
         }
         return res;
     }
@@ -141,7 +141,7 @@ public class TableEdit implements Edit {
                     }
                     // 普通table
                     else {
-                        res.add("请修改from语句中的表" + match.toString());
+                        res.add("请修改from语句中的表" + match.originStr);
                     }
                 }
             }

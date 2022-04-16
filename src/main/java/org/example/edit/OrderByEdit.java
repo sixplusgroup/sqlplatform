@@ -119,7 +119,7 @@ public class OrderByEdit implements Edit {
             }
         }
         for (OrderByItem e: items_clone) {
-            res.add("请尝试在orderBy语句中删去" + e.toString());
+            res.add("请尝试在orderBy语句中删去" + e.column.originStr);
         }
         return res;
     }
@@ -135,7 +135,7 @@ public class OrderByEdit implements Edit {
                 items_clone.remove(tmp);
                 if (!(e.equals(tmp))) {
                     sameItems = false;
-                    res.add("请尝试在orderBy语句中将" + tmp.toString() + "改为" + e.toString());
+                    res.add("请尝试在orderBy语句中将" + tmp.column.originStr + " " + tmp.order + "改为" + e.toString());
                 }
             }
         }

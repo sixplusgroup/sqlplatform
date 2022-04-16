@@ -21,7 +21,9 @@ public class SetOpSelect extends Select {
     public SetOp operator;
     public OrderBy orderBy;
 
-    public SetOpSelect(){}
+    public SetOpSelect(String originStr) {
+        super(originStr);
+    }
 
     @Override
     public void setOuterSelect(PlainSelect outerSelect) {
@@ -31,7 +33,9 @@ public class SetOpSelect extends Select {
 
     // todo 类比CompoundCond，交换？多个？ sort?
 
-    public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy, Env env) {
+    public SetOpSelect(Select left, Select right, SQLUnionOperator operator, SQLOrderBy orderBy,
+                       Env env, String originStr) {
+        this(originStr);
         this.left = left;
         this.right = right;
 //        this.operator = SetOp.valueOf(operator.toString().replaceAll(" ","_"));
@@ -86,7 +90,7 @@ public class SetOpSelect extends Select {
 
     @Override
     public SetOpSelect clone() {
-        SetOpSelect select = new SetOpSelect();
+        SetOpSelect select = new SetOpSelect(originStr);
         select.left = left.clone();
         select.right = right.clone();
         select.operator = operator;

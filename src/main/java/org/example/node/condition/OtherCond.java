@@ -11,14 +11,18 @@ import org.example.edit.CostConfig;
 public class OtherCond extends Condition {
     public String value;
 
-    public OtherCond(){}
+    public OtherCond(String originStr) {
+        super(originStr);
+        this.value = originStr;
+    }
 
-    public OtherCond(String value){
-        super();
+    public OtherCond(String value, String originStr){
+        this(originStr);
         this.value = value;
     }
 
-    public OtherCond(boolean not, String value){
+    public OtherCond(boolean not, String value, String originStr){
+        this(originStr);
         this.not = not;
         this.value = value;
     }
@@ -64,7 +68,7 @@ public class OtherCond extends Condition {
 
     @Override
     public OtherCond clone() {
-        return new OtherCond(not,value);
+        return new OtherCond(not, value, originStr);
     }
 
     @Override

@@ -192,11 +192,11 @@ public class ConditionEdit {
             }
             else if (instrC instanceof CommutativeCond && stuC instanceof UncommutativeCond
                     && canDoUn2Comm((CommutativeCond) instrC, (UncommutativeCond) stuC)) {
-                res.add("请检查condition: " + stuC.toString());
+                res.add("请检查condition: " + stuC.getOriginStr());
             }
             else if (instrC instanceof UncommutativeCond && stuC instanceof CommutativeCond
                     && canDoComm2Un((UncommutativeCond) instrC, (CommutativeCond) stuC)) {
-                res.add("请检查condition: " + stuC.toString());
+                res.add("请检查condition: " + stuC.getOriginStr());
             }
             else if (instrC instanceof Exist && stuC instanceof Exist) {
                 if (! instrC.equals(stuC)) {
@@ -210,11 +210,11 @@ public class ConditionEdit {
             }
             else if (instrC instanceof OtherCond && stuC instanceof OtherCond) {
                 if (! instrC.equals(stuC))
-                    res.add("请检查condition: " + stuC.toString());
+                    res.add("请检查condition: " + stuC.getOriginStr());
             }
             // 不同类型，add / remove
             else {
-                res.add("请删去condition: " + stuC.toString());
+                res.add("请删去condition: " + stuC.getOriginStr());
                 res.add("请给condition加上一些内容");
             }
         }
@@ -226,7 +226,7 @@ public class ConditionEdit {
                 Condition match_stu = Condition.findEqual(stuC, instrC);
                 // case 1) 不匹配
                 if (match_instr == null && match_stu == null) {
-                    res.add("请删去condition: " + stuC.toString());
+                    res.add("请删去condition: " + stuC.getOriginStr());
                     res.add("请给condition加上一些内容");
                     return res;
                 }
@@ -239,7 +239,7 @@ public class ConditionEdit {
                 // 减去 stuC 多出来的部分
                 if (match_stu != null) {
                     if (!(match_stu.equals(stuC))) {
-                        res.add("请删去condition: " + stuC.toString() + "中多余的部分");
+                        res.add("请删去condition: " + stuC.getOriginStr() + "中多余的部分");
                     }
                 }
                 // 同级比较
@@ -263,7 +263,7 @@ public class ConditionEdit {
             else if (instrC instanceof CompoundCond) {
                 Condition match = Condition.findEqual(instrC, stuC);
                 if (match == null || match instanceof CompoundCond) {
-                    res.add("请删去condition: " + stuC.toString());
+                    res.add("请删去condition: " + stuC.getOriginStr());
                     res.add("请给condition加上一些内容");
                 }
                 else {
@@ -277,12 +277,12 @@ public class ConditionEdit {
             else {
                 Condition match = Condition.findEqual(stuC, instrC);
                 if (match == null || match instanceof CompoundCond) {
-                    res.add("请删去condition: " + stuC.toString());
+                    res.add("请删去condition: " + stuC.getOriginStr());
                     res.add("请给condition加上一些内容");
                 }
                 else {
                     // 减去 stuC 多出来的部分
-                    res.add("请删去condition: " + stuC.toString() + "中多余的部分");
+                    res.add("请删去condition: " + stuC.getOriginStr() + "中多余的部分");
                     // 同级比较
                     res.addAll(hints(instrC, match));
                 }
@@ -350,7 +350,7 @@ public class ConditionEdit {
         }
         // remove
         for (Condition item: stuC_clone) {
-            res.add("请尝试删去condition: " + item.toString());
+            res.add("请尝试删去condition: " + item.getOriginStr());
         }
         return res;
     }
@@ -428,7 +428,7 @@ public class ConditionEdit {
             instrC_clone.remove(item);
             stuC_clone.remove(match);
             if (!(match.equals(item))) {
-                res.add("请尝试将" + stuC.toString() + "的" + match.toString() + "改为" + item.toString());
+                res.add("请尝试将" + stuC.getOriginStr() + "的" + match.originStr + "改为" + item.toString());
             }
         }
         // add
@@ -437,7 +437,7 @@ public class ConditionEdit {
         }
         // remove
         for (Expr item: stuC_clone) {
-            res.add("请尝试删去" + stuC.toString() + "中有关" + item.toString() + "的内容");
+            res.add("请尝试删去" + stuC.getOriginStr() + "中有关" + item.originStr + "的内容");
         }
         return res;
     }
@@ -476,10 +476,10 @@ public class ConditionEdit {
     private List<String> hintUncommutative(UncommutativeCond instrC, UncommutativeCond stuC) {
         List<String> res = new ArrayList<>(hintNormal(instrC, stuC));
         if (!(instrC.left.equals(stuC.left))) {
-            res.add("请尝试将" + stuC.toString() + "的" + stuC.left + "改为" + instrC.left);
+            res.add("请尝试将" + stuC.getOriginStr() + "的" + stuC.left.originStr + "改为" + instrC.left);
         }
         if (!(instrC.right.equals(stuC.right))) {
-            res.add("请尝试将" + stuC.toString() + "的" + stuC.right + "改为" + instrC.right);
+            res.add("请尝试将" + stuC.getOriginStr() + "的" + stuC.right.originStr + "改为" + instrC.right);
         }
         return res;
     }
@@ -492,7 +492,7 @@ public class ConditionEdit {
 
     private Pair<PlainSelect, Float> editUn2Comm(CommutativeCond instrC, UncommutativeCond stuC) throws Exception {
         CommutativeCond new_stu = new CommutativeCond(instrC.operator,
-                Arrays.asList(stuC.left.clone(), stuC.right.clone()));
+                Arrays.asList(stuC.left.clone(), stuC.right.clone()), stuC.originStr);
         PlainSelect edited = stu.clone();
         Condition stuC_edited = Condition.find(stuC, edited.where);
         if (stuC_edited == null) {
@@ -595,8 +595,8 @@ public class ConditionEdit {
             Condition.setNot(match);
             res.add(new Pair<>(edited, CostConfig.not));
         }
-        if (instrC instanceof CompoundCond || instrC instanceof AtomCond) {
-            if (!(instrC.operator.equals(stuC.operator))) {
+        if (instrC instanceof CompoundCond) {
+            if (!(((CompoundCond) instrC).operator.equals(((CompoundCond) stuC).operator))) {
                 PlainSelect edited = stu.clone();
                 Condition match = Condition.find(stuC, edited.where);
                 if (match == null) {
@@ -605,11 +605,39 @@ public class ConditionEdit {
                             + "\nstudentSql:\n" + stu.toString());
                     throw new Exception("ConditionEdit.editNormal: match == null");
                 }
-                match.operator = instrC.operator;
-                if (instrC instanceof CompoundCond) {
+                if (match instanceof CompoundCond) {
+                    ((CompoundCond) match).operator = ((CompoundCond) instrC).operator;
                     res.add(new Pair<>(edited, CostConfig.logic_operator));
-                } else {
+                }
+                else {
+                    // match not CompoundCond
+                    ErrorLogger.logSevere("ConditionEdit.editNormal: match not CompoundCond\ninstrC:\n"
+                            + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                            + "\nstudentSql:\n" + stu.toString());
+                    throw new Exception("ConditionEdit.editNormal: match == null");
+                }
+            }
+        }
+        else if (instrC instanceof AtomCond) {
+            if (!(((AtomCond) instrC).operator.equals(((AtomCond) stuC).operator))) {
+                PlainSelect edited = stu.clone();
+                Condition match = Condition.find(stuC, edited.where);
+                if (match == null) {
+                    ErrorLogger.logSevere("ConditionEdit.editNormal: match == null\ninstrC:\n"
+                            + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                            + "\nstudentSql:\n" + stu.toString());
+                    throw new Exception("ConditionEdit.editNormal: match == null");
+                }
+                if (match instanceof AtomCond) {
+                    ((AtomCond) match).operator = ((AtomCond) instrC).operator;
                     res.add(new Pair<>(edited, CostConfig.math_operator));
+                }
+                else {
+                    // match not AtomCond
+                    ErrorLogger.logSevere("ConditionEdit.editNormal: match not AtomCond\ninstrC:\n"
+                            + instrC.toString() + "\nstuC:\n" + stuC.toString() + "\ninstrSql:\n" + instr.toString()
+                            + "\nstudentSql:\n" + stu.toString());
+                    throw new Exception("ConditionEdit.editNormal: match == null");
                 }
             }
         }
@@ -619,10 +647,17 @@ public class ConditionEdit {
     private List<String> hintNormal(Condition instrC, Condition stuC) {
         List<String> res = new ArrayList<>();
         if (instrC.getNot() != stuC.getNot()) {
-            res.add("请尝试为" + stuC.toString() + "加上/删除not");
+            res.add("请尝试为" + stuC.getOriginStr() + "加上/删除not");
         }
-        if (!(instrC.operator.equals(stuC.operator))) {
-            res.add("请尝试修改" + stuC.toString() + "的" + stuC.operator);
+        if (instrC instanceof CompoundCond && stuC instanceof CompoundCond) {
+            if (!(((CompoundCond) instrC).operator.equals(((CompoundCond) stuC).operator))) {
+                res.add("请尝试修改" + stuC.getOriginStr() + "的" + ((CompoundCond) stuC).operator);
+            }
+        }
+        else if (instrC instanceof AtomCond && stuC instanceof AtomCond) {
+            if (!(((AtomCond) instrC).operator.equals(((AtomCond) stuC).operator))) {
+                res.add("请尝试修改" + stuC.getOriginStr() + "的" + ((AtomCond) stuC).operator);
+            }
         }
         return res;
     }
@@ -666,7 +701,7 @@ public class ConditionEdit {
             throw new Exception("ConditionEdit.add: stuC_edited == null");
         }
         if (stuC_edited.father == null) {
-            edited.where = new CompoundCond("AND", Arrays.asList(stuC_edited, instrC.clone()));
+            edited.where = new CompoundCond("AND", Arrays.asList(stuC_edited, instrC.clone()), stuC_edited.originStr);
         } else {
             CompoundCond father = stuC_edited.father;
             father.add(instrC.clone());

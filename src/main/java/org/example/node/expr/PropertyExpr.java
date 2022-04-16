@@ -12,26 +12,27 @@ public class PropertyExpr extends Expr {
     public AtomExpr table;
     public AtomExpr attribute;
 
-    public PropertyExpr(){}
-
-    public PropertyExpr(String table, String attribute) {
+    public PropertyExpr(String table, String attribute, String originStr) {
+        super(originStr);
         if (table != null)
             this.table = new AtomExpr(table);
         if (attribute != null)
             this.attribute = new AtomExpr(attribute);
     }
 
-    public PropertyExpr(String table, String attribute, SQLObject object) {
+    public PropertyExpr(String table, String attribute, SQLObject object, String originStr) {
+        super(originStr);
         if (table != null)
             this.table = new AtomExpr(table);
         if (attribute != null)
             if (object instanceof SQLTableSource)
-                this.attribute = new AtomExpr(attribute, (SQLTableSource) object);
+                this.attribute = new AtomExpr(attribute, (SQLTableSource) object, attribute);
             else
-                this.attribute = new AtomExpr(attribute);
+                this.attribute = new AtomExpr(attribute, attribute);
     }
 
-    public PropertyExpr(AtomExpr table, AtomExpr attribute) {
+    public PropertyExpr(AtomExpr table, AtomExpr attribute, String originStr) {
+        super(originStr);
         this.table = table;
         this.attribute = attribute;
     }
@@ -70,7 +71,7 @@ public class PropertyExpr extends Expr {
 
     @Override
     public Expr clone() {
-        return new PropertyExpr(table,attribute);
+        return new PropertyExpr(table,attribute, originStr);
     }
 
     @Override

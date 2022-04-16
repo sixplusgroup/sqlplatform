@@ -11,11 +11,16 @@ public class UncommutativeCond extends AtomCond {
     public Expr left;
     public Expr right;
 
-    public UncommutativeCond(String operator, Expr left, Expr right){
-        super();
+    public UncommutativeCond(String operator, Expr left, Expr right, String originStr, String opOriginStr) {
+        super(originStr);
         this.operator = operator;
+        this.opOriginStr = opOriginStr;
         this.left = left;
         this.right = right;
+    }
+
+    public UncommutativeCond(String operator, Expr left, Expr right, String originStr) {
+        this(operator, left, right, originStr, originStr);
     }
 
     @Override
@@ -53,7 +58,7 @@ public class UncommutativeCond extends AtomCond {
 
     @Override
     public UncommutativeCond clone() {
-        return new UncommutativeCond(operator,left.clone(),right.clone());
+        return new UncommutativeCond(operator, left.clone(), right.clone(), originStr, opOriginStr);
     }
 
     @Override

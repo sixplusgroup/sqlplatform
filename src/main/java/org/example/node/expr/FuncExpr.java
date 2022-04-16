@@ -21,10 +21,9 @@ public class FuncExpr extends Expr {
     public List<Expr> parameters;
     public String option;
 
-    public FuncExpr(){
-    }
-
-    public FuncExpr(String name, SQLAggregateOption option, List<SQLExpr> exprs, HashMap<SQLTableSource, String> tableMapping){
+    public FuncExpr(String name, SQLAggregateOption option, List<SQLExpr> exprs,
+                    HashMap<SQLTableSource, String> tableMapping, String originStr){
+        super(originStr);
         this.name = name;
         if (option != null)
             this.option = option.toString();
@@ -34,7 +33,9 @@ public class FuncExpr extends Expr {
         }
     }
 
-    public FuncExpr(String name, List<SQLExpr> exprs, HashMap<SQLTableSource, String> tableMapping){
+    public FuncExpr(String name, List<SQLExpr> exprs,
+                    HashMap<SQLTableSource, String> tableMapping, String originStr){
+        super(originStr);
         this.name = name;
         parameters = new ArrayList<>();
         for (SQLExpr expr: exprs) {
@@ -42,7 +43,8 @@ public class FuncExpr extends Expr {
         }
     }
 
-    public FuncExpr(List<Expr> exprs, String name, String option){
+    public FuncExpr(List<Expr> exprs, String name, String option, String originStr){
+        this.originStr = originStr;
         this.name = name;
         this.option = option;
         parameters = new ArrayList<>();
@@ -113,7 +115,7 @@ public class FuncExpr extends Expr {
         List<Expr> parameters_clone = parameters.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
-        return new FuncExpr(parameters_clone, name, option);
+        return new FuncExpr(parameters_clone, name, option, originStr);
     }
 
     @Override

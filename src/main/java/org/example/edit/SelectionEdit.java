@@ -79,7 +79,7 @@ public class SelectionEdit implements Edit {
         Pair<List<Expr>, List<Expr>> matches = Expr.getMatches(now.selections, prev.selections);
         stu_clone.removeAll(matches.getValue());
         for (Expr e: stu_clone) {
-            res.add("请尝试在selections中删除" + e.toString());
+            res.add("请尝试在selections中删除" + e.originStr);
         }
         return res;
     }
@@ -94,7 +94,7 @@ public class SelectionEdit implements Edit {
             Expr item = match_instr.get(i);
             Expr match = match_stu.get(i);
             if (!(match.equals(item))) {
-                res.add("请尝试在selections中修改" + match.toString());
+                res.add("请尝试在selections中修改" + match.originStr);
             }
         }
         return res;

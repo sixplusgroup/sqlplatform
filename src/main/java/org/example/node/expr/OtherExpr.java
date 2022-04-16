@@ -10,9 +10,8 @@ import org.example.edit.CostConfig;
 public class OtherExpr extends Expr {
     public String value;
 
-    public OtherExpr(){}
-
-    public OtherExpr(String value){
+    public OtherExpr(String value, String originStr) {
+        super(originStr);
         this.value = value.toLowerCase();
     }
 
@@ -43,7 +42,7 @@ public class OtherExpr extends Expr {
 
     @Override
     public Expr clone() {
-        return new OtherExpr(value);
+        return new OtherExpr(value, originStr);
     }
 
     @Override

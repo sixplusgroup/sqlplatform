@@ -18,21 +18,33 @@ import java.util.stream.Collectors;
  * @date 2021/12/7
  **/
 public abstract class Expr {
+    public String originStr;
+
+    public Expr() {
+    }
+
+    public Expr(String originStr) {
+        this.originStr = originStr;
+    }
+
     public static Expr build(SQLExpr expr, HashMap<SQLTableSource, String> tableMapping){
         if (expr == null)
             return null;
         if (expr instanceof SQLAggregateExpr) {
             SQLAggregateExpr aggrExpr = (SQLAggregateExpr) expr;
-            return new FuncExpr(aggrExpr.getMethodName(), aggrExpr.getOption(), aggrExpr.getArguments(), tableMapping);
+            return new FuncExpr(aggrExpr.getMethodName(), aggrExpr.getOption(), aggrExpr.getArguments(),
+                    tableMapping, expr.toString());
         } else if (expr instanceof SQLMethodInvokeExpr) {
             SQLMethodInvokeExpr methodExpr = (SQLMethodInvokeExpr) expr;
-            return new FuncExpr(methodExpr.getMethodName(), methodExpr.getArguments(), tableMapping);
+            return new FuncExpr(methodExpr.getMethodName(), methodExpr.getArguments(),
+                    tableMapping, expr.toString());
         } else if (expr instanceof SQLPropertyExpr) {
             SQLPropertyExpr propExpr = (SQLPropertyExpr) expr;
             if (propExpr.getName().equals("*")) {
-                return new PropertyExpr(propExpr.getOwner().toString(), propExpr.getName(), propExpr.getResolvedOwnerObject());
+                return new PropertyExpr(propExpr.getOwner().toString(), propExpr.getName(),
+                        propExpr.getResolvedOwnerObject(), expr.toString());
             }
-            return new PropertyExpr(propExpr.getOwner().toString(), propExpr.getName());
+            return new PropertyExpr(propExpr.getOwner().toString(), propExpr.getName(), expr.toString());
         } else if (expr instanceof SQLIdentifierExpr) {
             if (((SQLIdentifierExpr) expr).getResolvedOwnerObject() != null) {
                 String attr = ((SQLIdentifierExpr) expr).getName();
@@ -45,13 +57,13 @@ public abstract class Expr {
                 if (object instanceof SQLTableSource && ((SQLTableSource) object).getAlias() != null) {
                     table = ((SQLTableSource) object).getAlias();
                 }
-                return new PropertyExpr(table, attr);
+                return new PropertyExpr(table, attr, expr.toString());
             }
             SQLIdentifierExpr idExpr = (SQLIdentifierExpr) expr;
-            return new AtomExpr(idExpr.getName());
+            return new AtomExpr(idExpr.getName(), expr.toString());
         } else if (expr instanceof SQLAllColumnExpr) {
             // * 单独处理
-            return new AtomExpr("*", ((SQLAllColumnExpr) expr).getResolvedTableSource());
+            return new AtomExpr("*", ((SQLAllColumnExpr) expr).getResolvedTableSource(), expr.toString());
         } else if (expr instanceof SQLNullExpr) {
             return new ConstantExpr("NULL");
         } else if (expr instanceof SQLIntegerExpr) {
@@ -62,9 +74,10 @@ public abstract class Expr {
             return new ListExpr(((SQLListExpr) expr).getItems()
             .stream()
             .map(e -> Expr.build(e, tableMapping))
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList()),
+                    expr.toString());
         } else {
-            return new OtherExpr(expr.toString());
+            return new OtherExpr(expr.toString(), expr.toString());
         }
     }
 

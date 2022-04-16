@@ -61,11 +61,11 @@ public class BuildAST {
     public static Select buildSetOpSelect(SQLUnionQuery query, Env env) {
         Select left = buildSelect(query.getLeft(),env);
         Select right = buildSelect(query.getRight(),env);
-        return new SetOpSelect(left,right,query.getOperator(),query.getOrderBy(),env);
+        return new SetOpSelect(left, right, query.getOperator(), query.getOrderBy(), env, query.toString());
     }
 
     public static Select buildPlainSelect(SQLSelectQueryBlock query, Env env) {
-        return new PlainSelect(query,env);
+        return new PlainSelect(query, env, query.toString());
     }
 
     public static void substituteAlias(Select instr, Select stu) {

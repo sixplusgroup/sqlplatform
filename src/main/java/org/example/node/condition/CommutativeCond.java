@@ -15,13 +15,35 @@ import java.util.stream.Collectors;
 public class CommutativeCond extends AtomCond {
     public List<Expr> operands;
 
-    public CommutativeCond(String operator, List<Expr> operands){
-        super();
+    public CommutativeCond(String operator, List<Expr> operands, String originStr, String opOriginStr) {
+        super(originStr);
         this.operator = operator;
+        this.opOriginStr = opOriginStr;
         this.operands = new ArrayList<>();
         if (operands != null){
             this.operands.addAll(operands);
         }
+    }
+
+    public CommutativeCond(String operator, List<Expr> operands, String originStr) {
+        this(operator, operands, originStr, originStr);
+    }
+
+    @Override
+    public String getOriginStr() {
+        if (originStr != null)
+            return originStr;
+        StringBuilder sb = new StringBuilder();
+        List<String> operands_s = operands.stream()
+                .map(e->e.originStr)
+                .collect(Collectors.toList());
+        Collections.sort(operands_s);
+        List<String> conds = new ArrayList<>();
+        for (int i=1;i<operands.size();i++) {
+            conds.add(operands_s.get(0) + " " + operator + " " + operands_s.get(i));
+        }
+        sb.append(String.join(" AND ", conds));
+        return sb.toString();
     }
 
     @Override
@@ -63,7 +85,7 @@ public class CommutativeCond extends AtomCond {
         List<Expr> exprs = operands.stream()
                 .map(Expr::clone)
                 .collect(Collectors.toList());
-        return new CommutativeCond(operator,exprs);
+        return new CommutativeCond(operator, exprs, getOriginStr(), opOriginStr);
     }
 
     @Override

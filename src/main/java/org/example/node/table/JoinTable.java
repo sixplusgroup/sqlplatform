@@ -12,7 +12,8 @@ public class JoinTable extends Table {
     Table right;
     JoinType joinType;
 
-    public JoinTable(Table left, Table right, JoinType joinType) {
+    public JoinTable(Table left, Table right, JoinType joinType, String originStr) {
+        super(originStr);
         this.left = left;
         this.right = right;
         this.joinType = joinType;
@@ -47,7 +48,7 @@ public class JoinTable extends Table {
 
     @Override
     public JoinTable clone() {
-        return new JoinTable(left.clone(),right.clone(),joinType);
+        return new JoinTable(left.clone(), right.clone(), joinType, originStr);
     }
 
     @Override

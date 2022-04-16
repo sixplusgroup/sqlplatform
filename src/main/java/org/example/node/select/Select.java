@@ -20,7 +20,8 @@ public abstract class Select extends Table {
     public HashMap<String, Table> tableAliasMap;
     public HashMap<String, Expr> attrAliasMap;
 
-    public Select(){
+    public Select(String originStr) {
+        super(originStr);
         subqueries = new ArrayList<>();
         tableAliasMap = new HashMap<>();
         attrAliasMap = new HashMap<>();

@@ -23,12 +23,22 @@ import java.util.stream.Collectors;
  **/
 public abstract class Condition {
     public CompoundCond father;
-    public String operator;
     protected boolean not;
+    public String originStr;
+
 
     public Condition(){
         not = false;
         father = null;
+    }
+
+    public Condition(String originStr){
+        this();
+        this.originStr = originStr;
+    }
+
+    public String getOriginStr() {
+        return originStr;
     }
 
     /**
@@ -36,7 +46,7 @@ public abstract class Condition {
      * @param expr
      * @return
      */
-    public static Condition build(SQLExpr expr, Env env, HashMap<SQLTableSource, String> tableMapping){
+    public static Condition build(SQLExpr expr, Env env, HashMap<SQLTableSource, String> tableMapping) {
         if (expr == null)
             return null;
         if (expr instanceof SQLBinaryOpExpr) {
@@ -49,11 +59,12 @@ public abstract class Condition {
                 List<Condition> subConds = new ArrayList<>();
                 subConds.add(build(left, env, tableMapping));
                 subConds.add(build(right, env, tableMapping));
-                return new CompoundCond(operator.name,subConds);
+                return new CompoundCond(operator.name, subConds, expr.toString());
             }
             // 单个条件
             else {
                 String op = getNormalizedOp(operator.name);
+                String originOp = op;
                 // some/any转exist
                 if (left instanceof SQLSomeExpr || left instanceof SQLAnyExpr
                         || right instanceof SQLSomeExpr || right instanceof SQLAnyExpr) {
@@ -70,8 +81,8 @@ public abstract class Condition {
                         selectQuery = ((SQLAnyExpr) right).subQuery.getQuery();
                     Select subQ = BuildAST.buildSelect(selectQuery, env);
                     Expr expr_some = Expr.build(left, tableMapping);
-                    toExist(expr_some, subQ, op);
-                    return new Exist(false, subQ);
+                    toExist(expr_some, subQ, op, originOp);
+                    return new Exist(false, subQ, expr.toString());
                 }
                 // all转not exist
                 else if (left instanceof SQLAllExpr || left instanceof SQLQueryExpr
@@ -92,16 +103,18 @@ public abstract class Condition {
                         selectQuery = ((SQLQueryExpr)right).subQuery.getQuery();
                     }
                     Select subQ = BuildAST.buildSelect(selectQuery, env);
-                    toExist(expr_all, subQ, op);
-                    return new Exist(true, subQ);
+                    toExist(expr_all, subQ, op, originOp);
+                    return new Exist(true, subQ, expr.toString());
                 }
                 // 普通运算符的情况
                 else if (isCommutative(op)) {
                     return new CommutativeCond(op,
-                            Arrays.asList(Expr.build(left, tableMapping), Expr.build(right, tableMapping)));
+                            Arrays.asList(Expr.build(left, tableMapping), Expr.build(right, tableMapping)),
+                            null);
                 }
                 else {
-                    return new UncommutativeCond(op, Expr.build(left, tableMapping), Expr.build(right, tableMapping));
+                    return new UncommutativeCond(op, Expr.build(left, tableMapping),
+                            Expr.build(right, tableMapping), expr.toString());
                 }
             }
         }
@@ -115,15 +128,15 @@ public abstract class Condition {
         else if (expr instanceof SQLExistsExpr) {
             SQLExistsExpr existsExpr = (SQLExistsExpr) expr;
             Select subQ = BuildAST.buildSelect(existsExpr.subQuery.getQuery(), env);
-            return new Exist(existsExpr.not, subQ);
+            return new Exist(existsExpr.not, subQ, expr.toString());
         }
         // in转exist
         else if (expr instanceof SQLInSubQueryExpr) {
             SQLInSubQueryExpr inExpr = (SQLInSubQueryExpr) expr;
             Expr expr_in = Expr.build(inExpr.getExpr(), tableMapping);
             Select subQ = BuildAST.buildSelect(inExpr.subQuery.getQuery(), env);
-            toExist(expr_in, subQ, "=");
-            return new Exist(inExpr.isNot(),subQ);
+            toExist(expr_in, subQ, "=", "in");
+            return new Exist(inExpr.isNot(), subQ, expr.toString());
         }
         // between 转 CompoundCond
         else if (expr instanceof SQLBetweenExpr) {
@@ -133,14 +146,14 @@ public abstract class Condition {
             Expr endExpr = Expr.build(betweenExpr.endExpr, tableMapping);
             if (betweenExpr.isNot()) {
                 List<Condition> subConds = new ArrayList<>();
-                subConds.add(new UncommutativeCond("<",testExpr,beginExpr));
-                subConds.add(new UncommutativeCond(">",testExpr,endExpr));
-                return new CompoundCond("OR", subConds);
+                subConds.add(new UncommutativeCond("<",testExpr,beginExpr, expr.toString(), ">"));
+                subConds.add(new UncommutativeCond(">",testExpr,endExpr, expr.toString(), "<"));
+                return new CompoundCond("OR", subConds, expr.toString());
             }else {
                 List<Condition> subConds = new ArrayList<>();
-                subConds.add(new UncommutativeCond(">=",testExpr,beginExpr));
-                subConds.add(new UncommutativeCond("<=",testExpr,endExpr));
-                return new CompoundCond("AND", subConds);
+                subConds.add(new UncommutativeCond(">=",testExpr,beginExpr, expr.toString()));
+                subConds.add(new UncommutativeCond("<=",testExpr,endExpr, expr.toString()));
+                return new CompoundCond("AND", subConds, expr.toString());
             }
         }
         // inList 转 CompoundCond
@@ -154,15 +167,15 @@ public abstract class Condition {
             List<Condition> subConds = new ArrayList<>();
             if (inListExpr.isNot()) {
                 for (Expr e: targetExprs) {
-                    subConds.add(new CommutativeCond("!=", Arrays.asList(testExpr, e)));
+                    subConds.add(new CommutativeCond("!=", Arrays.asList(testExpr, e), expr.toString(), "not in"));
                 }
-                return new CompoundCond("AND", subConds);
+                return new CompoundCond("AND", subConds, expr.toString());
             }
             else {
                 for (Expr e: targetExprs) {
-                    subConds.add(new CommutativeCond("=", Arrays.asList(testExpr, e)));
+                    subConds.add(new CommutativeCond("=", Arrays.asList(testExpr, e), expr.toString()));
                 }
-                return new CompoundCond("OR", subConds);
+                return new CompoundCond("OR", subConds, expr.toString());
             }
         }
         // 其他情况
@@ -179,10 +192,10 @@ public abstract class Condition {
      */
     public abstract Condition rearrange();
 
-    public static void toExist(Expr expr, Select subQ, String operator){
+    public static void toExist(Expr expr, Select subQ, String operator, String originOp){
         if (subQ instanceof SetOpSelect){
-            toExist(expr,((SetOpSelect) subQ).left,operator);
-            toExist(expr,((SetOpSelect) subQ).right,operator);
+            toExist(expr,((SetOpSelect) subQ).left,operator,originOp);
+            toExist(expr,((SetOpSelect) subQ).right,operator,originOp);
         } else if (subQ instanceof PlainSelect) {
             Condition c;
             List<Expr> selections = ((PlainSelect) subQ).selections;
@@ -192,23 +205,23 @@ public abstract class Condition {
             if (expr instanceof ListExpr) {
                 List<Expr> exprs = ((ListExpr) expr).exprs;
                 int size = Math.min(exprs.size(),selections.size());
-                CompoundCond cc = new CompoundCond("AND",new ArrayList<>());
+                CompoundCond cc = new CompoundCond("AND",new ArrayList<>(), expr.toString());
                 for (int i=0;i<size;i++) {
                     if (isCommutative(operator)){
-                        cc.add(new CommutativeCond(operator,Arrays.asList(exprs.get(i),selections.get(i))));
+                        cc.add(new CommutativeCond(operator,Arrays.asList(exprs.get(i),selections.get(i)), expr.toString(), originOp));
                     }else {
-                        cc.add(new UncommutativeCond(operator,exprs.get(i),selections.get(i)));
+                        cc.add(new UncommutativeCond(operator,exprs.get(i),selections.get(i), expr.toString(), originOp));
                     }
                 }
                 c = cc;
             } else {
                 if (isCommutative(operator)){
-                    c = new CommutativeCond(operator,Arrays.asList(expr,selections.get(0)));
+                    c = new CommutativeCond(operator,Arrays.asList(expr,selections.get(0)),expr.toString(), originOp);
                 }else {
-                    c = new UncommutativeCond(operator,expr,selections.get(0));
+                    c = new UncommutativeCond(operator,expr,selections.get(0), expr.toString(), originOp);
                 }
             }
-            ((PlainSelect) subQ).where = new CompoundCond("AND",Arrays.asList(((PlainSelect) subQ).where,c));
+            ((PlainSelect) subQ).where = new CompoundCond("AND",Arrays.asList(((PlainSelect) subQ).where,c),null);
             ((PlainSelect) subQ).where = ((PlainSelect) subQ).where.rearrange();
         }
     }
@@ -356,12 +369,12 @@ public abstract class Condition {
             c.not = !c.not;
             if (c.not) {
                 c.not = false;
-                switch (c.operator) {
+                switch (((CompoundCond) c).operator) {
                     case "AND":
-                        c.operator = "OR";
+                        ((CompoundCond) c).operator = "OR";
                         break;
                     case "OR":
-                        c.operator = "AND";
+                        ((CompoundCond) c).operator = "AND";
                         break;
                     default:
                         break;
@@ -372,7 +385,7 @@ public abstract class Condition {
             }
         }
         else if (c instanceof AtomCond) {
-            c.operator = getComplementaryOp(c.operator);
+            ((AtomCond) c).operator = getComplementaryOp(((AtomCond) c).operator);
         }
         else {
             c.not = !c.not;

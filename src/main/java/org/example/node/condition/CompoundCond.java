@@ -13,16 +13,31 @@ import java.util.stream.Collectors;
 public class CompoundCond extends Condition {
 
     private List<Condition> subConds;
+    public String operator;
+    public String opOriginStr;
 
-    public CompoundCond() {
-        super();
-        subConds = new ArrayList<>();
+    @Override
+    public String getOriginStr() {
+        if (originStr != null)
+            return originStr;
+        StringBuilder sb = new StringBuilder();
+        if (not)
+            sb.append("not (");
+        List<String> subConds_s = subConds.stream()
+                .map(Condition::getOriginStr)
+                .collect(Collectors.toList());
+        Collections.sort(subConds_s);
+        sb.append(String.join(" " + operator + " ", subConds_s));
+        if (not)
+            sb.append(")");
+        return sb.toString();
     }
 
-    public CompoundCond(String operator, List<Condition> conditions) {
-        super();
+    public CompoundCond(String operator, List<Condition> conditions, String originStr) {
+        super(originStr);
         this.father = null;
         this.operator = operator;
+        this.opOriginStr = operator;
         this.subConds = new ArrayList<>();
         if (conditions != null){
             this.subConds.addAll(conditions.stream()
@@ -34,9 +49,15 @@ public class CompoundCond extends Condition {
         }
     }
 
-    public CompoundCond(boolean not, String operator, List<Condition> conditions) {
-        this(operator, conditions);
+    public CompoundCond(boolean not, String operator, List<Condition> conditions, String originStr) {
+        this(operator, conditions, originStr);
         this.not = not;
+    }
+
+    public CompoundCond(boolean not, String operator, String opOriginStr, List<Condition> conditions, String originStr) {
+        this(operator, conditions, originStr);
+        this.not = not;
+        this.opOriginStr = opOriginStr;
     }
 
     @Override
@@ -139,9 +160,14 @@ public class CompoundCond extends Condition {
             return this;
         // 2.1 flag: 是否需要合并
         boolean flag = true;
-        String op = subConds.get(0).operator;
-        for (Condition c: subConds){
-            if (c instanceof CompoundCond && c.not==not && c.operator.equals(op)) {
+        String op = null;
+        for (int i=0;i<subConds.size();i++){
+            Condition c = subConds.get(i);
+            if (i==0 && c instanceof CompoundCond && c.not==not) {
+                op = ((CompoundCond) c).operator;
+                continue;
+            }
+            if (c instanceof CompoundCond && c.not==not && ((CompoundCond) c).operator.equals(op)) {
             }
             else{
                 flag = false;
@@ -162,10 +188,10 @@ public class CompoundCond extends Condition {
             } else if (sameConds.size()==1){
                 sameCond = sameConds.get(0);
             } else {
-                sameCond = new CompoundCond(op,sameConds);
+                sameCond = new CompoundCond(op, sameConds, null);
             }
             if (flag){
-                CompoundCond differentCond = new CompoundCond(operator,new ArrayList<>());
+                CompoundCond differentCond = new CompoundCond(operator,new ArrayList<>(), null);
                 for (Condition tmp: subConds){
                     ((CompoundCond)tmp).subConds.removeIf(c -> isStrictlyIn(c,sameConds));
                     if (((CompoundCond)tmp).subConds.size()==0){
@@ -181,7 +207,7 @@ public class CompoundCond extends Condition {
                         differentCond.add(tmp);
                     }
                 }
-                return new CompoundCond(op, Arrays.asList(sameCond,differentCond));
+                return new CompoundCond(op, Arrays.asList(sameCond,differentCond), null);
             }
         }
         return this;
@@ -195,7 +221,7 @@ public class CompoundCond extends Condition {
         for (Condition tmp: subConds_clone) {
             if (tmp instanceof CompoundCond) {
                 ((CompoundCond) tmp).flatten();
-                if (not==tmp.not && tmp.operator.equals(operator)) {
+                if (not==tmp.not && ((CompoundCond) tmp).operator.equals(operator)) {
                     subConds.addAll(((CompoundCond) tmp).subConds);
                     subConds.remove(tmp);
                 }
@@ -214,7 +240,7 @@ public class CompoundCond extends Condition {
             if (c instanceof CompoundCond) {
                 ((CompoundCond) c).flattenEquals();
             }
-            else if (c instanceof CommutativeCond && c.operator.equals("=")) {
+            else if (c instanceof CommutativeCond && ((CommutativeCond) c).operator.equals("=")) {
                 toFlatten.add((CommutativeCond) c);
                 subConds_clone.remove(c);
             }
@@ -313,7 +339,7 @@ public class CompoundCond extends Condition {
             // 解决some转exist的同名问题导致的A=A在上面操作中变成只有一个的问题
             if (operands.size() == 1)
                 operands.add(operands.get(0));
-            res.add(new CommutativeCond("=", operands));
+            res.add(new CommutativeCond("=", operands, null));
         }
         return res;
     }
@@ -358,7 +384,7 @@ public class CompoundCond extends Condition {
         List<Condition> subConds_clone = subConds.stream()
                 .map(Condition::clone)
                 .collect(Collectors.toList());
-        return new CompoundCond(not,operator,subConds_clone);
+        return new CompoundCond(not, operator, opOriginStr, subConds_clone, getOriginStr());
     }
 
     @Override
@@ -404,8 +430,8 @@ public class CompoundCond extends Condition {
     }
 
     public static void main(String[] args) {
-        CompoundCond c = new CompoundCond(false,"AND",null);
-        Condition c1 = c.clone();
+        CompoundCond c = new CompoundCond(false,"AND",null,null);
+        CompoundCond c1 = c.clone();
         c.operator = "OR";
         System.out.println(c1.operator);
     }

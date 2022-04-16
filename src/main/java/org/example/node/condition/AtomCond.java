@@ -5,8 +5,10 @@ package org.example.node.condition;
  * @date 2022/1/17
  **/
 public abstract class AtomCond extends Condition {
+    public String operator;
+    public String opOriginStr;
 
-    public AtomCond(){
-        super();
+    public AtomCond(String originStr) {
+        super(originStr);
     }
 }
