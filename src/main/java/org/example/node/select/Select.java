@@ -12,17 +12,11 @@ import java.util.List;
  * @date 2021/12/7
  **/
 public abstract class Select extends Table {
-    /**
-     * subquery单独列出来，防止重复统计
-     * 这玩意真的需要吗？反正暂时先没统计where里的
-     */
-    public List<Select> subqueries;
-    public HashMap<String, Table> tableAliasMap;
-    public HashMap<String, Expr> attrAliasMap;
+    public HashMap<String, Table> tableAliasMap; // from里来
+    public HashMap<String, Expr> attrAliasMap; // selections里来
 
     public Select(String originStr) {
         super(originStr);
-        subqueries = new ArrayList<>();
         tableAliasMap = new HashMap<>();
         attrAliasMap = new HashMap<>();
     }

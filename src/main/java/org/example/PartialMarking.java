@@ -12,6 +12,7 @@ import com.alibaba.druid.util.JdbcConstants;
 import org.example.node.select.Select;
 import org.example.util.CSVReader;
 import org.example.util.TxtWriter;
+import org.example.util.data.GetQuestionInfo;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -159,7 +160,7 @@ public class PartialMarking {
 //                "      (select count(distinct sender_id ,send_to_id) from friend_requests)\n" +
 //                ",0)\n" +
 //                ",2) as accept_rate ;";
-// PASS: union all连接的两个Select的顺序，alias，省略alias
+// PASS: union all连接的两个Select的顺序，alias，省略alias；由于没连上原本的表，resolve时会有点小问题
 //        String instrSql = "select group_id,min(player_id) as player_id\n" +
 //                "from\n" +
 //                "    (select player,sum(score)\n" +
@@ -179,6 +180,28 @@ public class PartialMarking {
 //                "        (select second_player player,second_score score from matches)) t\n" +
 //                "    group by player) a\n" +
 //                "    right join players p on a.player=p.player_id\n" +
+//                "group by group_id)\n" +
+//                "group by group_id\n" +
+//                "order by group_id;";
+//        String studentSql = "select group_id,min(player_id) as player_id\n" +
+//                "from\n" +
+//                "    (select player,sum(marks) as mark\n" +
+//                "    from\n" +
+//                "       (select second_player player,second_score marks from matches) \n" +
+//                "        union all\n" +
+//                "        ((select first_player player,first_score marks from matches)) haha\n" +
+//                "    group by player) lala\n" +
+//                "    right join players wa on lala.player=wa.player_id\n" +
+//                "where (group_id,mark) in\n" +
+//                "(select group_id,max(haha)\n" +
+//                "from \n" +
+//                "    (select gamer testGamer,sum(lala) as haha\n" +
+//                "    from\n" +
+//                "        ((select first_player gamer,first_score lala from matches)\n" +
+//                "        union all\n" +
+//                "        (select second_player gamer,second_score lala from matches))\n" +
+//                "    group by player) a\n" +
+//                "    right join players p on a.testGamer=p.player_id\n" +
 //                "group by group_id)\n" +
 //                "group by group_id\n" +
 //                "order by group_id;";
@@ -228,18 +251,24 @@ public class PartialMarking {
 //        String studentSql = "select t.tid from u, t where (u.uid=t.tid and t.tid=10) or (u.uid=t.tid and t.tid=7)";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
+        String instrSql = "select d.department_name as department, AVG(e.salary) as avg_salary\n" +
+                "from employees e LEFT JOIN departments d\n" +
+                "on e.department_id = d.department_id\n" +
+                "where d.department_name = 'Technology'\n" +
+                "group by e.department_id;";
+        String studentSql = instrSql;
+//        List<String> sqls = GetQuestionInfo.getEnvSqls(176);
         PartialMarking marking = new PartialMarking(dbType, sqls);
-//        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
-        String instrSql = "select max(Salary) SecondHighestSalary\n" +
-                "from employee\n" +
-                "where\n" +
-                "salary<(select max(salary) from employee)" +
-                "group by salary";
-        String studentSql = "select max(salary) secondhighestsalary" +
-                " from employee" +
-                " where" +
-                " salary<(select max(salary) from employee)";
-        List<String> hints = marking.getHints(instrSql, studentSql);
-        System.out.println(String.join("\n", hints));
+        System.out.println(marking.partialMark(instrSql,studentSql,100.0f));
+//        String instrSql = "select max(Salary) SecondHighestSalary\n" +
+//                "from employee\n" +
+//                "where\n" +
+//                "salary<(select max(salary) from employee)";
+//        String studentSql = "select min(Salary)\n" +
+//                "from employee e\n" +
+//                "where\n" +
+//                "salary>(select min(salary) from employee)";
+//        List<String> hints = marking.getHints(instrSql, studentSql);
+//        System.out.println(String.join("\n", hints));
     }
 }

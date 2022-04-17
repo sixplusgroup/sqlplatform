@@ -235,14 +235,14 @@ public abstract class Condition {
      */
     public static Condition isIn(Condition c, List<Condition> l) {
         Condition res = null;
-        String s = c.toString();
-        int distance = s.length();
+        float totalScore = c.score();
+        float score = 0;
         for (Condition item: l) {
             Condition match = findEqual(c,item);
             if (match != null) {
-                int d = CalculateScore.editDistance(s,match.toString());
-                if (d < distance && d < 0.5 * s.length()) {
-                    distance = d;
+                float tmp = c.score(match);
+                if (tmp > score && tmp / totalScore > 0.5) {
+                    score = tmp;
                     res = item;
                 }
             }
@@ -272,24 +272,25 @@ public abstract class Condition {
      */
     public static Condition findEqual(Condition instr, Condition stu) {
         Condition p = instr;
-        int distance = CalculateScore.editDistance(p.toString(), stu.toString());
+        float totalScore = stu.score();
+        float score = stu.score(instr);
+        boolean newHigh;
         while (p instanceof CompoundCond) {
-            CompoundCond cc = (CompoundCond) p;
-            List<Condition> subConds = new ArrayList<>(cc.getSubConds());
-            subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), stu.toString())));
-            Condition tmp = subConds.get(0);
-            int d = CalculateScore.editDistance(tmp.toString(), stu.toString());
-            if (d < distance) {
-                distance = d;
-                p = tmp;
-            } else {
-                break;
+            newHigh = false;
+            for (Condition c: ((CompoundCond) p).getSubConds()) {
+                float tmpScore = stu.score(c);
+                if (tmpScore > score) {
+                    score = tmpScore;
+                    p = c;
+                    newHigh = true;
+                }
             }
+            if (!newHigh)
+                break;
         }
-        int len = stu.toString().length();
-        if (distance > len / 2)
-            return null;
-        return p;
+        if (score / totalScore > 0.5)
+            return p;
+        return null;
     }
 
     /**
@@ -302,15 +303,22 @@ public abstract class Condition {
         Condition p = stu;
         if (p.equals(c))
             return p;
+        float score = c.score(stu);
+        boolean newHigh;
         while (p instanceof CompoundCond) {
-            CompoundCond cc = (CompoundCond) p;
-            List<Condition> subConds = new ArrayList<>(cc.getSubConds());
-            subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), c.toString())));
-            Condition tmp = subConds.get(0);
-            if (tmp.equals(c)) {
-                return tmp;
+            newHigh = false;
+            for (Condition item: ((CompoundCond) p).getSubConds()) {
+                float tmpScore = c.score(item);
+                if (tmpScore > score) {
+                    score = tmpScore;
+                    p = item;
+                    newHigh = true;
+                }
             }
-            p = tmp;
+            if (c.equals(p))
+                return p;
+            if (!newHigh)
+                break;
         }
         return null;
     }
@@ -322,9 +330,16 @@ public abstract class Condition {
      * @return
      */
     public static Condition findMostSimalrInList(Condition c, List<Condition> l) {
-        List<Condition> subConds = new ArrayList<>(l);
-        subConds.sort(Comparator.comparingInt(o -> CalculateScore.editDistance(o.toString(), c.toString())));
-        return subConds.get(0);
+        Condition res = null;
+        float score = 0;
+        for (Condition item: l) {
+            float tmp = c.score(item);
+            if (tmp > score) {
+                score = tmp;
+                res = item;
+            }
+        }
+        return res;
     }
 
     /**
@@ -334,10 +349,7 @@ public abstract class Condition {
      * @return
      */
     public static boolean isSimilar(Condition a, Condition b) {
-        String a_s = a.toString();
-        String b_s = b.toString();
-        int d = CalculateScore.editDistance(a_s, b_s);
-        if (d < a_s.length() / 3 && d < b_s.length() / 3)
+        if (a.score(b) / a.score() > 0.5 && b.score(a) / b.score() > 0.5)
             return true;
         return false;
     }

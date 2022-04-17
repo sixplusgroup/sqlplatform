@@ -66,7 +66,7 @@ public class CompoundCond extends Condition {
         if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
             List<Condition> subConds_new = new ArrayList<>();
-            for (Condition item: cc.subConds){
+            for (Condition item: cc.subConds) {
                 subConds_new.add(item.rearrange());
             }
             cc.subConds = subConds_new;
@@ -113,7 +113,7 @@ public class CompoundCond extends Condition {
                 match = Condition.isIn(item,subConds_clone);
                 if (match != null) {
                     matchScore += item.score(match);
-                    subConds_clone.remove(item);
+                    subConds_clone.remove(match);
                 }
             }
             for (Condition item: subConds_clone) {

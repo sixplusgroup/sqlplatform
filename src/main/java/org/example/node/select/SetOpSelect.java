@@ -42,9 +42,6 @@ public class SetOpSelect extends Select {
         this.operator = SetOp.valueOf(operator.toString().split(" ")[0]);
         this.orderBy = orderBy==null ? null : new OrderBy(orderBy, null);
         // 统计量赋值
-        subqueries = new ArrayList<>();
-        subqueries.addAll(left.subqueries);
-        subqueries.addAll(right.subqueries);
         tableAliasMap = new HashMap<>();
         tableAliasMap.putAll(left.tableAliasMap);
         tableAliasMap.putAll(right.tableAliasMap);
@@ -96,7 +93,6 @@ public class SetOpSelect extends Select {
         select.operator = operator;
         if (orderBy != null)
             select.orderBy = orderBy.clone();
-        select.subqueries = subqueries;
         select.tableAliasMap = tableAliasMap;
         select.attrAliasMap = attrAliasMap;
         return select;

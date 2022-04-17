@@ -109,28 +109,19 @@ public class ConditionEdit {
                 Condition match_instr = Condition.findEqual(instrC, stuC);
                 Condition match_stu = Condition.findEqual(stuC, instrC);
                 // case 1) 不匹配
-                if (match_instr == null && match_stu == null) {
-                    res.add(remove(stuC));
+                if (match_instr == null || match_stu == null) {
                     res.add(add(stuC, instrC));
+                    res.add(remove(stuC));
                     return res;
                 }
                 // 加上 instrC 多出来的部分
-                if (match_instr != null) {
-                    if (!(match_instr.equals(instrC))) {
-                        res.add(addInstrExtra(instrC, stuC, match_instr));
-                    }
+                if (!(instrC.equals(match_instr))) {
+                    res.add(addInstrExtra(instrC, stuC, match_instr));
                 }
                 // 减去 stuC 多出来的部分
-                if (match_stu != null) {
-                    if (!(match_stu.equals(stuC))) {
-                        res.add(removeStuExtra(stuC, match_stu));
-                    }
+                if (!(stuC.equals(match_stu))) {
+                    res.add(removeStuExtra(stuC, match_stu));
                 }
-                // 同级比较
-                if (match_instr == null)
-                    match_instr = instrC;
-                if (match_stu == null)
-                    match_stu = stuC;
                 // case 2) 同级比较：不都是 CompoundCond，递归
                 if (!(match_instr instanceof CompoundCond && match_stu instanceof CompoundCond)) {
                     res.addAll(edits(match_instr, match_stu));
@@ -204,7 +195,7 @@ public class ConditionEdit {
                             ((Exist) instrC).subQuery, ((Exist) stuC).subQuery,
                             CalculateScore.totalScore(((Exist) instrC).subQuery), env);
                     for (String s: hints) {
-                        res.add("请在subquery语句中检查类似如下内容: " + s);
+                        res.add("在subquery语句中" + s);
                     }
                 }
             }
@@ -225,28 +216,19 @@ public class ConditionEdit {
                 Condition match_instr = Condition.findEqual(instrC, stuC);
                 Condition match_stu = Condition.findEqual(stuC, instrC);
                 // case 1) 不匹配
-                if (match_instr == null && match_stu == null) {
+                if (match_instr == null || match_stu == null) {
                     res.add("请删去condition: " + stuC.getOriginStr());
                     res.add("请给condition加上一些内容");
                     return res;
                 }
                 // 加上 instrC 多出来的部分
-                if (match_instr != null) {
-                    if (!(match_instr.equals(instrC))) {
-                        res.add("请给condition加上一些内容");
-                    }
+                if (!(instrC.equals(match_instr))) {
+                    res.add("请给condition加上一些内容");
                 }
                 // 减去 stuC 多出来的部分
-                if (match_stu != null) {
-                    if (!(match_stu.equals(stuC))) {
-                        res.add("请删去condition: " + stuC.getOriginStr() + "中多余的部分");
-                    }
+                if (!(stuC.equals(match_stu))) {
+                    res.add("请删去condition: " + stuC.getOriginStr() + "中多余的部分");
                 }
-                // 同级比较
-                if (match_instr == null)
-                    match_instr = instrC;
-                if (match_stu == null)
-                    match_stu = stuC;
                 // case 2) 同级比较：不都是 CompoundCond，递归
                 if (!(match_instr instanceof CompoundCond && match_stu instanceof CompoundCond)) {
                     res.addAll(hints(match_instr, match_stu));

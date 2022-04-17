@@ -53,6 +53,22 @@ public class FuncExpr extends Expr {
         }
     }
 
+    public String getAlias() {
+        if (parameters.size() != 1)
+            return null;
+        Expr e = parameters.get(0);
+        if (e instanceof PropertyExpr) {
+            return ((PropertyExpr) e).attribute.value;
+        }
+        else if (e instanceof AtomExpr) {
+            return ((AtomExpr) e).value;
+        }
+        else if (e instanceof FuncExpr) {
+            return ((FuncExpr) e).getAlias();
+        }
+        return null;
+    }
+
     @Override
     public float score() {
         return (float) (CostConfig.func + parameters.stream()

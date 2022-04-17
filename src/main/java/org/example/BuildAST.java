@@ -6,7 +6,6 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
-import com.alibaba.druid.sql.repository.SchemaRepository;
 import com.alibaba.druid.util.JdbcConstants;
 import javafx.util.Pair;
 import org.example.enums.SetOp;
@@ -17,16 +16,9 @@ import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.select.SetOpSelect;
 import org.example.node.table.Table;
-import org.example.util.CSVReader;
 import org.example.util.ErrorLogger;
-import org.example.util.TxtWriter;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 将 sql 语句解析为 AST
@@ -148,49 +140,20 @@ public class BuildAST {
             }
         }
         // step 2: main body
-        HashMap<String, String> tableAliasMap = new HashMap<>();
-        HashMap<String, String> attrAliasMap = new HashMap<>();
-        // step 2.1: map stu alias to instr alias
-        HashMap<Table, String> stuTableMap = exchangeHashMap(stu.tableAliasMap);
-        List<Table> stuTables = new ArrayList<>(stuTableMap.keySet());
-        for (Map.Entry<String, Table> item: instr.tableAliasMap.entrySet()) {
-            Table instrTable = item.getValue();
-            Table match = Table.isIn(instrTable, stuTables);
-            if (match != null) {
-                Pair<String, String> pair =
-                        getCorrespondingAlias(stuTableMap.get(match),item.getKey(),instr.toString(), stu.toString());
-                tableAliasMap.put(pair.getKey(), item.getKey());
-                if (pair.getValue() == null || pair.getValue().length() == 0) {
-                    stuTables.remove(match);
-                    stuTableMap.remove(match);
-                } else {
-                    stuTableMap.put(match, pair.getValue());
-                }
-            }
-        }
-        HashMap<Expr, String> stuAttrMap = exchangeHashMap(stu.attrAliasMap);
-        List<Expr> stuAttrs = new ArrayList<>(stuAttrMap.keySet());
-        for (Map.Entry<String, Expr> item: instr.attrAliasMap.entrySet()) {
-            Expr instrAttr = item.getValue();
-            Expr match = Expr.isIn(instrAttr, stuAttrs).getKey();
-            if (match != null) {
-                Pair<String, String> pair =
-                        getCorrespondingAlias(stuAttrMap.get(match),item.getKey(),instr.toString(), stu.toString());
-                attrAliasMap.put(pair.getKey(), item.getKey());
-                if (pair.getValue() == null || pair.getValue().length() == 0) {
-                    stuAttrs.remove(match);
-                    stuAttrMap.remove(match);
-                } else {
-                    stuAttrMap.put(match, pair.getValue());
-                }
-            }
-        }
-        // step 2.2: substitute, 注意要传递给上一层Select（e.g. sql.csv 15）
-        substituteMainBody(stu, tableAliasMap, attrAliasMap, true);
+        // map stu alias to instr alias and substitute
+        // step 2.1: substitute table alias
+        HashMap<String, String> tableAliasMap = getTableAliasMap(stu.tableAliasMap, instr.tableAliasMap,
+                                                                    instr.toString(), stu.toString());
+        substituteMainBody(stu, tableAliasMap, new HashMap<>());
+        updateTableAliasInAttrMap(tableAliasMap, stu.attrAliasMap); // 更新attrAliasMap里的表名
+        // step 2.2: 向outerSelect substitute attr
+        HashMap<String, String> attrAliasMap = getAttrAliasMap(stu.attrAliasMap, instr.attrAliasMap,
+                instr.toString(), stu.toString());
         PlainSelect p = stu;
         if (p.getOuterSelect() != null) {
             PlainSelect outerSelect = p.getOuterSelect();
-            substituteMainBody(outerSelect, tableAliasMap, attrAliasMap, false);
+            substituteMainBody(outerSelect, new HashMap<>(), attrAliasMap);
+            updateAttrAliasInAttrMap(attrAliasMap, outerSelect.attrAliasMap); // 更新外部attrAliasMap
             p = outerSelect;
         }
         // step 3: 处理 where 里的 subQueries
@@ -210,6 +173,64 @@ public class BuildAST {
         stu.attrAliasMap = instr.attrAliasMap;
     }
 
+    public static HashMap<String, String> getTableAliasMap(HashMap<String, Table> stuMap, HashMap<String, Table> instrMap,
+                                                          String instr, String stu) {
+        HashMap<String, String> res = new HashMap<>();
+        HashMap<Table, String> stuTableMap = exchangeHashMap(stuMap);
+        List<Table> stuTables = new ArrayList<>(stuTableMap.keySet());
+        for (Map.Entry<String, Table> item: instrMap.entrySet()) {
+            Table instrTable = item.getValue();
+            Table match = Table.isIn(instrTable, stuTables);
+            if (match != null) {
+                Pair<String, String> pair =
+                        getCorrespondingAlias(stuTableMap.get(match),item.getKey(),instr, stu);
+                res.put(pair.getKey(), item.getKey());
+                if (pair.getValue() == null || pair.getValue().length() == 0) {
+                    stuTables.remove(match);
+                    stuTableMap.remove(match);
+                } else {
+                    stuTableMap.put(match, pair.getValue());
+                }
+            }
+        }
+        return res;
+    }
+
+    public static HashMap<String, String> getAttrAliasMap(HashMap<String, Expr> stuMap, HashMap<String, Expr> instrMap,
+                                                          String instr, String stu) {
+        HashMap<String, String> res = new HashMap<>();
+        HashMap<Expr, String> stuAttrMap = exchangeHashMap(stuMap);
+        List<Expr> stuAttrs = new ArrayList<>(stuAttrMap.keySet());
+        for (Map.Entry<String, Expr> item: instrMap.entrySet()) {
+            Expr instrAttr = item.getValue();
+            Expr match = Expr.isIn(instrAttr, stuAttrs).getKey();
+            if (match != null) {
+                Pair<String, String> pair =
+                        getCorrespondingAlias(stuAttrMap.get(match),item.getKey(), instr, stu);
+                res.put(pair.getKey(), item.getKey());
+                if (pair.getValue() == null || pair.getValue().length() == 0) {
+                    stuAttrs.remove(match);
+                    stuAttrMap.remove(match);
+                } else {
+                    stuAttrMap.put(match, pair.getValue());
+                }
+            }
+        }
+        return res;
+    }
+
+    public static void updateTableAliasInAttrMap(HashMap<String, String> tableAliasMap, HashMap<String, Expr> attrMap) {
+        for (Map.Entry<String, Expr> entry: attrMap.entrySet()) {
+            substituteExpr(entry.getValue(), tableAliasMap, new HashMap<>());
+        }
+    }
+
+    public static void updateAttrAliasInAttrMap(HashMap<String, String> attrAliasMap, HashMap<String, Expr> attrMap) {
+        for (Map.Entry<String, Expr> entry: attrMap.entrySet()) {
+            substituteExpr(entry.getValue(), new HashMap<>(), attrAliasMap);
+        }
+    }
+
     private static List<Table> getSubQsFromCondition(Condition c) {
         List<Table> res = new ArrayList<>();
         if (c instanceof Exist) {
@@ -223,9 +244,9 @@ public class BuildAST {
         return res;
     }
 
-    public static <T2> HashMap<T2, String> exchangeHashMap(HashMap<String, T2> oriMap) {
-        HashMap<T2, String> newMap = new HashMap<>();
-        for (Map.Entry<String, T2> e: oriMap.entrySet()) {
+    public static <T> HashMap<T, String> exchangeHashMap(HashMap<String, T> oriMap) {
+        HashMap<T, String> newMap = new HashMap<>();
+        for (Map.Entry<String, T> e: oriMap.entrySet()) {
             if (newMap.containsKey(e.getValue())) {
                 newMap.put(e.getValue(), newMap.get(e.getValue()) + ":" + e.getKey());
             } else {
@@ -237,15 +258,9 @@ public class BuildAST {
 
     private static void substituteMainBody(PlainSelect stu,
                                            HashMap<String, String> tableAliasMap,
-                                           HashMap<String, String> attrAliasMap,
-                                           boolean self) {
+                                           HashMap<String, String> attrAliasMap) {
         for (Expr e: stu.selections) {
-            if (self) {
-                substituteExpr(e, tableAliasMap, new HashMap<>());
-            }
-            else {
-                substituteExpr(e, tableAliasMap, attrAliasMap);
-            }
+            substituteExpr(e, tableAliasMap, attrAliasMap);
         }
         substituteCondition(stu.where, tableAliasMap, attrAliasMap);
         for (Expr e: stu.groupBy.items) {
@@ -287,7 +302,7 @@ public class BuildAST {
             substituteSubQ(((SetOpSelect) select).right, tableAliasMap, attrAliasMap);
         }
         else {
-            substituteMainBody((PlainSelect) select, tableAliasMap, attrAliasMap, false);
+            substituteMainBody((PlainSelect) select, tableAliasMap, attrAliasMap);
         }
     }
 
@@ -328,10 +343,7 @@ public class BuildAST {
         if (!toSplit.contains(":")) {
             return new Pair<>(toSplit, "");
         }
-        List<String> candidates = new ArrayList<>();
-        for (String s: toSplit.split(":")) {
-            candidates.add(s);
-        }
+        List<String> candidates = new ArrayList<>(Arrays.asList(toSplit.split(":")));
         String match = "";
         int distance = Integer.MAX_VALUE;
         for (String s: candidates) {
@@ -348,11 +360,14 @@ public class BuildAST {
 
     public static void main(String[] args) {
         String dbType = JdbcConstants.MYSQL;
-        Env env = new Env(dbType,new ArrayList<>());
+        List<String> sqls = new ArrayList<>();
+        sqls.add("create table users(uid varchar(20));");
+        Env env = new Env(dbType, sqls);
 //        String sql = "select departmentId, salary\n" +
 //                "from b, c\n" +
 //                "where b.rk in (cnt+1/2,cnt+1,cnt) or b.rk=cnt+0.6;";
-        String sql = "select u.uid from u, t where not (not(u.id=t.id) and not(u.name!=t.name))";
+//        String sql = "select u.uid from u, t where not (not(u.id=t.id) and not(u.name!=t.name))";
+        String sql = "select u.uid lala from users u where uid=2";
         Select s = buildSelect(sql, env);
         System.out.println("success");
 

@@ -55,8 +55,7 @@ public class PlainSelect extends Select {
         else {
             from = new From();
         }
-        // alias：从selections和tables中来，where中的不会干预到外面，而且还可能和外面重名，所以不考虑
-        // 先做 from 后做 selections 可以避免重名问题（e.g. sql.csv 15）
+        // alias：from影响全局，selections里的影响outerSelect和orderBy（根据SQL执行顺序来的，selections后面只有orderBy和limit）
         tableAliasMap.putAll(from.tableAliasMap);
         attrAliasMap.putAll(from.attrAliasMap);
         if (query.getSelectList() == null) {
@@ -73,15 +72,17 @@ public class PlainSelect extends Select {
             if (alias != null) {
                 attrAliasMap.put(alias, selections.get(i));
             }
-            else if (selections.get(i) instanceof FuncExpr
-                    && ((FuncExpr) selections.get(i)).parameters.size() == 1
-            && (!(((FuncExpr) selections.get(i)).parameters.get(0) instanceof FuncExpr))) {
-                Expr e = ((FuncExpr) selections.get(i)).parameters.get(0);
-                if (e instanceof PropertyExpr)
-                    alias = ((PropertyExpr) e).attribute.value;
-                else
-                    alias = e.toString();
+            // e.g. a.score -> score
+            else if (selections.get(i) instanceof PropertyExpr) {
+                alias = ((PropertyExpr) selections.get(i)).attribute.value;
                 attrAliasMap.put(alias, selections.get(i));
+            }
+            // e.g. max(score) -> score
+            else if (selections.get(i) instanceof FuncExpr) {
+                alias = ((FuncExpr) selections.get(i)).getAlias();
+                if (alias != null) {
+                    attrAliasMap.put(alias, selections.get(i));
+                }
             }
         }
         normalizeSelections();
@@ -177,7 +178,6 @@ public class PlainSelect extends Select {
         select.groupBy = groupBy.clone();
         select.orderBy = orderBy.clone();
         select.limit = limit.clone();
-        select.subqueries = subqueries;
         select.tableAliasMap = tableAliasMap;
         select.attrAliasMap = attrAliasMap;
         return select;
