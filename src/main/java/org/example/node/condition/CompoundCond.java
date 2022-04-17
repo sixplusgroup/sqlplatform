@@ -63,12 +63,21 @@ public class CompoundCond extends Condition {
     @Override
     public Condition rearrange() {
         Condition c = merge();
+        if (c == null)
+            return null;
         if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
             List<Condition> subConds_new = new ArrayList<>();
             for (Condition item: cc.subConds) {
-                subConds_new.add(item.rearrange());
+                Condition newItem = item.rearrange();
+                if (newItem != null) {
+                    subConds_new.add(newItem);
+                }
             }
+            if (subConds_new.size() == 0)
+                return null;
+            if (subConds_new.size() == 1)
+                return subConds_new.get(0);
             cc.subConds = subConds_new;
             cc.mergeNot();
             cc.flatten();
@@ -156,8 +165,10 @@ public class CompoundCond extends Condition {
      * 合并 e.g. (A and B) or (A and C) -> A and (B or c)
      */
     public Condition merge(){
-        if (subConds.size()==0)
-            return this;
+        if (subConds.size() == 0)
+            return null;
+        if (subConds.size() == 1)
+            return subConds.get(0);
         // 2.1 flag: 是否需要合并
         boolean flag = true;
         String op = null;

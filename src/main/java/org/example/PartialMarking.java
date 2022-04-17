@@ -251,12 +251,16 @@ public class PartialMarking {
 //        String studentSql = "select t.tid from u, t where (u.uid=t.tid and t.tid=10) or (u.uid=t.tid and t.tid=7)";
         final String dbType = JdbcConstants.MYSQL;
         List<String> sqls = new ArrayList<>();
-        String instrSql = "select d.department_name as department, AVG(e.salary) as avg_salary\n" +
-                "from employees e LEFT JOIN departments d\n" +
-                "on e.department_id = d.department_id\n" +
-                "where d.department_name = 'Technology'\n" +
-                "group by e.department_id;";
-        String studentSql = instrSql;
+        String instrSql = "select \n" +
+                "count(distinct user_id)*1.0/(select count(distinct user_id) from logins) as rate\n" +
+                "from logins\n" +
+                "where (user_id,login_date)\n" +
+                "in (select user_id,DATE_ADD(min(login_date),INTERVAL 1 DAY) from logins group by user_id);";
+        String studentSql = "select count(l.user_id) * 1.0 /\n" +
+                "  (select count(distinct user_id) from logins) rate\n" +
+                "from logins l,logins l1\n" +
+                "where l.user_id=l1.user_id and l.login_date=date_add(l1.login_date,interval 1 day)\n" +
+                "  and l1.login_date=(select min(login_date) from logins l1 where l1.user_id=l.user_id)";
 //        List<String> sqls = GetQuestionInfo.getEnvSqls(176);
         PartialMarking marking = new PartialMarking(dbType, sqls);
         System.out.println(marking.partialMark(instrSql,studentSql,100.0f));

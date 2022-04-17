@@ -1,0 +1,20 @@
+
+
+[标准答案集问题] Attention!! 评分34.067802 < 100 ！ 8
+
+答案sql:
+select 
+count(distinct user_id)*1.0/(select count(distinct user_id) from logins) as rate
+from logins
+where (user_id,login_date)
+in (select user_id,DATE_ADD(min(login_date),INTERVAL 1 DAY) from logins group by user_id);
+学生sql:
+select count(l.user_id) * 1.0 /
+  (select count(distinct user_id) from logins) rate
+from logins l,logins l1
+where l.user_id=l1.user_id and l.login_date=date_add(l1.login_date,interval 1 day)
+  and l1.login_date=(select min(login_date) from logins l1 where l1.user_id=l.user_id)
+
+
+
+

@@ -27,13 +27,13 @@ public class OrderByItem {
 
     public OrderByItem(SQLSelectOrderByItem item, HashMap<SQLTableSource, String> tableMapping){
         SQLSelectItem resolvedItem = item.getResolvedSelectItem();
-        if (resolvedItem != null && (! resolvedItem.getExpr().toString().contains("*"))) {
+        if (resolvedItem != null) {
             column = Expr.build(resolvedItem.getExpr(), tableMapping);
         }
         else {
             column = Expr.build(item.getExpr(), tableMapping);
         }
-        if (item.getType() == null){
+        if (item.getType() == null) {
             order = Order.ASC;
         } else {
             order = Order.valueOf(item.getType().name);

@@ -28,7 +28,7 @@ public abstract class Expr {
         this.originStr = originStr;
     }
 
-    public static Expr build(SQLExpr expr, HashMap<SQLTableSource, String> tableMapping){
+    public static Expr build(SQLExpr expr, HashMap<SQLTableSource, String> tableMapping) {
         if (expr == null)
             return null;
         if (expr instanceof SQLAggregateExpr) {
