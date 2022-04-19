@@ -1,7 +1,10 @@
 package com.example.sqlexercise.service;
 
+import com.example.sqlexercise.lib.ResultOfTask;
 import com.example.sqlexercise.po.SubQuestion;
 
+import javax.xml.transform.Result;
+import java.util.ArrayList;
 import java.util.Map;
 
 public interface SqlDatabaseService {
@@ -12,14 +15,14 @@ public interface SqlDatabaseService {
 
     SubQuestion getSubQuestionBySubId(int subId);
 
-    String runSqlTask(int mainId, String driver, String sqlText, Map options);
+    Object runSqlTask(int mainId, String driver, String sqlText, Map options);
 
-    String getStandardAnswer(int subId, String driver);
+    ResultOfTask getStandardAnswer(int subId, String driver);
 
-    Object runTaskOfGettingSchemaInfo(int mainId, String driver);
+    ResultOfTask runTaskOfGettingSchemaInfo(int mainId, String driver);
 
-    Object runTaskOfUpdatingSchemaInfo(int mainId, String driver);
+    ArrayList<ResultOfTask> runTaskOfUpdatingSchemaInfo(int mainId, String driver);
 
-    Object runTaskOfCleaningSchema(int mainId, String driver);
+    ArrayList<ResultOfTask> runTaskOfCleaningSchema(int mainId, String driver);
 
 }

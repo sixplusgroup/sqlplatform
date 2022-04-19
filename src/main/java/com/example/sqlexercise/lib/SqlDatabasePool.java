@@ -44,6 +44,11 @@ public class SqlDatabasePool {
         this.servers = servers;
     }
 
+    /**
+     * 构造数据库实例表中某个schema的初始结构
+     * @param schemaName
+     * @return
+     */
     private ItemOfSqlDatabaseMap createItemOfMap(@NotNull String schemaName){
         //create uuidv5 namespace
         UUID namespace = Generators.nameBasedGenerator(UUID.fromString(NAMESPACE_URL)).generate("sqlexercise");
@@ -88,6 +93,11 @@ public class SqlDatabasePool {
         return inSchema;
     }
 
+    /**
+     * 获取数据库实例表中某个schema的结构
+     * @param schemaName
+     * @return
+     */
     private ItemOfSqlDatabaseMap getItemOfMap(String schemaName){
         // 若不存在某个 Schema 的结构，则先进行构造
         if(!this.sqlDatabaseMap.containsKey(schemaName)){
@@ -98,12 +108,26 @@ public class SqlDatabasePool {
         return this.sqlDatabaseMap.get(schemaName);
     }
 
+    /**
+     * 获取数据库实例
+     * @param schemaName
+     * @param driver
+     * @param server
+     * @param index
+     * @return
+     */
     public SqlDatabase getSqlDatabase(String schemaName, String driver, String server, int index){
         ItemOfSqlDatabaseMap item = getItemOfMap(schemaName);
         return item.itemOfSqlDatabaseMap.get(driver).get(server).get(index);
     }
 
-    private ArrayList<SqlDatabase> getSqlDatabaseList(String schemaName, String driver){
+    /**
+     * 获取数据库实例列表
+     * @param schemaName
+     * @param driver
+     * @return
+     */
+    public ArrayList<SqlDatabase> getSqlDatabaseList(String schemaName, String driver){
         ItemOfSqlDatabaseMap item = getItemOfMap(schemaName);
         ArrayList<SqlDatabase> sqlDatabases = new ArrayList<>();
         for(String server: this.servers){
@@ -112,6 +136,13 @@ public class SqlDatabasePool {
         return sqlDatabases;
     }
 
+    /**
+     * 从可用数据库实例中选择一个
+     * 选择基于Round Robin
+     * @param schemaName
+     * @param driver
+     * @return
+     */
     public SqlDatabase pickSqlDatabase(String schemaName, String driver){
         SqlDatabase sqlDatabase = null;
         ArrayList<SqlDatabase> sqlDatabases = getSqlDatabaseList(schemaName, driver);
@@ -125,6 +156,7 @@ public class SqlDatabasePool {
         }
         return sqlDatabase;
     }
+
 
 
 }

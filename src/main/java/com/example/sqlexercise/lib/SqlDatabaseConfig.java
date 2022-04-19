@@ -3,10 +3,11 @@ package com.example.sqlexercise.lib;
 import java.util.Map;
 
 public class SqlDatabaseConfig {
-    String host;
-    int port;
-    String username;
-    String password;
-    int maxRows;
-    Map tags;
+    public String host;
+    public int port;
+    public String username;
+    public String password;
+    public int maxRows;
+    public Map tags;
+
 }
