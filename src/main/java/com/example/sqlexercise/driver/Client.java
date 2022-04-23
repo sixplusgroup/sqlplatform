@@ -16,4 +16,8 @@ public interface Client {
     String initSchemaSql(String database);
 
     String cleanSchemaSql(String database);
+
+    boolean createUser(String sqlText);
+
+    void createTable(String sqlText);
 }

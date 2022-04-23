@@ -16,19 +16,21 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SqlDatabaseServiceImpl implements SqlDatabaseService {
 
-    private SqlDatabasePool sqlDatabasePool;
+    private final SqlDatabasePool sqlDatabasePool;
+    private final MainQuestionMapper mainQuestionMapper;
+    private final SubQuestionMapper subQuestionMapper;
 
     @Autowired
-    private MainQuestionMapper mainQuestionMapper;
-    @Autowired
-    private SubQuestionMapper subQuestionMapper;
+    public SqlDatabaseServiceImpl(MainQuestionMapper mainQuestionMapper, SubQuestionMapper subQuestionMapper, SqlDatabasePool sqlDatabasePool) {
+        this.mainQuestionMapper = mainQuestionMapper;
+        this.subQuestionMapper = subQuestionMapper;
+        this.sqlDatabasePool = sqlDatabasePool;
+    }
 
     @Override
     public String getSchemaNameByMainId(int mainId){
@@ -46,7 +48,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
             System.out.println("Info of main question "+mainId+" is not found!");
         }
         try {
-            Path dbPath = Paths.get(mainQuestion.getDbPath());
+            Path dbPath = Paths.get("src/main/resources"+mainQuestion.getDbPath());
             if (!Files.exists(dbPath)) {
                 System.out.println("File of main question" + mainId + "is not found!");
             }
@@ -72,7 +74,6 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
         String schemaConstructor = getSchemaConstructorByMainId(mainId);
         if(forEach){
             ArrayList<SqlDatabase> sqlDatabaseArrayList = sqlDatabasePool.getSqlDatabaseList(schemaName, driver);
-            //TODO
             ArrayList<ResultOfTask> results = new ArrayList<>();
             for(SqlDatabase sqlDatabase : sqlDatabaseArrayList ){
                 if(!skipPre) {

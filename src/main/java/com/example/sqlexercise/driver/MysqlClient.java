@@ -21,13 +21,20 @@ public class MysqlClient implements Client {
         this.poolDataSource.setPort(config.port);
         this.poolDataSource.setUser(config.username);
         this.poolDataSource.setPassword(config.password);
-
-
+        try {
+            this.poolDataSource.setUseSSL(true);
+            this.poolDataSource.setConnectTimeout(5 * 60);
+            this.poolDataSource.setAllowMultiQueries(true);
+            this.poolDataSource.setInteractiveClient(true);
+            this.poolDataSource.setServerTimezone("UTC");
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void destroy() {
-
+        this.poolDataSource = null;
     }
 
     @Override
@@ -50,6 +57,7 @@ public class MysqlClient implements Client {
             }
             rs.close();
             statement.close();
+            connection.close();
         }catch(SQLTimeoutException e){
             e.printStackTrace();
             resultOfTask.error = "SQLTimeoutException!";
@@ -86,4 +94,50 @@ public class MysqlClient implements Client {
         return "DROP DATABASE IF EXISTS "+database;
     }
 
+    @Override
+    public void createTable(String sqlText){
+        Connection connection = null;
+        Statement statement = null;
+        try{
+            PooledConnection connections = poolDataSource.getPooledConnection();
+            connection = connections.getConnection();
+            statement = connection.createStatement();
+            statement.execute(sqlText);
+            statement.close();
+            connection.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean createUser(String sqlText){
+        try {
+            PooledConnection connections = poolDataSource.getPooledConnection();
+            Connection connection = connections.getConnection();
+            Statement statement = connection.createStatement();
+            //执行多条语句并返回第一条语句的结果;
+            //true表示返回结果集为resultSet
+            //false表示返回结果是更新计数或没有结果
+            boolean rs = statement.execute(sqlText);
+            while(true) {
+                if (rs) {
+                    System.out.println("An error occurred when create user");
+                    return false;
+                } else {
+                    //rs为false，且updateCount=-1时,所有结果已取出
+                    if(statement.getUpdateCount()==-1){
+                        break;
+                    }
+                    rs = statement.getMoreResults();
+                }
+            }
+            statement.close();
+            connection.close();
+            return true;
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

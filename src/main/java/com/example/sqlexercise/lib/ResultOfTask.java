@@ -9,4 +9,9 @@ public class ResultOfTask {
     public boolean ordered = false;
     public String error = null;
 
+    public ResultOfTask(){
+        this.sheet = new ArrayList<>();
+        incomplete = false;
+    }
+
 }

@@ -3,6 +3,7 @@ package com.example.sqlexercise.lib;
 import com.alibaba.fastjson.JSONObject;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.ListImagesCmd;
 import com.github.dockerjava.api.command.LoadImageCmd;
 import com.github.dockerjava.api.command.PullImageCmd;
 import com.github.dockerjava.api.model.*;
@@ -10,16 +11,17 @@ import com.github.dockerjava.core.DockerClientBuilder;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.List;
 
 
 public class DockerUtils {
 
-    public DockerClient connectDocker(){
-        DockerClient dockerClient = DockerClientBuilder.getInstance("tcp://localhost:2375").build();
-        Info info = dockerClient.infoCmd().exec();
-        String infoStr = JSONObject.toJSONString(info);
-        System.out.println("docker的环境信息如下：===========");
-        System.out.println(infoStr);
+    public DockerClient connectDocker(String protocol, String host, int port){
+        DockerClient dockerClient = DockerClientBuilder.getInstance(protocol+"://"+host+":"+port).build();
+        //Info info = dockerClient.infoCmd().exec();
+        //String infoStr = JSONObject.toJSONString(info);
+        System.out.println("docker已连接！");
+        //System.out.println(infoStr);
         return dockerClient;
     }
 
@@ -50,6 +52,12 @@ public class DockerUtils {
         return pullImageCmd;
     }
 
+    public ListImagesCmd listImages(DockerClient client){
+        ListImagesCmd listImagesCmd = client.listImagesCmd();
+        listImagesCmd.withShowAll(true).exec();
+        return listImagesCmd;
+    }
+
     public void removeImage(DockerClient client, String imageId){
         client.removeImageCmd(imageId).exec();
     }
@@ -71,7 +79,7 @@ public class DockerUtils {
 
     public static void main(String[] args){
         DockerUtils dockerUtils = new DockerUtils();
-        DockerClient client = dockerUtils.connectDocker();
+        DockerClient client = dockerUtils.connectDocker("tcp","localhost",2375);
         dockerUtils.startContainer(client, "common_configserver_1");
         System.out.println("successfully start container!");
     }

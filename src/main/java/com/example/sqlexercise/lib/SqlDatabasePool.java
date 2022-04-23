@@ -1,29 +1,28 @@
 package com.example.sqlexercise.lib;
 
+import com.example.sqlexercise.config.DockerConfig;
 import com.fasterxml.uuid.Generators;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.context.annotation.Scope;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
+@Scope("singleton")
 public class SqlDatabasePool {
 
     int count;
-    String[] drivers;
+    ArrayList<String> drivers;
     Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap;
     int maxRows;
     ArrayList<DockerServer> dockerServers;
     ArrayList<String> servers;
 
-
     private final String NAMESPACE_URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
 
-    public SqlDatabasePool(String[] drivers, Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap){
+    public SqlDatabasePool(DockerConfig dockerConfig, ArrayList<String> drivers, Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap){
         this.drivers = drivers;
         this.sqlDatabaseMap = sqlDatabaseMap;
-        this.dockerServers = DockerServer.getDockerServers();
+        this.dockerServers = dockerConfig.getDockerServers();
         this.maxRows = 500;
         ArrayList<String> servers = new ArrayList<>();
         for(DockerServer dockerServer : dockerServers){
@@ -32,10 +31,10 @@ public class SqlDatabasePool {
         this.servers = servers;
     }
 
-    public SqlDatabasePool(String[] drivers){
+    public SqlDatabasePool(DockerConfig dockerConfig, ArrayList<String> drivers){
         this.drivers = drivers;
         this.sqlDatabaseMap = new HashMap<>();
-        this.dockerServers = DockerServer.getDockerServers();
+        this.dockerServers = dockerConfig.getDockerServers();
         this.maxRows = 500;
         ArrayList<String> servers = new ArrayList<>();
         for(DockerServer dockerServer : dockerServers){
@@ -72,7 +71,7 @@ public class SqlDatabasePool {
                             config.tags.put("index", i);
                             config.host = e.host;
                             config.port = 3310+i;
-                            config.username = schemaName.isEmpty() ? "sqlexercise" : "root";
+                            config.username = schemaName.isEmpty() ? "root" : "sqlexercise";
                             config.password = Generators.nameBasedGenerator(namespace).generate(driver+"-"+server+"-"+i).toString();
                             config.maxRows = this.maxRows;
 
@@ -157,6 +156,7 @@ public class SqlDatabasePool {
         return sqlDatabase;
     }
 
-
-
+    public ArrayList<DockerServer> getDockerServers() {
+        return dockerServers;
+    }
 }
