@@ -1,14 +1,20 @@
 package org.example.node;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.*;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
+import com.alibaba.druid.sql.repository.SchemaObject;
+import javafx.util.Pair;
 import org.example.BuildAST;
 import org.example.Env;
 import org.example.edit.CostConfig;
 import org.example.enums.JoinType;
+import org.example.node.condition.CommutativeCond;
 import org.example.node.condition.CompoundCond;
 import org.example.node.condition.Condition;
 import org.example.node.expr.Expr;
+import org.example.node.expr.PropertyExpr;
 import org.example.node.select.PlainSelect;
 import org.example.node.select.Select;
 import org.example.node.table.JoinTable;
@@ -64,6 +70,11 @@ public class From {
             Table right = handleTableSource(((SQLJoinTableSource) tableSource).getRight(), env, outerSelect);
             JoinType type = handleJoinType(((SQLJoinTableSource) tableSource).getJoinType());
             handleCondsFromSQLExpr(((SQLJoinTableSource) tableSource).getCondition(), env, tableMapping);
+            // 单独处理NATURAL JOIN
+            if (((SQLJoinTableSource) tableSource).getJoinType() == SQLJoinTableSource.JoinType.NATURAL_JOIN
+            || ((SQLJoinTableSource) tableSource).getJoinType() == SQLJoinTableSource.JoinType.NATURAL_INNER_JOIN) {
+                handleNaturalJoin(((SQLJoinTableSource) tableSource).getLeft(), ((SQLJoinTableSource) tableSource).getRight());
+            }
             t = new JoinTable(left, right, type, tableSource.toString());
         }
         else if (tableSource instanceof SQLUnionQueryTableSource) {
@@ -164,6 +175,50 @@ public class From {
         }else {
             joinCondition = c;
         }
+    }
+
+    public void handleNaturalJoin(SQLTableSource left, SQLTableSource right) {
+        Pair<String, List<String>> l = getTableAndAttrs(left);
+        Pair<String, List<String>> r = getTableAndAttrs(right);
+        String attr = null;
+        if (l.getValue() != null && r.getValue() != null) {
+            for (String s1: l.getValue()) {
+                if (r.getValue().contains(s1)) {
+                    attr = s1;
+                    break;
+                }
+            }
+        }
+        if (attr != null) {
+            PropertyExpr lpe = new PropertyExpr(l.getKey(), attr, l.getKey() + "." + attr);
+            PropertyExpr rpe = new PropertyExpr(r.getKey(), attr, r.getKey() + "." + attr);
+            CommutativeCond c = new CommutativeCond("=", Arrays.asList(lpe, rpe),
+                    left.toString() + " NATURAL JOIN " + right.toString());
+            if (joinCondition != null){
+                joinCondition = new CompoundCond("AND", Arrays.asList(joinCondition, c), c.toString());
+            }else {
+                joinCondition = c;
+            }
+        }
+    }
+
+    public Pair<String, List<String>> getTableAndAttrs(SQLTableSource t) {
+        String table = null;
+        List<String> attrs = null;
+        if (t instanceof SQLExprTableSource) {
+            SQLStatement stmt = ((SQLExprTableSource) t).getSchemaObject().getStatement();
+            if (stmt instanceof MySqlCreateTableStatement) {
+                if (t.getAlias() != null)
+                    table = t.getAlias();
+                else
+                    table = t.toString();
+                attrs = ((MySqlCreateTableStatement) stmt).getTableElementList().stream()
+                        .filter(e -> e instanceof SQLColumnDefinition)
+                        .map(e -> ((SQLColumnDefinition) e).getName().toString())
+                        .collect(Collectors.toList());
+            }
+        }
+        return new Pair<>(table, attrs);
     }
 
     public float score() {

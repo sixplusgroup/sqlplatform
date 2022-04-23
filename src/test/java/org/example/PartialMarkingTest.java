@@ -120,7 +120,8 @@ public class PartialMarkingTest {
 //        String sql = "select name from (select name from customer c where name=\"John\")";
         sqls.add("create table t_emp(emp_id bigint, name varchar(20), gender boolean, primary key(emp_id));");
         sqls.add("create table t_org(org_id bigint, name varchar(20));");
-        String sql = "select t.* from t_emp t order by emp_id, name";
+//        String sql = "select t.* from t_emp t order by emp_id, name";
+        String sql = "select org_id from t_emp NATURAL JOIN t_org";
         Env env = new Env(dbType, sqls);
         Select s = BuildAST.buildSelect(sql, env);
         Canonicalizer.canonicalize(s, env);

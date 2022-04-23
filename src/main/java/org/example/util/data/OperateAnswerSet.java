@@ -25,7 +25,7 @@ public class OperateAnswerSet {
         try{
             Class.forName(JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL,USER,PWD);
-            String sql = "SELECT answer FROM answer_set where main_id=? and sub_id=?";
+            String sql = "SELECT answer FROM answer_set where main_id=? and sub_id=? and state=0";
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, main_id);
             stmt.setInt(2, sub_id);

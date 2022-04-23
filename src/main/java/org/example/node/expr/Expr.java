@@ -7,7 +7,6 @@ import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import javafx.util.Pair;
 import org.example.CalculateScore;
 import org.example.edit.CostConfig;
-import org.example.node.condition.Condition;
 
 import java.util.ArrayList;
 import java.util.HashMap;

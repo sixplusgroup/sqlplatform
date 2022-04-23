@@ -45,6 +45,10 @@ public class UncommutativeCond extends AtomCond {
             UncommutativeCond uc = (UncommutativeCond) c;
             score += operator.equals(uc.operator) ? CostConfig.math_operator : 0;
             score += left.score(uc.left) + right.score(uc.right);
+            float tmpScore = 0;
+            tmpScore += operator.equals(Condition.getOppositeOp(uc.operator)) ? CostConfig.math_operator : 0;
+            tmpScore += left.score(uc.right) + right.score(uc.left);
+            score = Math.max(score, tmpScore);
         }
         else if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
@@ -71,7 +75,11 @@ public class UncommutativeCond extends AtomCond {
         if (!(obj instanceof UncommutativeCond))
             return false;
         UncommutativeCond c = (UncommutativeCond) obj;
-        return c.operator.equals(operator) && c.left.equals(left) && c.right.equals(right);
+        boolean equal = c.operator.equals(operator) && c.left.equals(left) && c.right.equals(right);
+        if (!equal && operator.equals(Condition.getOppositeOp(c.operator))) {
+            equal = c.left.equals(right) && c.right.equals(left);
+        }
+        return equal;
     }
 
     @Override
