@@ -62,24 +62,18 @@ public class CompoundCond extends Condition {
 
     @Override
     public Condition rearrange() {
+        List<Condition> subConds_new = new ArrayList<>();
+        for (Condition item: subConds) {
+            Condition newItem = item.rearrange();
+            subConds_new.add(newItem);
+        }
+        if (subConds_new.size() == 1)
+            return subConds_new.get(0);
+        subConds = subConds_new;
+        mergeNot();
         Condition c = merge();
-        if (c == null)
-            return null;
         if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
-            List<Condition> subConds_new = new ArrayList<>();
-            for (Condition item: cc.subConds) {
-                Condition newItem = item.rearrange();
-                if (newItem != null) {
-                    subConds_new.add(newItem);
-                }
-            }
-            if (subConds_new.size() == 0)
-                return null;
-            if (subConds_new.size() == 1)
-                return subConds_new.get(0);
-            cc.subConds = subConds_new;
-            cc.mergeNot();
             cc.flatten();
             c = cc.flattenEquals();
         }
@@ -164,61 +158,65 @@ public class CompoundCond extends Condition {
     /**
      * 合并 e.g. (A and B) or (A and C) -> A and (B or c)
      */
-    public Condition merge(){
-        if (subConds.size() == 0)
-            return null;
+    public Condition merge() {
         if (subConds.size() == 1)
             return subConds.get(0);
         // 2.1 flag: 是否需要合并
         boolean flag = true;
         String op = null;
-        for (int i=0;i<subConds.size();i++){
-            Condition c = subConds.get(i);
-            if (i==0 && c instanceof CompoundCond && c.not==not) {
-                op = ((CompoundCond) c).operator;
-                continue;
+        boolean isNot = false;
+        for (Condition c : subConds) {
+            if (!(c instanceof CompoundCond)) {
+                flag = false;
+                break;
             }
-            if (c instanceof CompoundCond && c.not==not && ((CompoundCond) c).operator.equals(op)) {
-            }
-            else{
+            CompoundCond cc = (CompoundCond) c;
+            if (op == null) {
+                op = cc.operator;
+                isNot = cc.not;
+            } else if (!(cc.operator.equals(op)) || cc.not != isNot) {
                 flag = false;
                 break;
             }
         }
-        if (flag){
+        if (flag) {
             // 2.2 提取合并内容
             List<Condition> sameConds = new ArrayList<>(((CompoundCond)subConds.get(0)).subConds);
-            for (int i=1;i<subConds.size();i++){
-                List<Condition> tmpList =((CompoundCond)subConds.get(i)).subConds;
+            for (int i=1;i<subConds.size();i++) {
+                List<Condition> tmpList = ((CompoundCond)subConds.get(i)).subConds;
                 sameConds.removeIf(c -> !isStrictlyIn(c, tmpList));
             }
             // 2.3 合并
             Condition sameCond = null;
-            if (sameConds.size()==0){
+            if (sameConds.size() == 0) {
                 flag = false;
-            } else if (sameConds.size()==1){
+            } else if (sameConds.size() == 1) {
                 sameCond = sameConds.get(0);
             } else {
                 sameCond = new CompoundCond(op, sameConds, null);
             }
-            if (flag){
-                CompoundCond differentCond = new CompoundCond(operator,new ArrayList<>(), null);
-                for (Condition tmp: subConds){
+            if (flag) {
+                CompoundCond differentCond = new CompoundCond(operator, new ArrayList<>(), null);
+                for (Condition tmp: subConds) {
                     ((CompoundCond)tmp).subConds.removeIf(c -> isStrictlyIn(c,sameConds));
-                    if (((CompoundCond)tmp).subConds.size()==0){
+                    if (((CompoundCond)tmp).subConds.size() == 0) {
                         if (op.equals("AND") && operator.equals("AND")
-                        || (op.equals("OR") && operator.equals("OR"))){
-                        } else if ((op.equals("AND") && operator.equals("OR"))
-                        || (op.equals("OR") && operator.equals("AND"))){
+                        || (op.equals("OR") && operator.equals("OR"))) {
+                            // do nothing
+                        }
+                        else if ((op.equals("AND") && operator.equals("OR"))
+                        || (op.equals("OR") && operator.equals("AND"))) {
                             return sameCond;
                         }
-                    } else if (((CompoundCond)tmp).subConds.size()==1){
+                    }
+                    else if (((CompoundCond)tmp).subConds.size() == 1) {
                         differentCond.add(((CompoundCond)tmp).subConds.get(0));
-                    } else {
+                    }
+                    else {
                         differentCond.add(tmp);
                     }
                 }
-                return new CompoundCond(op, Arrays.asList(sameCond,differentCond), null);
+                return new CompoundCond(op, Arrays.asList(sameCond, differentCond), null);
             }
         }
         return this;
@@ -238,6 +236,7 @@ public class CompoundCond extends Condition {
                 }
             }
         }
+        subConds = subConds.stream().distinct().collect(Collectors.toList());
     }
 
     /**
@@ -249,7 +248,8 @@ public class CompoundCond extends Condition {
         List<Condition> subConds_clone = new ArrayList<>(subConds);
         for (Condition c: subConds) {
             if (c instanceof CompoundCond) {
-                ((CompoundCond) c).flattenEquals();
+                subConds_clone.remove(c);
+                subConds_clone.add(((CompoundCond) c).flattenEquals());
             }
             else if (c instanceof CommutativeCond && ((CommutativeCond) c).operator.equals("=")) {
                 toFlatten.add((CommutativeCond) c);
