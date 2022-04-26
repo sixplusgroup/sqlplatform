@@ -9,12 +9,6 @@ import java.util.Map;
 
 public interface SqlDatabaseService {
 
-    String getSchemaNameByMainId(int mainId);
-
-    String getSchemaConstructorByMainId(int mainId);
-
-    SubQuestion getSubQuestionBySubId(int subId);
-
     Object runSqlTask(int mainId, String driver, String sqlText, Map options);
 
     ResultOfTask getStandardAnswer(int subId, String driver);

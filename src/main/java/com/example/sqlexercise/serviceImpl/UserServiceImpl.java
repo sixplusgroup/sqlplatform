@@ -19,10 +19,14 @@ import java.util.UUID;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private final UserMapper userMapper;
+    private final CodeMapper codeMapper;
+
     @Autowired
-    UserMapper userMapper;
-    @Autowired
-    CodeMapper codeMapper;
+    public UserServiceImpl(UserMapper userMapper, CodeMapper codeMapper) {
+        this.userMapper = userMapper;
+        this.codeMapper = codeMapper;
+    }
 
     @Override
     public ResponseVO signUp(UserVO userVO){

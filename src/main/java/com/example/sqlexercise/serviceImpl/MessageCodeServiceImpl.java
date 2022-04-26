@@ -18,8 +18,12 @@ import java.util.Properties;
 @Service
 public class MessageCodeServiceImpl implements MessageCodeService {
 
+    private final CodeMapper codeMapper;
+
     @Autowired
-    CodeMapper codeMapper;
+    public MessageCodeServiceImpl(CodeMapper codeMapper) {
+        this.codeMapper = codeMapper;
+    }
 
     @Override
     public ResponseVO sendMessageCode(String email, String code){
