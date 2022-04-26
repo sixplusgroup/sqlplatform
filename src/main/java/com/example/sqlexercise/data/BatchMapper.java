@@ -1,15 +1,16 @@
 package com.example.sqlexercise.data;
 
-import com.example.sqlexercise.po.SubQuestion;
+import com.example.sqlexercise.po.Batch;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
-@Mapper
 @Repository
-public interface SubQuestionMapper {
+@Mapper
+public interface BatchMapper {
 
-    SubQuestion getBySubId(@Param("subId") int subId);
+    void create(Batch batch);
 
+    Batch getById(@Param("id") String id);
 
 }

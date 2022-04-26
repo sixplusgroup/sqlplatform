@@ -12,7 +12,6 @@ public class MainQuestion {
     Date updatedAt;
     int totalDifficulty;
     int subCount;
-    int state;
 
     public int getId() {
         return id;
@@ -24,10 +23,6 @@ public class MainQuestion {
 
     public String getDesc() {
         return desc;
-    }
-
-    public int getState() {
-        return state;
     }
 
     public int getSubCount() {

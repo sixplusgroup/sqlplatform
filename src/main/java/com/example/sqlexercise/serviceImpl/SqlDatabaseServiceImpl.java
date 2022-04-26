@@ -48,7 +48,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
             System.out.println("Info of main question "+mainId+" is not found!");
         }
         try {
-            Path dbPath = Paths.get("src/main/resources"+mainQuestion.getDbPath());
+            Path dbPath = Paths.get("src/main/resources/"+mainQuestion.getDbPath());
             if (!Files.exists(dbPath)) {
                 System.out.println("File of main question" + mainId + "is not found!");
             }

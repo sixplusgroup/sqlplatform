@@ -12,7 +12,6 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
@@ -72,11 +71,12 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             newCode.append(all.charAt(num));
         }
         Cache cache = new Cache();
+        cache.setEmail(email);
         cache.setCode(newCode.toString());
         Date now = new Date();
         Date expiryDate = new Date(now.getTime()+5*60*1000);
         cache.setCreatedAt(now);
-        cache.setExpiryDate(expiryDate);
+        cache.setExpiryAt(expiryDate);
         if(codeMapper.getCacheByEmail(email)!=null){
             codeMapper.update(cache);
         }else {

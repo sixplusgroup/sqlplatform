@@ -86,7 +86,7 @@ public class MysqlClient implements Client {
 
     @Override
     public String initSchemaSql(String database){
-        return "CREATE DATABASE IF NOT EXISTS "+database+";\nUse"+database+";\n";
+        return "CREATE DATABASE IF NOT EXISTS "+database+";\nUse "+database+";\n";
     }
 
     @Override

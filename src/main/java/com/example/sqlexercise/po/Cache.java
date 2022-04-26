@@ -3,16 +3,17 @@ package com.example.sqlexercise.po;
 import java.util.Date;
 
 public class Cache {
-    String id;
+    int id;
     String code;
-    Date expiryDate;
+    String email;
+    Date expiryAt;
     Date createdAt;
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -24,12 +25,12 @@ public class Cache {
         this.createdAt = createdAt;
     }
 
-    public Date getExpiryDate() {
-        return expiryDate;
+    public Date getExpiryAt() {
+        return expiryAt;
     }
 
-    public void setExpiryDate(Date expiryDate) {
-        this.expiryDate = expiryDate;
+    public void setExpiryAt(Date expiryDate) {
+        this.expiryAt = expiryDate;
     }
 
     public String getCode() {
@@ -38,5 +39,13 @@ public class Cache {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

@@ -15,7 +15,7 @@ public class DockerConfig {
     @Autowired
     public DockerConfig(){
         this.dockerServers = new ArrayList<>();
-        DockerServer dockerServer = new DockerServer("1", "localhost", 2375, "tcp", "", 2);
+        DockerServer dockerServer = new DockerServer("1", "localhost", 2375, "tcp", "", 1);
         this.dockerServers.add(dockerServer);
     }
 

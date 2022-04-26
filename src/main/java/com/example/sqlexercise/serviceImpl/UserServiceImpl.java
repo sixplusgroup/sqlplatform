@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,7 +30,7 @@ public class UserServiceImpl implements UserService {
         String email = userVO.getEmail();
         Cache cache = codeMapper.getCacheByEmail(email);
         String rightCode = cache.getCode();
-        if(cache.getExpiryDate().before(new Date())){
+        if(cache.getExpiryAt().before(new Date())){
             return ResponseVO.failure("验证码已过期，请重新发送");
         }
         if(!rightCode.equals(userVO.getCode())){
@@ -41,13 +42,15 @@ public class UserServiceImpl implements UserService {
         if (userMapper.findOneByEmail(email)!=null){
             return ResponseVO.failure("用户已存在！");
         }
-
         User user = new User();
         BeanUtils.copyProperties(userVO, user);
+        user.setId(UUID.randomUUID().toString());
         user.setPasshash(Passhash.getPasshash(userVO.getPassword()));
         user.setCreatedAt(new Date());
         user.setUpdatedAt(new Date());
         user.setRole("user");
+        userMapper.create(user);
+
         return ResponseVO.success("注册成功");
     }
 

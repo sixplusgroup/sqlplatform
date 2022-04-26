@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class UserController {
 
-    @Autowired
-    private MessageCodeService messageCodeService;
-    @Autowired
-    private UserService userService;
+    private final MessageCodeService messageCodeService;
+    private final UserService userService;
 
-    @GetMapping("/api/signup/getMessageCode/{email}")
+    @Autowired
+    public UserController(MessageCodeService messageCodeService, UserService userService) {
+        this.messageCodeService = messageCodeService;
+        this.userService = userService;
+    }
+
+    @GetMapping("/api/signup/sendMessageCode/{email}")
     public ResponseVO sendMessageCode(@PathVariable String email){
         return messageCodeService.sendMessageCode(email, messageCodeService.generateMessageCode(email));
     }

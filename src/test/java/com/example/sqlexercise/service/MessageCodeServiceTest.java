@@ -14,15 +14,8 @@ public class MessageCodeServiceTest {
     MessageCodeService messageCodeService;
 
     @Test
-    public void dateTest(){
-        Date date = new Date();
-        System.out.println(date);
-        System.out.println(date.getTime());
-        Date expiryDate = new Date(date.getTime()+5*60*1000);
-        System.out.println(expiryDate);
-        System.out.println(expiryDate.getTime());
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        System.out.println(simpleDateFormat.format(date.getTime()));
-        System.out.println(simpleDateFormat.format(expiryDate.getTime()));
+    public void Test(){
+        String code = messageCodeService.generateMessageCode("181250043@smail.nju.edu.cn");
+        messageCodeService.sendMessageCode("181250043@smail.nju.edu.cn", code);
     }
 }
