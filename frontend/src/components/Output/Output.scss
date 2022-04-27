@@ -1,0 +1,39 @@
+.mask {
+    background-color: rgba(198, 198, 198, 0.5);
+    min-width: 100vw;
+    min-height: 100vh;
+    width: fit-content;
+    height: fit-content;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 80px;
+    align-items: center;
+    justify-content: center;
+}
+.card {
+    padding: 60px;
+    border-radius: 40px;
+    min-width: 90%;
+    background: linear-gradient(145deg, #f0f0f0, #cacaca);
+    box-shadow: 0 0 70px #9b9b9b;
+}
+.statements {
+    margin-top: 20px;
+    padding-left: 30px;
+    .insertStatement {
+        font-family: 'Courier New', Courier, monospace;
+        text-align: left;
+        margin-left: 30px;
+    }
+}
+
+.head {
+    font-size: 20px;
+}
+.buttons {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}

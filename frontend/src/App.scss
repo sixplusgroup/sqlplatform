@@ -1,0 +1,93 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  min-width: fit-content;
+  background: rgb(34, 193, 195);
+  background: linear-gradient(45deg, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
+  color: rgb(41, 31, 31);
+  --header-height: 100px;
+  --h1-font-size: 2rem;
+  --article-font-size: 20px;
+  --you-font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Open Sans", "Helvetica Neue", sans-serif;
+
+  .App-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--h1-font-size);
+    height: var(--header-height);
+  }
+}
+main {
+  min-height: 500px;
+  padding: 0 100px 80px;
+}
+.input-area {
+  display: grid;
+  grid-template-areas:
+    "a b"
+    "c d";
+  grid-template-columns: 1fr 4fr;
+  row-gap: 28px;
+}
+.cm-focused {
+  outline: none !important;
+}
+
+.label {
+  font-size: var(--article-font-size);
+  min-width: 270px;
+  text-align: end;
+  padding-right: 25px;
+  cursor: default;
+  font-family: var(--you-font-family);
+  font-weight: bold;
+}
+.input {
+  height: 26px;
+  width: 350px;
+  border-radius: 5px;
+  border: none;
+  font-size: 15px;
+  padding: 4px 8px;
+  outline: none;
+}
+.query-input {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  text-align: left;
+  outline: none;
+}
+
+.schema {
+  display: flex;
+  flex-direction: column;
+  .table-number {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    .table-number-text {
+      font-size: 20px;
+    }
+    .number-text {
+      width: 35px;
+      background-color: white;
+      height: 28px;
+      line-height: 28px;
+    }
+    .crement-btn {
+      width: 30px;
+      height: 28px;
+      cursor: pointer;
+      border: none;
+    }
+  }
+  .btns {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+}

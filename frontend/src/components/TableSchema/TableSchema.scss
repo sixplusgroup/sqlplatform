@@ -1,0 +1,58 @@
+.tableSchema {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgb(182, 182, 182);
+    padding: 27px 35px;
+    margin: 20px 0;
+    width: 800px;
+    position: relative;
+    background-color: rgb(224, 224, 224);
+    &:hover {
+        .close {
+            display: block;
+        }
+    }
+    .close {
+        position: absolute;
+        top: 5px;
+        right: 9px;
+        cursor: pointer;
+        display: none;
+    }
+    .table-head {
+        display: flex;
+        flex-direction: row;
+        padding: 0 20px;
+        .table-name {
+            flex-direction: row;
+            display: flex;
+            align-items: center;
+            .table-name-input {
+                width: 140px;
+            }
+        }
+        .num-of-columns {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            .number-text {
+                width: 35px;
+                background-color: white;
+                height: 28px;
+                line-height: 28px;
+            }
+            .crement-btn {
+                width: 30px;
+                height: 28px;
+                cursor: pointer;
+                border: none;
+            }
+        }
+        .head-label {
+            margin: 0 10px;
+        }
+    }
+}
