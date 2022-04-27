@@ -75,7 +75,7 @@ public class GroupBy {
                 score += CostConfig.sequence_penalty;
             idx = curIdx;
         }
-        for (Expr item: stuC_clone) {
+        for (Expr ignored : stuC_clone) {
             score -= CostConfig.group_by_item * CostConfig.delete_cost_rate;
         }
         // having

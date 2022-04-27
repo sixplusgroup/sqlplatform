@@ -62,18 +62,18 @@ public class CompoundCond extends Condition {
 
     @Override
     public Condition rearrange() {
-        List<Condition> subConds_new = new ArrayList<>();
-        for (Condition item: subConds) {
-            Condition newItem = item.rearrange();
-            subConds_new.add(newItem);
-        }
-        if (subConds_new.size() == 1)
-            return subConds_new.get(0);
-        subConds = subConds_new;
-        mergeNot();
         Condition c = merge();
         if (c instanceof CompoundCond) {
             CompoundCond cc = (CompoundCond) c;
+            List<Condition> subConds_new = new ArrayList<>();
+            for (Condition item: cc.subConds) {
+                Condition newItem = item.rearrange();
+                subConds_new.add(newItem);
+            }
+            if (subConds_new.size() == 1)
+                return subConds_new.get(0);
+            cc.subConds = subConds_new;
+            cc.mergeNot();
             cc.flatten();
             c = cc.flattenEquals();
         }
@@ -142,21 +142,31 @@ public class CompoundCond extends Condition {
             if (c instanceof CompoundCond) {
                 ((CompoundCond) c).mergeNot();
             }
-            if (!c.not){
+            if (!c.not) {
                 flag = false;
                 break;
             }
         }
         if (flag){
-            not = !not;
             for (Condition c: subConds) {
                 c.not = false;
+            }
+            not = !not;
+            switch (operator) {
+                case "AND":
+                    operator = "OR";
+                    break;
+                case "OR":
+                    operator = "AND";
+                    break;
+                default:
+                    break;
             }
         }
     }
 
     /**
-     * 合并 e.g. (A and B) or (A and C) -> A and (B or c)
+     * 合并 e.g. (A and B) or (A and C) -> A and (B or C)
      */
     public Condition merge() {
         if (subConds.size() == 1)

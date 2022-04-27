@@ -300,25 +300,20 @@ public abstract class Condition {
      * @return
      */
     public static Condition find(Condition c, Condition stu) {
-        Condition p = stu;
-        if (p.equals(c))
-            return p;
-        float score = c.score(stu);
-        boolean newHigh;
-        while (p instanceof CompoundCond) {
-            newHigh = false;
-            for (Condition item: ((CompoundCond) p).getSubConds()) {
-                float tmpScore = c.score(item);
-                if (tmpScore > score) {
-                    score = tmpScore;
-                    p = item;
-                    newHigh = true;
+        Queue<Condition> queue = new LinkedList<>();
+        queue.add(stu);
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            while (size-- > 0) {
+                Condition cdt = queue.poll();
+                if (cdt == null)
+                    continue;
+                if (cdt.equals(c))
+                    return cdt;
+                if (cdt instanceof CompoundCond) {
+                    queue.addAll(((CompoundCond) cdt).getSubConds());
                 }
             }
-            if (c.equals(p))
-                return p;
-            if (!newHigh)
-                break;
         }
         return null;
     }

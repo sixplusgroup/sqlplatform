@@ -63,7 +63,7 @@ public class CalculateScore {
                 }
             }
             // case 1.3: 两个都是 set operator
-            // set operator不匹配则分数-1
+            // set operator匹配则+1
             // 如果不是except，两种情况取max
             //     * left对left, right对right的情况分数计算：edit score相加，注意分数上限
             // 如果是except，匹配左子树
