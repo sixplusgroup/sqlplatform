@@ -12,6 +12,8 @@
     justify-content: center;
 }
 .card {
+    max-height: 80%;
+    overflow: scroll;
     padding: 60px;
     border-radius: 40px;
     min-width: 90%;
