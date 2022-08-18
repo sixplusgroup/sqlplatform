@@ -17,9 +17,9 @@ public class AsyncController {
 
     @GetMapping("/async-test")
     public String asyncTest(){
-        System.out.println("---> enter async-test controller!");
+        System.out.println(Thread.currentThread().getName()+"---> enter async-test controller!");
         asyncService.myAsyncMethod();
-        System.out.println("---> end of async-test controller!");
+        System.out.println(Thread.currentThread().getName()+"---> end of async-test controller!");
         return "hello";
     }
 
