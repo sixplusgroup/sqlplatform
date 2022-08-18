@@ -1,12 +1,15 @@
 package com.example.sqlexercise;
 
 import com.example.sqlexercise.lib.*;
+import com.example.sqlexercise.serviceImpl.MyAsyncService;
 import com.fasterxml.uuid.Generators;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
@@ -20,12 +23,14 @@ import java.util.UUID;
 public class CreateEnvForSqlExercise implements ApplicationRunner {
 
     private final SqlDatabasePool pool;
+    private final MyAsyncService myAsyncService;
     private final String NAMESPACE_URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
     private final String SALT = "sqlexercise";
 
     @Autowired
-    public CreateEnvForSqlExercise(SqlDatabasePool pool) {
+    public CreateEnvForSqlExercise(SqlDatabasePool pool, MyAsyncService myAsyncService) {
         this.pool = pool;
+        this.myAsyncService = myAsyncService;
     }
 
     @Override
@@ -114,19 +119,11 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                     e.printStackTrace();
                 }
                 dockerServer.createDockerContainerForMysql57(container.getName(), container.getPassword(), container.getPort());
-                //TODO 改成Spring异步执行，加快环境构建速度
-                dockerServer.startDockerContainer(container.getName());
-                //连接数据库
+                //以下部分已改成Spring异步执行，不阻塞主线程
                 SqlDatabase sqlDatabase = this.pool.getSqlDatabase("", "mysql", dockerServer.getId(), container.getIndex());
-                sqlDatabase.connect("SHOW DATABASES;", 5);
-                if(!sqlDatabase.isConnected()){
-                    throw new Exception("Connection Error");
-                }
-                sqlDatabase.createUser("CREATE USER 'sqlexercise'@'%' IDENTIFIED BY '"+container.getPassword()+"';\n" +
-                        "GRANT SELECT ON *.* TO 'sqlexercise'@'%';\n" +
-                        "FLUSH PRIVILEGES;", 1);
+                myAsyncService.asyncInit(dockerServer, container, sqlDatabase);
             }
-
         }
     }
+
 }
