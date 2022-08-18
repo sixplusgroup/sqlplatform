@@ -99,7 +99,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
         options.put("forEach", true);
         options.put("skipPre", true);
         options.put("skipPost", true);
-        return (ArrayList<ResultOfTask>) this.runSqlTask(0, driver, sqlText, options);
+        return (ArrayList<ResultOfTask>) this.runSqlTask(mainId, driver, sqlText, options);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
         options.put("forEach", true);
         options.put("skipPre", true);
         options.put("skipPost", true);
-        return (ArrayList<ResultOfTask>) this.runSqlTask(0, driver, sqlText, options);
+        return (ArrayList<ResultOfTask>) this.runSqlTask(mainId, driver, sqlText, options);
     }
 
 }

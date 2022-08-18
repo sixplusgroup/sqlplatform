@@ -238,7 +238,7 @@ public class SqlDatabase {
     }
 
     public void posttask(){
-        //TODO sql任务执行完毕后的处理
+        //TODO sql任务执行完毕后的处理，支持非查询语句时需要用
     }
 
     public void testConnect(){

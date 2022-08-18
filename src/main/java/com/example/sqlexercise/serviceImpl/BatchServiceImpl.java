@@ -40,7 +40,7 @@ public class BatchServiceImpl implements BatchService {
     }
 
     private ResponseVO createBatchAsync(BatchVO batchVO) {
-        //TODO Spring + activeMQ
+        //TODO Spring + MQ 消息中间件选型待定
         return null;
     }
 
@@ -64,6 +64,8 @@ public class BatchServiceImpl implements BatchService {
     }
 
     private void executeBatch(Batch batch, int main_id, int sub_id, String driver, String sqlText){
+        //现在的判分是先运行一次标准答案，然后与结果比对
+        //TODO 引入redis对频繁使用的标准结果集进行多级缓存
         ResultOfTask answer = sqlDatabaseService.getStandardAnswer(sub_id, driver);
         Map options = new HashMap();
         options.put("skipPre", true);

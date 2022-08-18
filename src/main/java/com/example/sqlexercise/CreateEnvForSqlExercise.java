@@ -114,6 +114,7 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                     e.printStackTrace();
                 }
                 dockerServer.createDockerContainerForMysql57(container.getName(), container.getPassword(), container.getPort());
+                //TODO 改成Spring异步执行，加快环境构建速度
                 dockerServer.startDockerContainer(container.getName());
                 //连接数据库
                 SqlDatabase sqlDatabase = this.pool.getSqlDatabase("", "mysql", dockerServer.getId(), container.getIndex());
