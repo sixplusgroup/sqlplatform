@@ -9,6 +9,7 @@ import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.SqlDatabaseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -60,6 +61,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
     }
 
     @Override
+    @Cacheable("standardAnswer")
     public ResultOfTask getStandardAnswer(int subId, String driver){
         SubQuestion subQuestion = questionService.getSubQuestionBySubId(subId);
         int mainId = subQuestion.getMainId();

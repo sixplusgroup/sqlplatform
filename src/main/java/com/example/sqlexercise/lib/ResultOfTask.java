@@ -1,8 +1,9 @@
 package com.example.sqlexercise.lib;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class ResultOfTask {
+public class ResultOfTask implements Serializable {
 
     public ArrayList<ArrayList<String>> sheet;
     public boolean incomplete;
