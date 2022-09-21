@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.sqlexercise.data.AnswerSetMapper">
+
+    <resultMap id="AnswerSet" type="com.example.sqlexercise.po.AnswerSet">
+        <id column="id" property="id"></id>
+        <result column="main_id" property="mainId"></result>
+        <result column="sub_id" property="subId"></result>
+        <result column="answer" property="answer"></result>
+        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"></result>
+        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"></result>
+        <result column="state" property="state"></result>
+    </resultMap>
+
+    <select id="getByAnswer" resultMap="AnswerSet">
+        select * from answer_set where main_id=#{mainId} and sub_id=#{subId} and answer=#{answer}
+    </select>
+
+    <insert id="create" parameterType="com.example.sqlexercise.po.AnswerSet" keyProperty="id" useGeneratedKeys="true">
+        insert into answer_set (main_id, sub_id, answer, created_at, updated_at) values (#{mainId},#{subId},#{answer},#{createdAt},#{updatedAt})
+    </insert>
+
+    <update id="updateStatus" parameterType="com.example.sqlexercise.po.AnswerSet">
+        update answer_set set state=0, updated_at=#{updatedAt} where main_id=#{mainId} and sub_id=#{subId} and answer=#{answer}
+    </update>
+</mapper>
