@@ -1,12 +1,16 @@
 package com.example.sqlexercise.serviceImpl;
 
+import com.example.sqlexercise.data.AnswerSetMapper;
 import com.example.sqlexercise.data.BatchMapper;
 import com.example.sqlexercise.data.PassRecordMapper;
 import com.example.sqlexercise.lib.ResultOfTask;
+import com.example.sqlexercise.po.AnswerSet;
 import com.example.sqlexercise.po.Batch;
 import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.service.BatchService;
+import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
+import com.example.sqlexercise.vo.GetScoreVO;
 import com.example.sqlexercise.vo.ResponseVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +25,16 @@ public class BatchServiceImpl implements BatchService {
     private final BatchMapper batchMapper;
     private final boolean useMessageQueue;
     private final PassRecordMapper passRecordMapper;
+    private final ScoreService scoreService;
+    private final AnswerSetMapper answerSetMapper;
 
     @Autowired
-    public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, BatchMapper batchMapper, PassRecordMapper passRecordMapper) {
+    public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, BatchMapper batchMapper, PassRecordMapper passRecordMapper, ScoreService scoreService, AnswerSetMapper answerSetMapper) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.batchMapper = batchMapper;
         this.passRecordMapper = passRecordMapper;
+        this.scoreService = scoreService;
+        this.answerSetMapper = answerSetMapper;
         this.useMessageQueue = false;
     }
 
@@ -81,6 +89,25 @@ public class BatchServiceImpl implements BatchService {
             passRecord.setPoint(100);
             passRecordMapper.create(passRecord);
             System.out.println(batch.getId()+" passed!");
+            // 如果静态分析得到的评分非满分，需要将其加入答案集
+            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
+            float score = scoreService.getScore(getScoreVO);
+            if (score < 100f) {
+                AnswerSet stuAnswer = new AnswerSet();
+                stuAnswer.setMainId(main_id);
+                stuAnswer.setSubId(sub_id);
+                stuAnswer.setAnswer(sqlText);
+                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
+                if (ans == null) {
+                    stuAnswer.setCreatedAt(new Date());
+                    stuAnswer.setUpdatedAt(new Date());
+                    answerSetMapper.create(stuAnswer);
+                }
+                else if (ans.getState() == 1) {
+                    stuAnswer.setUpdatedAt(new Date());
+                    answerSetMapper.updateStatus(stuAnswer);
+                }
+            }
         }else{
             System.out.println(batch.getId()+" didn't pass!");
         }
