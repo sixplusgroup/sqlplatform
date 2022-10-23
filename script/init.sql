@@ -1,5 +1,5 @@
-/**create database if not exists sqlexercise;
-use sqlexercise;**/
+--create database if not exists sqlexercise;
+--use sqlexercise;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`(
                       `id` varchar(255) not null ,
