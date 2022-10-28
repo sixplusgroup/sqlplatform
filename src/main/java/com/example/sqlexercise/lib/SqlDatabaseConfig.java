@@ -9,5 +9,4 @@ public class SqlDatabaseConfig {
     public String password;
     public int maxRows;
     public Map tags;
-
 }

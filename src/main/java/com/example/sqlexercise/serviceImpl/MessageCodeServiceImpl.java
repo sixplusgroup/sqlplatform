@@ -26,14 +26,14 @@ public class MessageCodeServiceImpl implements MessageCodeService {
     }
 
     @Override
-    public ResponseVO sendMessageCode(String email, String code){
+    public ResponseVO sendMessageCode(String email, String code) {
 
         Properties properties = new Properties();
         //设置发送邮件的基本参数
-        properties.put("mail.transport.protocol", "smtp");//协议
-        properties.put("mail.smtp.host", "smtp.qq.com");//邮件服务器地址
-        properties.put("mail.smtp.auth", "true");//需要请求认证
-        properties.put("mail.smtp.port", "587");//端口号
+        properties.put("mail.transport.protocol", "smtp");      //协议
+        properties.put("mail.smtp.host", "smtp.qq.com");        //邮件服务器地址
+        properties.put("mail.smtp.auth", "true");               //需要请求认证
+        properties.put("mail.smtp.port", "587");                //端口号
         //SSL 安全认证
         properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         properties.put("mail.smtp.socketFactory.fallback", "false");
@@ -47,7 +47,8 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             //From
             message.setFrom(new InternetAddress("wenbing.he@qq.com", "sqlexercise", "UTF-8"));
             //To
-            message.setRecipient(MimeMessage.RecipientType.TO, new InternetAddress(email, "sqlexercise 新用户", "UTF-8"));
+            message.setRecipient(MimeMessage.RecipientType.TO,
+                    new InternetAddress(email, "sqlexercise 新用户", "UTF-8"));
             //主题
             message.setSubject("SQL Exercise 注册验证码", "UTF-8");
             //正文
@@ -60,14 +61,14 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             transport.connect("wenbing.he@qq.com", "rzljkrkpwkxqbfbd");
             transport.sendMessage(message, message.getAllRecipients());
             transport.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         return ResponseVO.success("发送成功");
     }
 
     @Override
-    public String generateMessageCode(String email){
+    public String generateMessageCode(String email) {
         StringBuilder newCode = new StringBuilder();
         String all = "0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         for (int i = 0; i < 6; i++) {
@@ -78,12 +79,13 @@ public class MessageCodeServiceImpl implements MessageCodeService {
         cache.setEmail(email);
         cache.setCode(newCode.toString());
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime()+5*60*1000);
+        // 验证码过期时间有效期5min
+        Date expiryDate = new Date(now.getTime() + 5 * 60 * 1000);
         cache.setCreatedAt(now);
         cache.setExpiryAt(expiryDate);
-        if(codeMapper.getCacheByEmail(email)!=null){
+        if (codeMapper.getCacheByEmail(email) != null) {
             codeMapper.update(cache);
-        }else {
+        } else {
             codeMapper.create(cache);
         }
         return newCode.toString();

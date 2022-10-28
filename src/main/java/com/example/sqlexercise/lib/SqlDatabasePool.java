@@ -15,29 +15,33 @@ public class SqlDatabasePool {
     Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap;
     int maxRows;
     ArrayList<DockerServer> dockerServers;
-    ArrayList<String> servers;
+    ArrayList<String> servers;  // 存dockerServers中各dockerServer的id
 
     private final String NAMESPACE_URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
 
-    public SqlDatabasePool(DockerConfig dockerConfig, ArrayList<String> drivers, Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap){
+    // 构造函数
+    public SqlDatabasePool(DockerConfig dockerConfig,
+                           ArrayList<String> drivers,
+                           Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap) {
         this.drivers = drivers;
         this.sqlDatabaseMap = sqlDatabaseMap;
         this.dockerServers = dockerConfig.getDockerServers();
         this.maxRows = 500;
         ArrayList<String> servers = new ArrayList<>();
-        for(DockerServer dockerServer : dockerServers){
+        for (DockerServer dockerServer : dockerServers) {
             servers.add(dockerServer.id);
         }
         this.servers = servers;
     }
 
-    public SqlDatabasePool(DockerConfig dockerConfig, ArrayList<String> drivers){
+    // 构造函数
+    public SqlDatabasePool(DockerConfig dockerConfig, ArrayList<String> drivers) {
         this.drivers = drivers;
         this.sqlDatabaseMap = new HashMap<>();
         this.dockerServers = dockerConfig.getDockerServers();
         this.maxRows = 500;
         ArrayList<String> servers = new ArrayList<>();
-        for(DockerServer dockerServer : dockerServers){
+        for (DockerServer dockerServer : dockerServers) {
             servers.add(dockerServer.id);
         }
         this.servers = servers;
@@ -45,38 +49,39 @@ public class SqlDatabasePool {
 
     /**
      * 构造数据库实例表中某个schema的初始结构
+     *
      * @param schemaName
      * @return
      */
-    private ItemOfSqlDatabaseMap createItemOfMap(@NotNull String schemaName){
+    private ItemOfSqlDatabaseMap createItemOfMap(@NotNull String schemaName) {
         //create uuidv5 namespace
         UUID namespace = Generators.nameBasedGenerator(UUID.fromString(NAMESPACE_URL)).generate("sqlexercise");
         ItemOfSqlDatabaseMap inRoot = null;
-        if(!schemaName.isEmpty()){
+        if (!schemaName.isEmpty()) {
             inRoot = getItemOfMap("");
         }
         ItemOfSqlDatabaseMap inSchema = new ItemOfSqlDatabaseMap();
-        for(String driver: this.drivers){
+        for (String driver : this.drivers) {
             Map inDriver = new HashMap<String, ArrayList<SqlDatabase>>();
-            for(String server: this.servers){
+            for (String server : this.servers) {
                 ArrayList<SqlDatabase> inServer = new ArrayList<>();
-                for(DockerServer e: this.dockerServers){
-                    if(e.id.equals(server)){
-                        for(int i=0; i<e.container; i++){
+                for (DockerServer e : this.dockerServers) {
+                    if (e.id.equals(server)) {
+                        for (int i = 0; i < e.container; i++) {
                             SqlDatabaseConfig config = new SqlDatabaseConfig();
                             config.tags = new HashMap<>();
-                            config.tags.put("schemaName",schemaName);
+                            config.tags.put("schemaName", schemaName);
                             config.tags.put("driver", driver);
                             config.tags.put("server", server);
                             config.tags.put("index", i);
                             config.host = e.host;
-                            config.port = 3310+i;
+                            config.port = 3310 + i;
                             config.username = schemaName.isEmpty() ? "root" : "sqlexercise";
-                            config.password = Generators.nameBasedGenerator(namespace).generate(driver+"-"+server+"-"+i).toString();
+                            config.password = Generators.nameBasedGenerator(namespace).generate(driver + "-" + server + "-" + i).toString();
                             config.maxRows = this.maxRows;
 
                             SqlDatabase root = null;
-                            if(!schemaName.isEmpty()){
+                            if (!schemaName.isEmpty()) {
                                 root = inRoot.itemOfSqlDatabaseMap.get(driver).get(server).get(i);
                             }
                             inServer.add(new SqlDatabase(config, root));
@@ -94,12 +99,13 @@ public class SqlDatabasePool {
 
     /**
      * 获取数据库实例表中某个schema的结构
+     *
      * @param schemaName
      * @return
      */
-    private ItemOfSqlDatabaseMap getItemOfMap(String schemaName){
+    private ItemOfSqlDatabaseMap getItemOfMap(String schemaName) {
         // 若不存在某个 Schema 的结构，则先进行构造
-        if(!this.sqlDatabaseMap.containsKey(schemaName)){
+        if (!this.sqlDatabaseMap.containsKey(schemaName)) {
             // 此处先赋值为构造的异步任务，方法内部会再自动赋值为构造的结果
             this.sqlDatabaseMap.put(schemaName, createItemOfMap(schemaName));
         }
@@ -109,27 +115,29 @@ public class SqlDatabasePool {
 
     /**
      * 获取数据库实例
+     *
      * @param schemaName
      * @param driver
      * @param server
      * @param index
      * @return
      */
-    public SqlDatabase getSqlDatabase(String schemaName, String driver, String server, int index){
+    public SqlDatabase getSqlDatabase(String schemaName, String driver, String server, int index) {
         ItemOfSqlDatabaseMap item = getItemOfMap(schemaName);
         return item.itemOfSqlDatabaseMap.get(driver).get(server).get(index);
     }
 
     /**
      * 获取数据库实例列表
+     *
      * @param schemaName
      * @param driver
      * @return
      */
-    public ArrayList<SqlDatabase> getSqlDatabaseList(String schemaName, String driver){
+    public ArrayList<SqlDatabase> getSqlDatabaseList(String schemaName, String driver) {
         ItemOfSqlDatabaseMap item = getItemOfMap(schemaName);
         ArrayList<SqlDatabase> sqlDatabases = new ArrayList<>();
-        for(String server: this.servers){
+        for (String server : this.servers) {
             sqlDatabases.addAll(item.itemOfSqlDatabaseMap.get(driver).get(server));
         }
         return sqlDatabases;
@@ -138,16 +146,17 @@ public class SqlDatabasePool {
     /**
      * 从可用数据库实例中选择一个
      * 选择基于Round Robin
+     *
      * @param schemaName
      * @param driver
      * @return
      */
-    public SqlDatabase pickSqlDatabase(String schemaName, String driver){
+    public SqlDatabase pickSqlDatabase(String schemaName, String driver) {
         SqlDatabase sqlDatabase = null;
         ArrayList<SqlDatabase> sqlDatabases = getSqlDatabaseList(schemaName, driver);
         int length = sqlDatabases.size();
-        while (sqlDatabase==null || sqlDatabase.lockedQueries > 0){
-            if(sqlDatabase!=null){
+        while (sqlDatabase == null || sqlDatabase.lockedQueries > 0) {
+            if (sqlDatabase != null) {
                 sqlDatabase.unlock();
             }
             sqlDatabase = sqlDatabases.get(this.count % length);

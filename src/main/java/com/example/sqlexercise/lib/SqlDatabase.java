@@ -3,6 +3,7 @@ package com.example.sqlexercise.lib;
 import com.example.sqlexercise.driver.Client;
 import com.example.sqlexercise.driver.MysqlClient;
 import com.mysql.cj.jdbc.Driver;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
@@ -11,6 +12,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j(topic = "com.example.sqlexercise.lib.SqlDatabase")
 public class SqlDatabase {
 
     private String id;
@@ -23,9 +25,9 @@ public class SqlDatabase {
     public int consecutiveErrors;
     public int lockedQueries;
 
-    public SqlDatabase(@NotNull SqlDatabaseConfig config, SqlDatabase root){
+    public SqlDatabase(@NotNull SqlDatabaseConfig config, SqlDatabase root) {
         this.id = UUID.randomUUID().toString();
-        this.name = config.tags.get("schemaName").toString()+"-"+config.tags.get("driver").toString()+"-"+config.tags.get("server").toString()+"-"+config.tags.get("index").toString();
+        this.name = config.tags.get("schemaName").toString() + "-" + config.tags.get("driver").toString() + "-" + config.tags.get("server").toString() + "-" + config.tags.get("index").toString();
         this.root = root;
         this.config = config;
         this.consecutiveErrors = 0;
@@ -36,9 +38,9 @@ public class SqlDatabase {
 
     }
 
-    public SqlDatabase(@NotNull SqlDatabaseConfig config){
+    public SqlDatabase(@NotNull SqlDatabaseConfig config) {
         this.id = UUID.randomUUID().toString();
-        this.name = config.tags.get("schemaName").toString()+"-"+config.tags.get("driver").toString()+"-"+config.tags.get("server").toString()+"-"+config.tags.get("index").toString();
+        this.name = config.tags.get("schemaName").toString() + "-" + config.tags.get("driver").toString() + "-" + config.tags.get("server").toString() + "-" + config.tags.get("index").toString();
         this.config = config;
         this.consecutiveErrors = 0;
         this.lockedQueries = 0;
@@ -47,21 +49,21 @@ public class SqlDatabase {
         this.client = null;
     }
 
-    private int lock(){
+    private int lock() {
         int errors = this.consecutiveErrors;
         this.lockedQueries = errors * errors;
         return this.lockedQueries;
     }
 
-    public int unlock(){
-        if(this.lockedQueries>0){
+    public int unlock() {
+        if (this.lockedQueries > 0) {
             this.lockedQueries--;
         }
         return this.lockedQueries;
     }
 
-    private void startTimer(){
-        if(this.timer==null) {
+    private void startTimer() {
+        if (this.timer == null) {
             this.timer = new Timer();
             TimerTask task = new TimerTask() {
                 @Override
@@ -73,80 +75,80 @@ public class SqlDatabase {
         }
     }
 
-    private void stopTimer(){
-        if(this.timer != null){
+    private void stopTimer() {
+        if (this.timer != null) {
             this.timer.cancel();
             this.timer = null;
         }
     }
 
-    public boolean isConnected(){
-        if(this.client==null){
+    public boolean isConnected() {
+        if (this.client == null) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
 
-    private void disconnect(){
-        if(!isConnected()){
+    private void disconnect() {
+        if (!isConnected()) {
             return;
         }
         try {
             this.client.destroy();
-            System.out.println("Database disconnected");
-        }catch (Exception e){
+            log.info("Database disconnected");
+        } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Failed to disconnect");
+            log.info("Failed to disconnect");
         }
         this.client = null;
         this.stopTimer();
     }
 
-    public void connect(String testText, int maxRetryTimes){
-        if (isConnected()){
+    public void connect(String testText, int maxRetryTimes) {
+        if (isConnected()) {
             return;
         }
-        for(int i=1; i<= maxRetryTimes; i++){
+        for (int i = 1; i <= maxRetryTimes; i++) {
             try {
                 if (i == 1) {
-                    System.out.println("Try to connect....");
+                    log.info("Try to connect....");
                     if (this.driver.equals("mysql")) {
                         this.client = new MysqlClient();
                     }
                     this.client.init(this.config);
                     startTimer();
                 } else {
-                    System.out.println("Retry to connect in " + 2 * i + " seconds...");
+                    log.info("Retry to connect in " + 2 * i + " seconds...");
                     try {
                         TimeUnit.SECONDS.sleep(2 * i);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-                if(testText!=null){
+                if (testText != null) {
                     runQuery(testText);
                 }
-                System.out.println("Database connected");
+                log.info("Database connected");
                 return;
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("Fail to connect");
+                log.info("Fail to connect");
             }
         }
         this.client = null;
         stopTimer();
     }
 
-    private ResultOfTask runQuery(String sqlText){
+    private ResultOfTask runQuery(String sqlText) {
         stopTimer();
-        if(!isConnected()){
-            connect(null,1);
+        if (!isConnected()) {
+            connect(null, 1);
         }
         ResultOfTask result = this.client.runQuery(sqlText);
-        if(result.error!=null){
+        if (result.error != null) {
             this.consecutiveErrors++;
-        }else{
+        } else {
             this.consecutiveErrors = 0;
         }
         lock();
@@ -154,27 +156,27 @@ public class SqlDatabase {
         return result;
     }
 
-    public void pretask(String schemaConstructor){
-        if(schemaConstructor==null){
+    public void pretask(String schemaConstructor) {
+        if (schemaConstructor == null) {
             return;
         }
-        if(!isConnected()){
-            connect(null,1);
+        if (!isConnected()) {
+            connect(null, 1);
         }
         String sqlText = this.client.getSchemaSql(this.config.tags.get("schemaName").toString());
         ResultOfTask result = this.root.runQuery(sqlText);
-        if(result.error!=null && result.sheet.size()==0){
+        if (result.error != null && result.sheet.size() == 0) {
             sqlText = this.client.initSchemaSql(this.config.tags.get("schemaName").toString()) + schemaConstructor;
             this.root.createTable(sqlText);
         }
     }
 
-    public ResultOfTask task(String sqlText, int maxRetryTimes){
-        for(int i=1; i<=maxRetryTimes; i++){
-            if(i==1){
-                System.out.println("Try to execute SQL task");
-            }else{
-                System.out.println("Retry to execute SQL task in "+2*i+" seconds");
+    public ResultOfTask task(String sqlText, int maxRetryTimes) {
+        for (int i = 1; i <= maxRetryTimes; i++) {
+            if (i == 1) {
+                log.info("Try to execute SQL task");
+            } else {
+                log.info("Retry to execute SQL task in " + 2 * i + " seconds");
                 try {
                     TimeUnit.SECONDS.sleep(2 * i);
                 } catch (InterruptedException e) {
@@ -182,19 +184,19 @@ public class SqlDatabase {
                 }
             }
             ResultOfTask result = this.runQuery(sqlText);
-            if(result.error==null || i>=maxRetryTimes){
+            if (result.error == null || i >= maxRetryTimes) {
                 return result;
             }
         }
         return null;
     }
 
-    public void createUser(String sqlText, int maxRetryTimes){
-        for(int i=1; i<=maxRetryTimes; i++){
-            if(i==1){
-                System.out.println("Try to execute Mysql createUser task");
-            }else{
-                System.out.println("Retry to execute Mysql createUser task in "+2*i+" seconds");
+    public void createUser(String sqlText, int maxRetryTimes) {
+        for (int i = 1; i <= maxRetryTimes; i++) {
+            if (i == 1) {
+                log.info("Try to execute Mysql createUser task");
+            } else {
+                log.info("Retry to execute Mysql createUser task in " + 2 * i + " seconds");
                 try {
                     TimeUnit.SECONDS.sleep(2 * i);
                 } catch (InterruptedException e) {
@@ -202,24 +204,24 @@ public class SqlDatabase {
                 }
             }
             boolean result = this.runCreate(sqlText);
-            if(result){
-                System.out.println("create new user successfully!");
+            if (result) {
+                log.info("create new user successfully!");
             }
-            if(result || i>=maxRetryTimes){
+            if (result || i >= maxRetryTimes) {
                 return;
             }
         }
     }
 
-    private boolean runCreate(String sqlText){
+    private boolean runCreate(String sqlText) {
         stopTimer();
-        if(!isConnected()){
-            connect(null,1);
+        if (!isConnected()) {
+            connect(null, 1);
         }
         boolean result = this.client.createUser(sqlText);
-        if(result){
+        if (result) {
             this.consecutiveErrors = 0;
-        }else{
+        } else {
             this.consecutiveErrors++;
         }
         lock();
@@ -227,24 +229,24 @@ public class SqlDatabase {
         return result;
     }
 
-    private void createTable(String sqlText){
+    private void createTable(String sqlText) {
         stopTimer();
-        if(!isConnected()){
-            connect(null,1);
+        if (!isConnected()) {
+            connect(null, 1);
         }
         this.client.createTable(sqlText);
         lock();
         startTimer();
     }
 
-    public void posttask(){
+    public void posttask() {
         //TODO sql任务执行完毕后的处理，支持非查询语句时需要用
     }
 
-    public void testConnect(){
+    public void testConnect() {
         try {
             Driver driver = new com.mysql.cj.jdbc.Driver();
-            System.out.println("正在连接远端mysql数据库.....");
+            log.info("正在连接远端mysql数据库.....");
             //77d3bc2d-d446-5b79-b64e-95cfa00dfd5c
             String url = "jdbc:mysql://localhost:3306/sqlexam?useUnicode=true&useJDBCComliantTimezoneShift=true&serverTimezone=UTC&characterEncoding=utf8";
             Properties info = new Properties();
@@ -255,17 +257,17 @@ public class SqlDatabase {
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(sql);
             int columnCount = rs.getMetaData().getColumnCount();
-            while(rs.next()) {
-                for(int i=1;i<=columnCount;i++){
-                    System.out.print(rs.getString(i)+" ");
+            while (rs.next()) {
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.print(rs.getString(i) + " ");
                 }
                 System.out.println();
             }
             rs.close();
             statement.close();
             connection.close();
-            System.out.println("数据库连接已关闭");
-        }catch(Exception e){
+            log.info("数据库连接已关闭");
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

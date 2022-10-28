@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
         if(!rightCode.equals(userVO.getCode())){
             return ResponseVO.failure("验证码错误！");
         }
-        if (!userVO.getPassword().equals(userVO.getPasswordComfirmation())) {
+        if (!userVO.getPassword().equals(userVO.getPasswordConfirmation())) {
             return ResponseVO.failure("两次输入的密码不一致！");
         }
         if (userMapper.findOneByEmail(email)!=null){
