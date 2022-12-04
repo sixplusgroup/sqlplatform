@@ -259,7 +259,7 @@ export default {
             name: this.form.getFieldValue('registerUsername'),
             code: this.form.getFieldValue('registerCode'),
             password: this.form.getFieldValue('registerPassword'),
-            passwordComfirmation: this.form.getFieldValue('registerPasswordconfirm'),
+            passwordConfirmation: this.form.getFieldValue('registerPasswordconfirm'),
           };
           await this.register(data).then(() => {
             // this.customActiveKey = 'tab1';

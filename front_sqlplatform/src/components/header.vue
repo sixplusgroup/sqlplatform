@@ -109,7 +109,7 @@ export default {
   /*justify-content: space-between;*/
   min-width: 100%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
-  margin-bottom: 1px;
+  /*margin-bottom: 1px;*/
 }
 
 .mytitle {
@@ -148,8 +148,8 @@ export default {
 }
 
 .myLogo {
-  height: 40px;
-  width: 40px;
+  height: 20px;
+  width: 20px;
   /*filter:Invert();*/
   margin: 10px;
 }

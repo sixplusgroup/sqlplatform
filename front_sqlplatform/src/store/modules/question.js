@@ -3,22 +3,25 @@ import router from '@/router'
 import {resetRouter} from '@/router'
 import {message} from 'ant-design-vue'
 
-import {
-  loginAPI,
-  sendCodeAPI,
-  registerAPI
-} from '../../api/user'
-
-import {getMainQuestionAPI,getSubQuestionsAPI} from "../../api/question";
+import {getMainQuestionAPI,getSubQuestionsAPI,
+  getQuestionListAPI
+} from "../../api/question";
 
 const question = {
   state: {
-    mainQuestion: {},
-    subQuestions: {}
+    mainQuestion: '',
+    subQuestions: {},
+    questionList:{}
   },
   mutations: {
     set_mainQuestion: (state, data) => {
-      state.mainQuestion = "## "+data.title+"\n"+data.desc;
+      state.mainQuestion = "## "+data.title+"\n"+data.description;
+    },
+    set_subQuestions: (state, data) => {
+      state.subQuestions = data;
+    },
+    set_questionList: (state, data) => {
+      state.questionList = data;
     },
   },
   actions: {
@@ -28,6 +31,14 @@ const question = {
 
       if (res1) {
         commit('set_mainQuestion', res1.obj)
+        commit('set_subQuestions',res2.obj)
+      }
+    },
+    getQuestionList: async ({commit}, queryParam) => {
+      const res = await getQuestionListAPI(queryParam)
+      // console.log(res)
+      if (res) {
+        commit('set_questionList', res.obj)
       }
     },
 

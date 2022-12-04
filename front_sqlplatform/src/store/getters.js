@@ -7,6 +7,8 @@ const getters = {
 
   mainQuestion: state => state.question.mainQuestion,
   subQuestions: state => state.question.subQuestions,
+  questionList: state => state.question.questionList,
+
 
 };
 

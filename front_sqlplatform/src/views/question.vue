@@ -10,39 +10,24 @@
   <div class="mid">
     <div class="subQuestion">
       <a-tabs v-model:activeKey="activeKey" style="text-align: left">
-        <a-tab-pane key="1" tab="问题 1">Content of Tab Pane 1
+        <a-tab-pane :key="index"  v-for="(item,index) in subQuestions" :tab="'问题' + (index+1)">
+          <div
+            style="padding: 1em"
+          >{{ item.description }}</div>
           <div style="background-color: rgb(247,247,247);padding: 5px;margin-top: 1em "></div>
           <div class="commonEditor">
-
             <CommonEditor
               :value="codeSnippets"
               language="sql"
               @input="changeTextarea"
-              style="height: 70vh"
+              style="height: 50vh"
             ></CommonEditor>
           </div>
+
           <div class="footbar">
             <a-button shape="round"> 运行</a-button>
             <a-button shape="round"> 保存</a-button>
-            <a-button shape="round" color="green"> 提交</a-button>
-          </div>
-
-        </a-tab-pane>
-        <a-tab-pane key="2" tab="问题 2" >Content of Tab Pane 2
-          <div style="background-color: rgb(247,247,247);padding: 5px;margin-top: 1em "></div>
-          <div class="commonEditor">
-
-            <CommonEditor
-              :value="codeSnippets"
-              language="sql"
-              @input="changeTextarea"
-              style="height: 70vh"
-            ></CommonEditor>
-          </div>
-          <div class="footbar">
-            <a-button shape="round"> 运行</a-button>
-            <a-button shape="round"> 保存</a-button>
-            <a-button shape="round" color="green"> 提交</a-button>
+            <a-button shape="round"> 提交</a-button>
           </div>
 
         </a-tab-pane>
@@ -67,7 +52,7 @@ export default {
   data() {
     return {
       codeSnippets: 'SELECT * FROM ',
-      activeKey: ref('1'),
+      activeKey: ref(0),
     }
   },
   mounted() {
