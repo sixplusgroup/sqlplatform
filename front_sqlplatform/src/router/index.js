@@ -1,9 +1,13 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../views/login.vue'
+
+// import Layout from '../views/layout.vue'
 import App from "../App";
 
 import exerciseList from '../views/exerciseList.vue'
+
+import question from '../views/question.vue'
 import HelloWorld from '@/components/HelloWorld'
 
 import Qs from 'qs';
@@ -25,12 +29,17 @@ const routes = [
       path: '/',
       name: 'NJUSE',
       redirect: '/exerciseList',
-      component: App,
+      component: () => import('../views/layout'),
       children :[
         {
           path: '/exerciseList',
           name: 'exerciseList',
           component: exerciseList
+        },
+        {
+          path: '/question/:mainId',
+          name: 'question',
+          component: question
         },
       ]
     }

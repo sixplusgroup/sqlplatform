@@ -14,7 +14,9 @@ const user = {
   state: {
     userId: '',
     token: '',
-    userInfo: {}
+    userInfo: {
+      username: "未登录"
+    }
   },
   mutations: {
     reset_state: function (state) {
@@ -25,6 +27,9 @@ const user = {
     set_userId: (state, data) => {
       state.userId = data
     },
+    set_userInfo: (state, data) => {
+      state.userInfo.username = data.name;
+    },
 
   },
   actions: {
@@ -32,13 +37,15 @@ const user = {
       const res = await loginAPI(userData)
       console.log(res)
       if (res) {
-        setToken(res.id)
+        message.success("登录成功")
+        setToken(res.obj.id)
         // setSecretToken(res.token)
-        localStorage.setItem("token", res.token)
-        commit('set_userId', res.id)
+        localStorage.setItem("token", res.obj.id)
+        commit('set_userId', res.obj.id)
+        commit('set_userInfo', res.obj)
         // dispatch('getUserInfo')
         router.push('/')
-        message.success("登录成功")
+
       } else {
         message.error('用户名或密码错误！')
       }
