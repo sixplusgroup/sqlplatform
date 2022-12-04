@@ -18,13 +18,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j(topic = "com.example.sqlexercise.lib.DockerServer")
 @Getter
 public class DockerServer {
-    String id;
-    String host;
-    int port;
-    String protocol;
-    String certPath;
-    int container;
-    DockerClient client;
+    private String id;
+    private String host;
+    private int port;
+    private String protocol;
+    private String certPath;
+    private int container;
+    private DockerClient client;
 
     public DockerServer(String id, String host, int port, String protocol, String certPath, int container) {
         this.id = id;
@@ -38,27 +38,22 @@ public class DockerServer {
 
     public void connectDocker() {
         this.client = DockerClientBuilder.getInstance(this.protocol + "://" + this.host + ":" + this.port).build();
-        //Info info = dockerClient.infoCmd().exec();
-        //String infoStr = JSONObject.toJSONString(info);
         log.info("Docker " + this.host + " 已连接！");
-        //System.out.println(infoStr);
     }
 
-    public List<Image> getDockerImageByReference(String reference) throws NullPointerException {
+    public Image getDockerImageByReference(String reference) throws NullPointerException {
         if (this.client == null) {
             throw new NullPointerException("还未连接Docker");
         }
         List<Image> images = this.client.listImagesCmd().exec();
-        List<Image> result = new ArrayList<>();
         for (Image image : images) {
             for (String tag : image.getRepoTags()) {
                 if (tag.equals(reference)) {
-                    result.add(image);
-                    break;
+                    return image;
                 }
             }
         }
-        return result;
+        return null;
     }
 
     public void pullImageByRepository(String repository, String tag) {
@@ -95,7 +90,11 @@ public class DockerServer {
         CreateContainerResponse response = this.client.createContainerCmd("mysql:5.7").withName(name)
                 .withHostConfig(hostConfig)
                 .withEnv("MYSQL_ROOT_PASSWORD=" + password).withCmd(cmd).exec();
-        log.info("Container " + response.getId() + " is created successfully!");
+        log.info(name + " container " + response.getId() + " is created successfully!");
+    }
+
+    public void createDockerContainerForRedis(String name, String password, int port) {
+        // TODO 创建redis容器
     }
 
     public void startDockerContainer(String containerName) {

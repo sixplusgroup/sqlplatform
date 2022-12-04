@@ -10,8 +10,8 @@ import java.util.ArrayList;
 @Slf4j(topic = "com.example.sqlexercise.lib.SqlServer")
 public class SqlServer {
 
-    String hostName;
-    ArrayList<String> occupiedPort;
+    private String hostName;
+    private ArrayList<String> occupiedPort;
 
     public SqlServer() {
         this.hostName = "localhost";
@@ -29,11 +29,8 @@ public class SqlServer {
      * 当 autoRelease 为 false 时，查找到的端口不会自动解锁，需要手动释放
      * 检测范围为 portFrom 到 portTo
      *
-     * @param {boolean} autoRelease
-     * @param {int}     portFrom
-     * @param {int}     [portTo]
-     * @throws {Error} 如果在 portFrom 和 portTo 之间没有可用端口，则抛出异常
-     * @returns {Promise<int>} 可用端口
+     * @throws Exception 如果在 portFrom 和 portTo 之间没有可用端口，则抛出异常
+     * @returns 可用端口
      */
     public int detectServerPort(boolean autoRelease, int portFrom, int portTo) throws Exception {
         for (int port = portFrom; port <= portTo; port++) {

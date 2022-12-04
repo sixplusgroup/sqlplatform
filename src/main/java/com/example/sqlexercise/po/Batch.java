@@ -8,10 +8,16 @@ import java.util.Date;
 public class Batch {
 
     String id;
+
     String batch_text;
+
     String user_id;
+
     Date created_at;
+
     Date updated_at;
+
     int main_id;
+
     int sub_id;
 }

@@ -6,14 +6,22 @@ import java.util.Date;
 
 @Data
 public class MainQuestion {
-    int id;
-    String title;
-    String desc;
-    String dbPath;
-    String fileName;
-    Date createdAt;
-    Date updatedAt;
-    int totalDifficulty;
-    int subCount;
 
+    Integer id;
+
+    String title;
+
+    String description;
+
+    String dbPath;
+
+    String fileName;
+
+    Date createdAt;
+
+    Date updatedAt;
+
+    int totalDifficulty;
+
+    int subCount;
 }

@@ -23,8 +23,14 @@ public class QuestionController {
         return ResponseVO.success(questionService.getMainQuestionByMainId(mainId));
     }
 
-    @GetMapping("/api/question/getSubQuestion/{subId}")
-    public ResponseVO getSubQuestion(@PathVariable("subId") int subId){
-        return ResponseVO.success(questionService.getSubQuestionBySubId(subId));
+    @GetMapping("/api/question/getSubQuestion/{mainId}")
+    public ResponseVO getSubQuestion(@PathVariable("mainId") int mainId){
+        return ResponseVO.success(questionService.getSubQuestionByMainId(mainId));
     }
+
+    @GetMapping("/api/question/get_main_question_by_page")
+    public ResponseVO getMainQuestionsByPage(Integer page, Integer pageSize) {
+        return ResponseVO.success(questionService.getMainQuestionsByPage(page, pageSize));
+    }
+
 }

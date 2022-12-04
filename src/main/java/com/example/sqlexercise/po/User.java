@@ -11,7 +11,7 @@ public class User {
     String role;
     String name;
     Boolean disabled;
-    String passhash;
+    String passwordHash;
     Date createdAt;
     Date updatedAt;
 }

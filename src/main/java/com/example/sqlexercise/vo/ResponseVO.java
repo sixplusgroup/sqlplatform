@@ -28,6 +28,6 @@ public class ResponseVO {
     }
 
     public static ResponseVO success(Object obj) {
-        return new ResponseVO("failure", obj);
+        return new ResponseVO("success", obj);
     }
 }

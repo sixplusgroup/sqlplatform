@@ -5,11 +5,13 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Mapper
 @Repository
 public interface SubQuestionMapper {
 
-    SubQuestion getBySubId(@Param("subId") int subId);
+    List<SubQuestion> selectByMainId(@Param("mainId") int mainId);
 
-
+    SubQuestion selectBySubId(@Param("subId") int subId);
 }

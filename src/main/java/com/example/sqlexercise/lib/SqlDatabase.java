@@ -65,6 +65,7 @@ public class SqlDatabase {
     private void startTimer() {
         if (this.timer == null) {
             this.timer = new Timer();
+            // 启动定时任务，3min后断开连接
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
@@ -83,11 +84,7 @@ public class SqlDatabase {
     }
 
     public boolean isConnected() {
-        if (this.client == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return this.client != null;
     }
 
     private void disconnect() {
@@ -109,6 +106,7 @@ public class SqlDatabase {
         if (isConnected()) {
             return;
         }
+        // 重复尝试连接
         for (int i = 1; i <= maxRetryTimes; i++) {
             try {
                 if (i == 1) {
@@ -253,7 +251,7 @@ public class SqlDatabase {
             info.put("user", "root");
             info.put("password", "123456");
             Connection connection = driver.connect(url, info);
-            String sql = "select b.* from batches b";
+            String sql = "select b.* from batch b";
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(sql);
             int columnCount = rs.getMetaData().getColumnCount();

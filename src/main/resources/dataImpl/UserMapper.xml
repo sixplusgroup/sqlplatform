@@ -2,26 +2,38 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.sqlexercise.data.UserMapper">
 
-    <select id="findOneById" resultMap="User">
-        select * from users where id=#{id}
+    <resultMap id="User" type="com.example.sqlexercise.po.User">
+        <id column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="email" jdbcType="VARCHAR" property="email"/>
+        <result column="role" jdbcType="VARCHAR" property="role"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="passwordHash" jdbcType="VARCHAR" property="passwordHash"/>
+        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"/>
+        <result column="disabled" jdbcType="TINYINT" javaType="BOOLEAN" property="disabled"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="User">
+        select *
+        from users
+        where id = #{id}
     </select>
 
-    <select id="findOneByEmail" resultMap="User">
-        select * from users where email=#{email}
+    <select id="selectByEmail" resultMap="User">
+        select *
+        from users
+        where email = #{email}
     </select>
 
-    <insert id="create" parameterType="com.example.sqlexercise.po.User" useGeneratedKeys="false" >
-        insert into users values (#{id},#{email},#{role},#{name},#{passhash},#{createdAt},#{updatedAt},#{disabled})
+    <delete id="deleteById">
+        delete
+        from users
+        where id = #{id}
+    </delete>
+
+    <insert id="insert" parameterType="com.example.sqlexercise.po.User" useGeneratedKeys="false">
+        insert into users
+        values (#{id}, #{email}, #{role}, #{name}, #{passhash}, #{createdAt}, #{updatedAt}, #{disabled})
     </insert>
 
-    <resultMap id="User" type="com.example.sqlexercise.po.User">
-        <id column="id" jdbcType="VARCHAR" property="id"></id>
-        <result column="email" jdbcType="VARCHAR" property="email"></result>
-        <result column="role" jdbcType="VARCHAR" property="role"></result>
-        <result column="name" jdbcType="VARCHAR" property="name"></result>
-        <result column="passhash" jdbcType="VARCHAR" property="passhash"></result>
-        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"></result>
-        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"></result>
-        <result column="disabled" jdbcType="TINYINT" javaType="BOOLEAN" property="disabled"></result>
-    </resultMap>
 </mapper>

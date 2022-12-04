@@ -6,12 +6,20 @@ import java.util.Date;
 
 @Data
 public class PassRecord {
-    int id;
+
+    Integer id;
+
     String userId;
+
     int mainId;
+
     int subId;
+
     String batchId;
+
     int point;
+
     Date createdAt;
+
     Date updatedAt;
 }

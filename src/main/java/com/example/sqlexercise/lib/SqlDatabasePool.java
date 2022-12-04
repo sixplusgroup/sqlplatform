@@ -10,18 +10,17 @@ import java.util.*;
 @Scope("singleton")
 public class SqlDatabasePool {
 
-    int count;
-    ArrayList<String> drivers;
-    Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap;
-    int maxRows;
-    ArrayList<DockerServer> dockerServers;
-    ArrayList<String> servers;  // 存dockerServers中各dockerServer的id
+    private int count;
+    private ArrayList<String> drivers;
+    private Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap;
+    private int maxRows;
+    private ArrayList<DockerServer> dockerServers;
+    private ArrayList<String> servers;  // 存dockerServers中各dockerServer的id
 
     private final String NAMESPACE_URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
 
     // 构造函数
-    public SqlDatabasePool(DockerConfig dockerConfig,
-                           ArrayList<String> drivers,
+    public SqlDatabasePool(DockerConfig dockerConfig, ArrayList<String> drivers,
                            Map<String, ItemOfSqlDatabaseMap> sqlDatabaseMap) {
         this.drivers = drivers;
         this.sqlDatabaseMap = sqlDatabaseMap;
@@ -29,7 +28,7 @@ public class SqlDatabasePool {
         this.maxRows = 500;
         ArrayList<String> servers = new ArrayList<>();
         for (DockerServer dockerServer : dockerServers) {
-            servers.add(dockerServer.id);
+            servers.add(dockerServer.getId());
         }
         this.servers = servers;
     }
@@ -42,7 +41,7 @@ public class SqlDatabasePool {
         this.maxRows = 500;
         ArrayList<String> servers = new ArrayList<>();
         for (DockerServer dockerServer : dockerServers) {
-            servers.add(dockerServer.id);
+            servers.add(dockerServer.getId());
         }
         this.servers = servers;
     }
@@ -66,15 +65,15 @@ public class SqlDatabasePool {
             for (String server : this.servers) {
                 ArrayList<SqlDatabase> inServer = new ArrayList<>();
                 for (DockerServer e : this.dockerServers) {
-                    if (e.id.equals(server)) {
-                        for (int i = 0; i < e.container; i++) {
+                    if (e.getId().equals(server)) {
+                        for (int i = 0; i < e.getContainer(); i++) {
                             SqlDatabaseConfig config = new SqlDatabaseConfig();
                             config.tags = new HashMap<>();
                             config.tags.put("schemaName", schemaName);
                             config.tags.put("driver", driver);
                             config.tags.put("server", server);
                             config.tags.put("index", i);
-                            config.host = e.host;
+                            config.host = e.getHost();
                             config.port = 3310 + i;
                             config.username = schemaName.isEmpty() ? "root" : "sqlexercise";
                             config.password = Generators.nameBasedGenerator(namespace).generate(driver + "-" + server + "-" + i).toString();
