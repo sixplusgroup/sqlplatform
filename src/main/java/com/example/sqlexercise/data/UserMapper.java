@@ -9,11 +9,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserMapper {
 
-    User findOneById(@Param("id") String id);
+    User selectById(@Param("id") String id);
 
-    User findOneByEmail(@Param("email") String email);
+    User selectByEmail(@Param("email") String email);
 
-    void removeById(String id);
+    void deleteById(@Param("id") String id);
 
-    int create(User user);
+    int insert(User user);
 }

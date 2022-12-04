@@ -1,53 +1,33 @@
 package com.example.sqlexercise.vo;
 
+import lombok.Data;
+
+@Data
 public class ResponseVO {
-    String res;
-    String msg;
-    Object obj;
 
-    public String getRes() {
-        return res;
-    }
+    private String res;
+    private String msg;
+    private Object obj;
 
-    public void setRes(String res) {
+    public ResponseVO(String res, String msg) {
         this.res = res;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public void setMsg(String msg) {
         this.msg = msg;
     }
 
-    public Object getObj() {
-        return obj;
-    }
-
-    public void setObj(Object obj) {
+    public ResponseVO(String res, Object obj) {
+        this.res = res;
         this.obj = obj;
     }
 
-
     public static ResponseVO success(String msg) {
-        ResponseVO responseVO = new ResponseVO();
-        responseVO.setRes("success");
-        responseVO.setMsg(msg);
-        return responseVO;
+        return new ResponseVO("success", msg);
     }
 
     public static ResponseVO failure(String msg) {
-        ResponseVO responseVO = new ResponseVO();
-        responseVO.setRes("failure");
-        responseVO.setMsg(msg);
-        return responseVO;
+        return new ResponseVO("failure", msg);
     }
 
     public static ResponseVO success(Object obj) {
-        ResponseVO responseVO = new ResponseVO();
-        responseVO.setRes("success");
-        responseVO.setObj(obj);
-        return responseVO;
+        return new ResponseVO("success", obj);
     }
 }

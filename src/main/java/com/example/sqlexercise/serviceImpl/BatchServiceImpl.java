@@ -22,17 +22,19 @@ import java.util.*;
 public class BatchServiceImpl implements BatchService {
 
     private final SqlDatabaseServiceImpl sqlDatabaseService;
-    private final BatchMapper batchMapper;
     private final boolean useMessageQueue;
-    private final PassRecordMapper passRecordMapper;
     private final ScoreService scoreService;
     private final AnswerSetMapper answerSetMapper;
+    private PassRecordMapper passRecordMapper;
+    private BatchMapper batchMapper;
 
     @Autowired
-    public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, BatchMapper batchMapper, PassRecordMapper passRecordMapper, ScoreService scoreService, AnswerSetMapper answerSetMapper) {
+    public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
+                            AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
+                            BatchMapper batchMapper) {
         this.sqlDatabaseService = sqlDatabaseService;
-        this.batchMapper = batchMapper;
         this.passRecordMapper = passRecordMapper;
+        this.batchMapper = batchMapper;
         this.scoreService = scoreService;
         this.answerSetMapper = answerSetMapper;
         this.useMessageQueue = false;
@@ -61,14 +63,14 @@ public class BatchServiceImpl implements BatchService {
         batch.setCreated_at(now);
         batch.setUpdated_at(now);
         batch.setId(UUID.randomUUID().toString());
-        batchMapper.create(batch);
+        batchMapper.insert(batch);
         executeBatch(batch ,batch.getMain_id(),batch.getSub_id(),driver,batchVO.getBatch_text());
         return ResponseVO.success("batch is running! batchID is "+batch.getId());
     }
 
     @Override
     public Batch getBatch(String batchId) {
-        return batchMapper.getById(batchId);
+        return batchMapper.selectById(batchId);
     }
 
     private void executeBatch(Batch batch, int main_id, int sub_id, String driver, String sqlText){
@@ -87,7 +89,7 @@ public class BatchServiceImpl implements BatchService {
             passRecord.setCreatedAt(new Date());
             passRecord.setUpdatedAt(new Date());
             passRecord.setPoint(100);
-            passRecordMapper.create(passRecord);
+            passRecordMapper.insert(passRecord);
             System.out.println(batch.getId()+" passed!");
             // 如果静态分析得到的评分非满分，需要将其加入答案集
             GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);

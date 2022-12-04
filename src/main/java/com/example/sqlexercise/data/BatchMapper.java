@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 @Mapper
 public interface BatchMapper {
 
-    void create(Batch batch);
+    void insert(Batch batch);
 
-    Batch getById(@Param("id") String id);
+    Batch selectById(@Param("id") String id);
 
 }

@@ -16,8 +16,8 @@ import java.util.List;
 
 public class DockerUtils {
 
-    public DockerClient connectDocker(String protocol, String host, int port){
-        DockerClient dockerClient = DockerClientBuilder.getInstance(protocol+"://"+host+":"+port).build();
+    public DockerClient connectDocker(String protocol, String host, int port) {
+        DockerClient dockerClient = DockerClientBuilder.getInstance(protocol + "://" + host + ":" + port).build();
         //Info info = dockerClient.infoCmd().exec();
         //String infoStr = JSONObject.toJSONString(info);
         System.out.println("docker已连接！");
@@ -25,7 +25,7 @@ public class DockerUtils {
         return dockerClient;
     }
 
-    public CreateContainerResponse createContainers(DockerClient client, String containerName, String imageName){
+    public CreateContainerResponse createContainers(DockerClient client, String containerName, String imageName) {
         //映射端口8080->80
         ExposedPort tcp80 = ExposedPort.tcp(80);
         Ports portBindings = new Ports();
@@ -37,49 +37,49 @@ public class DockerUtils {
         return containerResponse;
     }
 
-    public LoadImageCmd loadImage(DockerClient client, String filePath){
+    public LoadImageCmd loadImage(DockerClient client, String filePath) {
         LoadImageCmd loadImageCmd = null;
-        try{
+        try {
             loadImageCmd = client.loadImageCmd(new FileInputStream(filePath));
-        }catch(FileNotFoundException e){
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         return loadImageCmd;
     }
 
-    public PullImageCmd pullImage(DockerClient client, String repository){
+    public PullImageCmd pullImage(DockerClient client, String repository) {
         PullImageCmd pullImageCmd = client.pullImageCmd(repository);
         return pullImageCmd;
     }
 
-    public ListImagesCmd listImages(DockerClient client){
+    public ListImagesCmd listImages(DockerClient client) {
         ListImagesCmd listImagesCmd = client.listImagesCmd();
         listImagesCmd.withShowAll(true).exec();
         return listImagesCmd;
     }
 
-    public void removeImage(DockerClient client, String imageId){
+    public void removeImage(DockerClient client, String imageId) {
         client.removeImageCmd(imageId).exec();
     }
 
     //containerId 也可以是containerName
-    public void removeContainer(DockerClient client, String containerId){
+    public void removeContainer(DockerClient client, String containerId) {
         client.removeContainerCmd(containerId).exec();
     }
 
     //containerId 也可以是containerName
-    public void startContainer(DockerClient client, String containerId){
+    public void startContainer(DockerClient client, String containerId) {
         client.startContainerCmd(containerId).exec();
     }
 
     //containerId 也可以是containerName
-    public void stopContainer(DockerClient client, String containerId){
+    public void stopContainer(DockerClient client, String containerId) {
         client.stopContainerCmd(containerId).exec();
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         DockerUtils dockerUtils = new DockerUtils();
-        DockerClient client = dockerUtils.connectDocker("tcp","localhost",2375);
+        DockerClient client = dockerUtils.connectDocker("tcp", "localhost", 2375);
         dockerUtils.startContainer(client, "common_configserver_1");
         System.out.println("successfully start container!");
     }

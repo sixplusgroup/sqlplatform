@@ -36,6 +36,11 @@ public class UserController {
         return userService.signIn(signVO);
     }
 
+    @GetMapping("/api/get_records")
+    public ResponseVO getRecords(Integer userId) {
+        return ResponseVO.success(userService.getRecords(userId));
+    }
+
     @PostMapping("/api/modifyinfo")
     public String modifyInfo(){
         return "1";
