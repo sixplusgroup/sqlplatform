@@ -33,7 +33,7 @@
 
     <insert id="insert" parameterType="com.example.sqlexercise.po.User" useGeneratedKeys="false">
         insert into users
-        values (#{id}, #{email}, #{role}, #{name}, #{passhash}, #{createdAt}, #{updatedAt}, #{disabled})
+        values (#{id}, #{email}, #{role}, #{name}, #{passwordHash}, #{createdAt}, #{updatedAt}, #{disabled})
     </insert>
 
 </mapper>
