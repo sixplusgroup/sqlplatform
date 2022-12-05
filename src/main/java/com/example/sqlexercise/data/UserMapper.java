@@ -16,4 +16,6 @@ public interface UserMapper {
     void deleteById(@Param("id") String id);
 
     int insert(User user);
+
+    int update(User user);
 }

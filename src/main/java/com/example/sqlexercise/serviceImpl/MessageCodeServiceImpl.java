@@ -44,7 +44,7 @@ public class MessageCodeServiceImpl implements MessageCodeService {
         Session session = Session.getDefaultInstance(properties, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("799580275@qq.com", "jobwdewvtwxbbcii");
+                return new PasswordAuthentication("auoy23@qq.com", "jobwdewvtwxbbcii");
             }
         });
         session.setDebug(true);//可以查看详细的发送Log
@@ -52,7 +52,7 @@ public class MessageCodeServiceImpl implements MessageCodeService {
         try {
             MimeMessage message = new MimeMessage(session);
             //From
-            message.setFrom(new InternetAddress("799580275@qq.com", "sqlexercise", "UTF-8"));
+            message.setFrom(new InternetAddress("auoy23@qq.com", "sqlexercise", "UTF-8"));
             //To
             message.setRecipient(MimeMessage.RecipientType.TO,
                     new InternetAddress(email, "sqlexercise 新用户", "UTF-8"));
@@ -74,7 +74,7 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             stringRedisTemplate.opsForValue().set(key, code, 3, TimeUnit.MINUTES);
 
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return ResponseVO.success("发送成功");
     }

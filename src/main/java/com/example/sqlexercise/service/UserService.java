@@ -14,4 +14,8 @@ public interface UserService {
     ResponseVO signIn(SignVO signVO);
 
     List<PassRecord> getRecords(Integer userId);
+
+    UserVO getUserInfo(String email);
+
+    ResponseVO modifyInfo(UserVO userVO);
 }

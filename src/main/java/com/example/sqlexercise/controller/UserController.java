@@ -41,8 +41,13 @@ public class UserController {
         return ResponseVO.success(userService.getRecords(userId));
     }
 
-    @PostMapping("/api/modifyinfo")
-    public String modifyInfo(){
-        return "1";
+    @PostMapping("/api/modify_info")
+    public ResponseVO modifyInfo(@RequestBody UserVO userVO) {
+        return userService.modifyInfo(userVO);
+    }
+
+    @GetMapping("/api/get_user_info")
+    public ResponseVO getUserInfo(String email) {
+        return ResponseVO.success(userService.getUserInfo(email));
     }
 }
