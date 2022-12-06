@@ -19,6 +19,7 @@ const question = {
     },
     set_subQuestions: (state, data) => {
       state.subQuestions = data;
+      console.log(data)
     },
     set_questionList: (state, data) => {
       state.questionList = data;

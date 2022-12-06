@@ -41,6 +41,7 @@ const user = {
         setToken(res.obj.id)
         // setSecretToken(res.token)
         localStorage.setItem("token", res.obj.id)
+        localStorage.setItem("userId", res.obj.id);
         commit('set_userId', res.obj.id)
         commit('set_userInfo', res.obj)
         // dispatch('getUserInfo')

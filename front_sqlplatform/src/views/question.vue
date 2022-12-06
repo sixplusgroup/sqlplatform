@@ -25,7 +25,7 @@
           </div>
 
           <div class="footbar">
-            <a-button shape="round"> 运行</a-button>
+            <a-button shape="round" @click="runCode(item)"> 运行</a-button>
             <a-button shape="round"> 保存</a-button>
             <a-button shape="round"> 提交</a-button>
           </div>
@@ -61,12 +61,12 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'mainQuestion','subQuestions'
+      'mainQuestion','subQuestions','userId','subQuestions'
     ])
   },
   methods: {
     ...mapActions([
-      'getQuestion'
+      'getQuestion','runTest'
     ]),
     dragControllerDiv () {
       var resize = document.getElementsByClassName('resize');
@@ -111,6 +111,15 @@ export default {
     },
     changeTextarea(val) {
       this.codeSnippets = val
+    },
+    runCode(item){
+      this.runTest({
+        batch_text: this.codeSnippets,
+        user_id: localStorage.getItem('userId'),
+        main_id: item.mainId,
+        sub_id: item.id,
+        driver: 'mysql'
+      })
     }
   }
 }

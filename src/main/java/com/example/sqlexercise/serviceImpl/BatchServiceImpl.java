@@ -65,7 +65,7 @@ public class BatchServiceImpl implements BatchService {
         batch.setId(UUID.randomUUID().toString());
         batchMapper.insert(batch);
         executeBatch(batch ,batch.getMain_id(),batch.getSub_id(),driver,batchVO.getBatch_text());
-        return ResponseVO.success("batch is running! batchID is "+batch.getId());
+        return ResponseVO.success(batch.getId());
     }
 
     @Override
