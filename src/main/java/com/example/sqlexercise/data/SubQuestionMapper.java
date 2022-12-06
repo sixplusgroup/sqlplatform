@@ -14,4 +14,6 @@ public interface SubQuestionMapper {
     List<SubQuestion> selectByMainId(@Param("mainId") int mainId);
 
     SubQuestion selectBySubId(@Param("subId") int subId);
+
+
 }

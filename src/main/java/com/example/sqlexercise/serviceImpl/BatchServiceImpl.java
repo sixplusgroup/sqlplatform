@@ -42,9 +42,9 @@ public class BatchServiceImpl implements BatchService {
 
     @Override
     public ResponseVO createBatch(BatchVO batchVO) {
-        if(useMessageQueue){
+        if (useMessageQueue) {
             return createBatchAsync(batchVO);
-        }else{
+        } else {
             return createBatchSync(batchVO);
         }
     }
@@ -73,14 +73,14 @@ public class BatchServiceImpl implements BatchService {
         return batchMapper.selectById(batchId);
     }
 
-    private void executeBatch(Batch batch, int main_id, int sub_id, String driver, String sqlText){
+    private void executeBatch(Batch batch, int main_id, int sub_id, String driver, String sqlText) {
         //现在的判分是先运行一次标准答案，然后与结果比对
         //TODO 引入redis对频繁使用的标准结果集进行多级缓存
         ResultOfTask answer = sqlDatabaseService.getStandardAnswer(sub_id, driver);
         Map options = new HashMap();
         options.put("skipPre", true);
         ResultOfTask queryResult = (ResultOfTask) sqlDatabaseService.runSqlTask(main_id, driver, sqlText, options);
-        if(isPass(queryResult, answer)){
+        if (isPass(queryResult, answer)) {
             PassRecord passRecord = new PassRecord();
             passRecord.setBatchId(batch.getId());
             passRecord.setMainId(main_id);
@@ -90,7 +90,7 @@ public class BatchServiceImpl implements BatchService {
             passRecord.setUpdatedAt(new Date());
             passRecord.setPoint(100);
             passRecordMapper.insert(passRecord);
-            System.out.println(batch.getId()+" passed!");
+            System.out.println(batch.getId() + " passed!");
             // 如果静态分析得到的评分非满分，需要将其加入答案集
             GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
             float score = scoreService.getScore(getScoreVO);
@@ -104,29 +104,28 @@ public class BatchServiceImpl implements BatchService {
                     stuAnswer.setCreatedAt(new Date());
                     stuAnswer.setUpdatedAt(new Date());
                     answerSetMapper.create(stuAnswer);
-                }
-                else if (ans.getState() == 1) {
+                } else if (ans.getState() == 1) {
                     stuAnswer.setUpdatedAt(new Date());
                     answerSetMapper.updateStatus(stuAnswer);
                 }
             }
-        }else{
-            System.out.println(batch.getId()+" didn't pass!");
+        } else {
+            System.out.println(batch.getId() + " didn't pass!");
         }
     }
 
     //针对标准结果集和sql运行得到的结果集进行打分
-    private boolean isPass(ResultOfTask queryResult, ResultOfTask standard){
+    private boolean isPass(ResultOfTask queryResult, ResultOfTask standard) {
         //首先确保运行不出错
-        if(queryResult.error!=null){
+        if (queryResult.error != null) {
             return false;
         }
         //先比较行数是否一致
-        if(queryResult.sheet.size()!=standard.sheet.size()){
+        if (queryResult.sheet.size() != standard.sheet.size()) {
             return false;
         }
         //再比较列数是否一致
-        if(queryResult.sheet.get(0).size()!=standard.sheet.get(0).size()){
+        if (queryResult.sheet.get(0).size() != standard.sheet.get(0).size()) {
             return false;
         }
         //逐行比较每一列
@@ -138,9 +137,9 @@ public class BatchServiceImpl implements BatchService {
         return true;
     }
 
-    private boolean compareRow(ArrayList<String> row, ArrayList<String> standard){
-        for(int k = 0; k<row.size(); k++){
-            if(!row.get(k).equals(standard.get(k))){
+    private boolean compareRow(ArrayList<String> row, ArrayList<String> standard) {
+        for (int k = 0; k < row.size(); k++) {
+            if (!row.get(k).equals(standard.get(k))) {
                 return false;
             }
         }

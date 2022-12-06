@@ -14,13 +14,13 @@
     </resultMap>
 
     <select id="selectById" resultMap="User">
-        select *
+        select name, role, email
         from users
         where id = #{id}
     </select>
 
     <select id="selectByEmail" resultMap="User">
-        select *
+        select name, role, email
         from users
         where email = #{email}
     </select>
@@ -35,5 +35,19 @@
         insert into users
         values (#{id}, #{email}, #{role}, #{name}, #{passwordHash}, #{createdAt}, #{updatedAt}, #{disabled})
     </insert>
+
+    <update id="update" parameterType="com.example.sqlexercise.po.User">
+        update users
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="passwordHash != null">
+                passwordHash = #{passwordHash},
+            </if>
+            updated_at = #{updatedAt}
+        </set>
+        where email = #{email}
+    </update>
 
 </mapper>

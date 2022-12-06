@@ -80,4 +80,36 @@ public class UserServiceImpl implements UserService {
     public List<PassRecord> getRecords(Integer userId) {
         return passRecordMapper.selectByUserId(userId);
     }
+
+    @Override
+    public UserVO getUserInfo(String email) {
+        User user = userMapper.selectByEmail(email);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
+    }
+
+    @Override
+    public ResponseVO modifyInfo(UserVO userVO) {
+        // 创建PO对象
+        User user = new User();
+        BeanUtils.copyProperties(userVO, user);
+        String password = userVO.getPassword();
+        if (password != null && !password.equals("")) {
+            user.setPasswordHash(PasswordHash.getPasswordHash(password));
+        }
+        String name = userVO.getName();
+        if (name != null && !name.equals("")) {
+            user.setName(name);
+        }
+        user.setUpdatedAt(new Date());
+
+        // 执行数据库更新操作
+        int res = userMapper.update(user);
+        if (res == 1) {
+            return ResponseVO.success("修改成功");
+        } else {
+            return ResponseVO.failure("修改失败");
+        }
+    }
 }
