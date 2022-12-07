@@ -14,13 +14,13 @@
     </resultMap>
 
     <select id="selectById" resultMap="User">
-        select name, role, email
+        select *
         from users
         where id = #{id}
     </select>
 
     <select id="selectByEmail" resultMap="User">
-        select name, role, email
+        select *
         from users
         where email = #{email}
     </select>

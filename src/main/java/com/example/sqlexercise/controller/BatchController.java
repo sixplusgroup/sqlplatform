@@ -18,13 +18,29 @@ public class BatchController {
         this.batchService = batchService;
     }
 
-    @PostMapping("/api/batch/create")
-    public ResponseVO createBatch(@RequestBody BatchVO batchVO){
+    /**
+     * 提交
+     *
+     * @return ResponseVO
+     */
+    @PostMapping("/api/batch/submit")
+    public ResponseVO submitBatch(@RequestBody BatchVO batchVO) {
         return batchService.createBatch(batchVO);
     }
 
+    /**
+     * 运行
+     *
+     * @return 返回单次运行结果给前端
+     */
+    @PostMapping("/api/batch/run")
+    public ResponseVO runBatch(@RequestBody BatchVO batchVO) {
+        return null;
+    }
+
     @GetMapping("/api/batch/get")
-    public ResponseVO getBatch(@RequestParam String batchId){
+    public ResponseVO getBatch(@RequestParam("batchId") String batchId) {
         return ResponseVO.success(batchService.getBatch(batchId));
     }
+
 }

@@ -15,5 +15,6 @@ public interface SubQuestionMapper {
 
     SubQuestion selectBySubId(@Param("subId") int subId);
 
+    Integer countTotal();
 
 }

@@ -56,8 +56,8 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // 配置远端服务器的Docker，初始化sql的运行环境，本地测试用本地数据库，先注释掉，不用docker
-//        createEnv(true);
+        // 配置远端服务器的Docker，初始化sql的运行环境
+        createEnv(true);
         //Container mysql-1-0 uses password 77d3bc2d-d446-5b79-b64e-95cfa00dfd5c
         //Container mysql-1-1 uses password 33b60f2b-1dbb-5fe0-81a0-98252b6414bb
     }

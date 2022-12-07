@@ -20,14 +20,20 @@
     </select>
 
     <select id="selectByPage" resultType="map">
-        select id,title,
-               sub_count as subCount,
+        select id,
+               title,
+               sub_count           as subCount,
                case
                    when total_difficulty &lt;= 5 then 'easy'
                    when total_difficulty &lt;= 10 then 'medium'
                    else 'hard' end as difficulty
         from main_question
         limit #{from}, #{size}
+    </select>
+
+    <select id="countTotal">
+        select count(*)
+        from main_question
     </select>
 
 </mapper>

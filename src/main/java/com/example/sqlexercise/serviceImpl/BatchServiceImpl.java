@@ -74,11 +74,11 @@ public class BatchServiceImpl implements BatchService {
     }
 
     private void executeBatch(Batch batch, int main_id, int sub_id, String driver, String sqlText) {
-        //现在的判分是先运行一次标准答案，然后与结果比对
-        //TODO 引入redis对频繁使用的标准结果集进行多级缓存
+        // 现在的判分是先运行一次标准答案，然后与结果比对
+        // TODO 引入redis对频繁使用的标准结果集进行多级缓存
         ResultOfTask answer = sqlDatabaseService.getStandardAnswer(sub_id, driver);
         Map options = new HashMap();
-        options.put("skipPre", true);
+        options.put("skipPre", false);
         ResultOfTask queryResult = (ResultOfTask) sqlDatabaseService.runSqlTask(main_id, driver, sqlText, options);
         if (isPass(queryResult, answer)) {
             PassRecord passRecord = new PassRecord();

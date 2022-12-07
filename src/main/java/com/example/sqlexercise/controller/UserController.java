@@ -22,17 +22,17 @@ public class UserController {
     }
 
     @GetMapping("/api/signup/sendMessageCode/{email}")
-    public ResponseVO sendMessageCode(@PathVariable String email){
+    public ResponseVO sendMessageCode(@PathVariable String email) {
         return messageCodeService.sendMessageCode(email, messageCodeService.generateMessageCode(email));
     }
 
     @PostMapping("/api/signup")
-    public ResponseVO signUp(@RequestBody UserVO userVO){
+    public ResponseVO signUp(@RequestBody UserVO userVO) {
         return userService.signUp(userVO);
     }
 
     @PostMapping("/api/signin")
-    public ResponseVO signIn(@RequestBody SignVO signVO){
+    public ResponseVO signIn(@RequestBody SignVO signVO) {
         return userService.signIn(signVO);
     }
 
@@ -47,7 +47,37 @@ public class UserController {
     }
 
     @GetMapping("/api/get_user_info")
-    public ResponseVO getUserInfo(String email) {
-        return ResponseVO.success(userService.getUserInfo(email));
+    public ResponseVO getUserInfo(String userId) {
+        return ResponseVO.success(userService.getUserInfo(userId));
+    }
+
+    /**
+     * 获取用户做题数据
+     *
+     * @return JSON，包括已通过题目数、提交未通过题目数、未开始题目数、提交总次数、提交通过次数、提交通过率
+     */
+    @GetMapping("/api/user/statistic")
+    public ResponseVO getStatistic(String userId) {
+        return null;
+    }
+
+    /**
+     * 获取用户收藏的题目
+     *
+     * @return JSON，[{main_id: xx, main_question.title: xx, sub_id: xx}, {}, {}, ...]
+     */
+    @GetMapping("/api/user/stars")
+    public ResponseVO getStars(String userId) {
+        return null;
+    }
+
+    /**
+     * 获取某一题目的状态，粒度为subQuestion
+     *
+     * @return JSON，
+     */
+    @GetMapping("/api/user/statistic_of")
+    public ResponseVO getStatisticOf(String userId, Integer mainId, Integer subId) {
+        return null;
     }
 }

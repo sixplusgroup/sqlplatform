@@ -82,8 +82,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserVO getUserInfo(String email) {
-        User user = userMapper.selectByEmail(email);
+    public UserVO getUserInfo(String userId) {
+        User user = userMapper.selectById(userId);
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
         return userVO;
