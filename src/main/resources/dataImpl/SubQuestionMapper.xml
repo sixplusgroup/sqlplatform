@@ -24,4 +24,9 @@
         where id = #{subId}
     </select>
 
+    <select id="countTotal">
+        select COUNT(*)
+        from sub_question
+    </select>
+
 </mapper>

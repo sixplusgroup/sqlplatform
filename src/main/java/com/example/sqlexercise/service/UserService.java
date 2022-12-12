@@ -15,7 +15,7 @@ public interface UserService {
 
     List<PassRecord> getRecords(Integer userId);
 
-    UserVO getUserInfo(String email);
+    UserVO getUserInfo(String userId);
 
     ResponseVO modifyInfo(UserVO userVO);
 }

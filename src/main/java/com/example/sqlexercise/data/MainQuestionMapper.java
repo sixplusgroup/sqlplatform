@@ -17,4 +17,6 @@ public interface MainQuestionMapper {
 
     List<Map<String, Object>> selectByPage(@Param("from") int from, @Param("size") int size);
 
+    Integer countTotal();
+
 }

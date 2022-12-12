@@ -14,7 +14,7 @@
     </resultMap>
 
     <select id="selectById" resultMap="User">
-        select name, role, email
+        select *
         from users
         where id = #{id}
     </select>

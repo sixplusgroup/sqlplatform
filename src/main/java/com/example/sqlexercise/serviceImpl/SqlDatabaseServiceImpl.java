@@ -27,33 +27,33 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
     }
 
     @Override
-    public Object runSqlTask(int mainId, String driver, String sqlText, Map options){
+    public Object runSqlTask(int mainId, String driver, String sqlText, Map options) {
         int maxRetryTimes = Integer.parseInt(options.getOrDefault("maxRetryTimes", 1).toString());
         boolean forEach = Boolean.parseBoolean(options.getOrDefault("forEach", false).toString());
         boolean skipPre = Boolean.parseBoolean(options.getOrDefault("skipPre", false).toString());
         boolean skipPost = Boolean.parseBoolean(options.getOrDefault("skipPost", false).toString());
         String schemaName = questionService.getSchemaNameByMainId(mainId);
         String schemaConstructor = questionService.getSchemaConstructorByMainId(mainId);
-        if(forEach){
+        if (forEach) {
             ArrayList<SqlDatabase> sqlDatabaseArrayList = sqlDatabasePool.getSqlDatabaseList(schemaName, driver);
             ArrayList<ResultOfTask> results = new ArrayList<>();
-            for(SqlDatabase sqlDatabase : sqlDatabaseArrayList ){
-                if(!skipPre) {
+            for (SqlDatabase sqlDatabase : sqlDatabaseArrayList) {
+                if (!skipPre) {
                     sqlDatabase.pretask(schemaConstructor);
                 }
                 results.add(sqlDatabase.task(sqlText, maxRetryTimes));
-                if(!skipPost){
+                if (!skipPost) {
                     sqlDatabase.posttask();
                 }
             }
             return results;
-        }else{
+        } else {
             SqlDatabase sqlDatabase = sqlDatabasePool.pickSqlDatabase(schemaName, driver);
-            if(!skipPre) {
+            if (!skipPre) {
                 sqlDatabase.pretask(schemaConstructor);
             }
             ResultOfTask result = sqlDatabase.task(sqlText, maxRetryTimes);
-            if(!skipPost){
+            if (!skipPost) {
                 sqlDatabase.posttask();
             }
             return result;
@@ -62,7 +62,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
 
     @Override
     @Cacheable("standardAnswer")
-    public ResultOfTask getStandardAnswer(int subId, String driver){
+    public ResultOfTask getStandardAnswer(int subId, String driver) {
         SubQuestion subQuestion = questionService.getSubQuestionBySubId(subId);
         int mainId = subQuestion.getMainId();
         String sqlText = subQuestion.getAnswer();
@@ -75,11 +75,11 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
     }
 
     @Override
-    public ResultOfTask runTaskOfGettingSchemaInfo(int mainId, String driver){
+    public ResultOfTask runTaskOfGettingSchemaInfo(int mainId, String driver) {
         String schemaName = questionService.getSchemaNameByMainId(mainId);
         Client client = null;
-        if(driver.equals("mysql")){
-             client = new MysqlClient();
+        if (driver.equals("mysql")) {
+            client = new MysqlClient();
         }
         String sqlText = client.getSchemaSql(schemaName);
         Map options = new HashMap();
@@ -89,14 +89,14 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
     }
 
     @Override
-    public ArrayList<ResultOfTask> runTaskOfUpdatingSchemaInfo(int mainId, String driver){
+    public ArrayList<ResultOfTask> runTaskOfUpdatingSchemaInfo(int mainId, String driver) {
         String schemaName = questionService.getSchemaNameByMainId(mainId);
         String schemaConstructor = questionService.getSchemaConstructorByMainId(mainId);
         Client client = null;
-        if(driver.equals("mysql")){
+        if (driver.equals("mysql")) {
             client = new MysqlClient();
         }
-        String sqlText = client.initSchemaSql(schemaName)+schemaConstructor;
+        String sqlText = client.initSchemaSql(schemaName) + schemaConstructor;
         Map options = new HashMap();
         options.put("forEach", true);
         options.put("skipPre", true);
@@ -105,10 +105,10 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
     }
 
     @Override
-    public ArrayList<ResultOfTask> runTaskOfCleaningSchema(int mainId, String driver){
+    public ArrayList<ResultOfTask> runTaskOfCleaningSchema(int mainId, String driver) {
         String schemaName = questionService.getSchemaNameByMainId(mainId);
         Client client = null;
-        if(driver.equals("mysql")){
+        if (driver.equals("mysql")) {
             client = new MysqlClient();
         }
         String sqlText = client.cleanSchemaSql(schemaName);

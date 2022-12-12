@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.sqlexercise.data.QuestionStateMapper">
+
+    <resultMap id="QuestionState" type="com.example.sqlexercise.po.QuestionState">
+        <id column="id" property="id"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="main_id" property="mainId"/>
+        <result column="sub_id" property="subId"/>
+        <result column="is_starred" jdbcType="TINYINT" javaType="BOOLEAN" property="isStarred"/>
+        <result column="state" jdbcType="TINYINT" property="state"/>
+    </resultMap>
+
+    <select id="select" resultMap="QuestionState">
+        select *
+        from question_state
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sqlexercise.po.QuestionState">
+        insert into question_state
+            (user_id, main_id, sub_id, is_starred, state)
+        values (#{userId}, #{mainId}, #{subId}, #{isStarred}, #{state})
+    </insert>
+
+    <update id="updateIsStarred" parameterType="com.example.sqlexercise.po.QuestionState">
+        update question_state
+        set is_starred = #{isStarred}
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </update>
+
+    <update id="updateState" parameterType="com.example.sqlexercise.po.QuestionState">
+        update question_state
+        set state=#{state}
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </update>
+
+</mapper>
