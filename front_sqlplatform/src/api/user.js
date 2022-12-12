@@ -30,4 +30,17 @@ export function loginAPI(data){
     console.log("catch: " , r)
   })
 }
+export function getUserInfoAPI(data){
+  return axios({
+    url:`/api/get_user_info`,
+    method: 'GET',
+    data
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+
+
+
 

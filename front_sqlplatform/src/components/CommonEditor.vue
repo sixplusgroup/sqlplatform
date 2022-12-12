@@ -21,6 +21,7 @@ import 'codemirror/mode/php/php'
 import 'codemirror/mode/python/python'
 import 'codemirror/mode/shell/shell'
 import 'codemirror/mode/powershell/powershell'
+import {mapGetters, mapActions, mapMutations} from 'vuex'
 
 const CodeMirror = require('codemirror/lib/codemirror')
 
@@ -94,6 +95,7 @@ export default {
   mounted() {
     // 初始化
     this.initialize()
+
   },
   methods: {
     // 初始化

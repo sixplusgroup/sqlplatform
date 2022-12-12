@@ -116,7 +116,8 @@ public class QuestionServiceImpl implements QuestionService {
     public ResponseVO getDraft(String userId, Integer mainId, Integer subId) {
         Draft draft = draftMapper.select(userId, mainId, subId);
         if (draft == null) {
-            return ResponseVO.failure("未保存过草稿！");
+//          若草稿为空，则前端替换为"SELECT * FROM "
+            return ResponseVO.success("未保存过草稿");
         }
         DraftVO draftVO = new DraftVO();
         org.springframework.beans.BeanUtils.copyProperties(draft, draftVO);

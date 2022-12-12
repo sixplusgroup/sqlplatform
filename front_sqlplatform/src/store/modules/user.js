@@ -35,9 +35,9 @@ const user = {
   actions: {
     login: async ({dispatch, commit}, userData) => {
       const res = await loginAPI(userData)
-      console.log(res)
       if (res) {
         message.success("登录成功")
+        console.log(res)
         setToken(res.obj.id)
         // setSecretToken(res.token)
         localStorage.setItem("token", res.obj.id)

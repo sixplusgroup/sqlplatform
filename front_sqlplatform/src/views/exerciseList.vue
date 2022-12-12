@@ -70,6 +70,7 @@ export default {
   mounted() {
     this.getQuestionList({page: 1, pageSize: 10})
     // this.dataSource = this.questionList
+    this.clear_draft()
 
   },
   computed: {
@@ -81,6 +82,9 @@ export default {
     ...mapActions([
       'logout',
       'getQuestionList', 'getQuestion'
+    ]),
+    ...mapMutations([
+      'clear_draft'
     ]),
     pageChange(page) {
       this.loading = true
@@ -100,6 +104,7 @@ export default {
       this.$router.push({name: 'question', params: {mainId: (mainId)}})
     },
     getQuestionDetail(id) {
+
       this.$router.push({name: 'question', params: {mainId: id}})
     }
   }

@@ -34,5 +34,29 @@ export function getQuestionListAPI(queryParam) {
   })
 }
 
+export function saveDraftAPI(data) {
+  return axios({
+    url: `/api/question/save_draft`,
+    method: 'POST',
+    data
+  }).catch((r) => {
+    console.log("catch: ", r)
+  })
+}
+
+export function getDraftAPI(data) {
+  return axios({
+    url: `/api/question/get_draft`,
+    method: 'GET',
+    params: {
+      userId: data.userId,
+      mainId: data.mainId,
+      subId: data.subId
+    }
+  }).catch((r) => {
+    console.log("catch: ", r)
+  })
+}
+
 
 
