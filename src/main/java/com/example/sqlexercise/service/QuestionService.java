@@ -55,4 +55,9 @@ public interface QuestionService {
      * @return message of success or fail
      */
     String unStar(String userId, Integer mainId, Integer subId);
+
+    /**
+     * 获取单个subQuestion对于某用户的状态
+     */
+    Object getStateOf(String userId, Integer mainId, Integer subId);
 }

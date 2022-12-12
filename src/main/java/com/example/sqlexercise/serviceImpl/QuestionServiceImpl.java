@@ -101,6 +101,9 @@ public class QuestionServiceImpl implements QuestionService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 保存用户做题草稿
+     */
     @Override
     public String saveDraft(DraftVO draftVO) {
         Draft draft = draftMapper.select(draftVO.getUserId(), draftVO.getMainId(), draftVO.getSubId());
@@ -116,6 +119,9 @@ public class QuestionServiceImpl implements QuestionService {
         return "保存成功";
     }
 
+    /**
+     * 获取用户保存的做题草稿
+     */
     @Override
     public DraftVO getDraft(String userId, Integer mainId, Integer subId) {
         Draft draft = draftMapper.select(userId, mainId, subId);
@@ -128,6 +134,9 @@ public class QuestionServiceImpl implements QuestionService {
         return draftVO;
     }
 
+    /**
+     * 修改一个subQuestion的状态为 已收藏
+     */
     @Override
     public String star(String userId, Integer mainId, Integer subId) {
         // 查询数据库中是否已经有该题目针对该用户的状态记录
@@ -143,10 +152,22 @@ public class QuestionServiceImpl implements QuestionService {
         return "已收藏";
     }
 
+    /**
+     * 修改一个subQuestion的状态为 未收藏
+     */
     @Override
     public String unStar(String userId, Integer mainId, Integer subId) {
         questionStateMapper.updateIsStarred(userId, mainId, subId, false);
         return "取消收藏";
+    }
+
+    /**
+     * 获取一个subQuestion的状态信息
+     */
+    @Override
+    public Object getStateOf(String userId, Integer mainId, Integer subId) {
+        QuestionState state = questionStateMapper.select(userId, mainId, subId);
+        return state;
     }
 
 }

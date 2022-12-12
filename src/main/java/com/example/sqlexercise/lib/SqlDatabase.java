@@ -163,7 +163,8 @@ public class SqlDatabase {
         }
         String sqlText = this.client.getSchemaSql(this.config.tags.get("schemaName").toString());
         ResultOfTask result = this.root.runQuery(sqlText);
-        if (result.error != null && result.sheet.size() == 0) {
+        if (result.error != null || result.sheet.size() == 0) {
+            // 还未初始化表，先进行初始化
             sqlText = this.client.initSchemaSql(this.config.tags.get("schemaName").toString()) + schemaConstructor;
             this.root.createTable(sqlText);
         }

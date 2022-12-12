@@ -1,9 +1,10 @@
 package com.example.sqlexercise.serviceImpl;
 
 import com.example.sqlexercise.data.PassRecordMapper;
+import com.example.sqlexercise.data.QuestionStateMapper;
 import com.example.sqlexercise.data.UserMapper;
 import com.example.sqlexercise.lib.PasswordHash;
-import com.example.sqlexercise.lib.RedisKeyConstants;
+import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.po.User;
 import com.example.sqlexercise.service.UserService;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -24,12 +26,15 @@ public class UserServiceImpl implements UserService {
 
     private UserMapper userMapper;
     private PassRecordMapper passRecordMapper;
+    private QuestionStateMapper questionStateMapper;
+
     private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
-    public UserServiceImpl(UserMapper userMapper, PassRecordMapper passRecordMapper, StringRedisTemplate stringRedisTemplate) {
+    public UserServiceImpl(UserMapper userMapper, PassRecordMapper passRecordMapper, QuestionStateMapper questionStateMapper, StringRedisTemplate stringRedisTemplate) {
         this.userMapper = userMapper;
         this.passRecordMapper = passRecordMapper;
+        this.questionStateMapper = questionStateMapper;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -37,7 +42,7 @@ public class UserServiceImpl implements UserService {
     public ResponseVO signUp(UserVO userVO) {
         //验证码校验
         String email = userVO.getEmail();
-        String rightCode = stringRedisTemplate.opsForValue().get(RedisKeyConstants.SIGN_UP_CODE_KEY_PREFIX + email);
+        String rightCode = stringRedisTemplate.opsForValue().get(Constants.RedisKeyConstants.SIGN_UP_CODE_KEY_PREFIX + email);
         if (rightCode == null) {
             return ResponseVO.failure("验证码已过期，请重新发送");
         }
@@ -112,4 +117,14 @@ public class UserServiceImpl implements UserService {
             return ResponseVO.failure("修改失败");
         }
     }
+
+    /**
+     * 获取某一用户收藏的题目列表
+     */
+    @Override
+    public Object getStars(String userId) {
+        List<Map<String, Object>> res = questionStateMapper.selectStars(userId);
+        return res;
+    }
+
 }

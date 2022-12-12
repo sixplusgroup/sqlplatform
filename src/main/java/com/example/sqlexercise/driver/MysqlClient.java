@@ -4,11 +4,13 @@ import com.example.sqlexercise.lib.ResultOfTask;
 import com.example.sqlexercise.lib.SqlDatabaseConfig;
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlPooledConnection;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.PooledConnection;
 import java.sql.*;
 import java.util.ArrayList;
 
+@Slf4j(topic = "com.example.sqlexercise.driver.MysqlClient")
 public class MysqlClient implements Client {
 
     private MysqlConnectionPoolDataSource poolDataSource;
@@ -75,9 +77,9 @@ public class MysqlClient implements Client {
     public String getSchemaSql(String database){
         String whereSql;
         if(database!=null){
-            whereSql = "WHERE t.table_schema = "+database;
+            whereSql = "WHERE t.table_schema = '" + database + "'";
         }else{
-            whereSql = "WHERE t.table_schema NOT IN (\n\'mysql\',\n\'performance_schema\',\n\'information_schema\'\n)";
+            whereSql = "WHERE t.table_schema NOT IN (\n'mysql',\n'performance_schema',\n'information_schema'\n)";
         }
         return "SELECT\nt.table_schema,\nt.table_name,\nc.column_name,\nc.data_type\nFROM\nINFORMATION_SCHEMA.TABLES t\n" +
                 "JOIN INFORMATION_SCHEMA.COLUMNS c ON t.table_schema = c.table_schema AND t.table_name = c.table_name\n"+
@@ -122,7 +124,7 @@ public class MysqlClient implements Client {
             boolean rs = statement.execute(sqlText);
             while(true) {
                 if (rs) {
-                    System.out.println("An error occurred when create user");
+                    log.info("An error occurred when create user");
                     return false;
                 } else {
                     //rs为false，且updateCount=-1时,所有结果已取出
