@@ -1,5 +1,6 @@
 package com.example.sqlexercise.controller;
 
+import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.UserService;
 import com.example.sqlexercise.vo.ResponseVO;
 import com.example.sqlexercise.vo.SignVO;
@@ -68,16 +69,7 @@ public class UserController {
      */
     @GetMapping("/api/user/stars")
     public ResponseVO getStars(String userId) {
-        return null;
-    }
-
-    /**
-     * 获取某一题目的状态，粒度为subQuestion
-     *
-     * @return JSON，
-     */
-    @GetMapping("/api/user/statistic_of")
-    public ResponseVO getStatisticOf(String userId, Integer mainId, Integer subId) {
-        return null;
+        Object res = userService.getStars(userId);
+        return ResponseVO.success(res);
     }
 }

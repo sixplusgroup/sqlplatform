@@ -1,5 +1,6 @@
 package com.example.sqlexercise.controller;
 
+import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.service.BatchService;
 import com.example.sqlexercise.vo.BatchVO;
 import com.example.sqlexercise.vo.ResponseVO;
@@ -25,7 +26,8 @@ public class BatchController {
      */
     @PostMapping("/api/batch/submit")
     public ResponseVO submitBatch(@RequestBody BatchVO batchVO) {
-        return batchService.createBatch(batchVO);
+        String res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
+        return ResponseVO.success(res);
     }
 
     /**
@@ -35,7 +37,8 @@ public class BatchController {
      */
     @PostMapping("/api/batch/run")
     public ResponseVO runBatch(@RequestBody BatchVO batchVO) {
-        return null;
+        String res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+        return ResponseVO.success(res);
     }
 
     @GetMapping("/api/batch/get")

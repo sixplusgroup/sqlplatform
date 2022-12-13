@@ -1,5 +1,6 @@
 package com.example.sqlexercise.service;
 
+import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.vo.BatchVO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class BatchServiceTest {
         batchVO.setMain_id(1);
         batchVO.setUser_id("ba01ae2f-4baa-4b8f-9035-d6b9a87930a6");
         batchVO.setSub_id(10);
-        batchService.createBatch(batchVO);
+        batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
     }
 
     @Test
@@ -46,6 +47,6 @@ public class BatchServiceTest {
         batchVO.setMain_id(2);
         batchVO.setUser_id("ba01ae2f-4baa-4b8f-9035-d6b9a87930a6");
         batchVO.setSub_id(14);
-        batchService.createBatch(batchVO);
+        batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
     }
 }

@@ -5,6 +5,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Map;
+
 @Repository
 @Mapper
 public interface QuestionStateMapper {
@@ -36,5 +39,10 @@ public interface QuestionStateMapper {
      * 插入一条question state数
      */
     int insert(QuestionState questionState);
+
+    /**
+     * 查询某一用户收藏的题目
+     */
+    List<Map<String, Object>> selectStars(@Param("userId") String userId);
 
 }

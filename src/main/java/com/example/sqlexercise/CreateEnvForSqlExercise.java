@@ -34,7 +34,7 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         System.out.println(args);
-        log.info("ApplicationRunner接口！");
+        log.info("ApplicationRunner接口！" + new Throwable().getStackTrace()[0]);
         /*
         SqlDatabaseConfig config = new SqlDatabaseConfig();
         config.tags = new HashMap<>();

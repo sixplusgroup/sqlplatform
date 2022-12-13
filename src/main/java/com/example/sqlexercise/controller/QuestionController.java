@@ -89,4 +89,15 @@ public class QuestionController {
         return ResponseVO.success(res);
     }
 
+    /**
+     * 获取某一题目对于某用户的状态，粒度为subQuestion
+     *
+     * @return JSON
+     */
+    @GetMapping("/api/question/state_of")
+    public ResponseVO getStateOf(String userId, Integer mainId, Integer subId) {
+        Object res = questionService.getStateOf(userId, mainId, subId);
+        return ResponseVO.success(res);
+    }
+
 }

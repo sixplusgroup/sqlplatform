@@ -18,4 +18,6 @@ public interface UserService {
     UserVO getUserInfo(String userId);
 
     ResponseVO modifyInfo(UserVO userVO);
+
+    Object getStars(String userId);
 }

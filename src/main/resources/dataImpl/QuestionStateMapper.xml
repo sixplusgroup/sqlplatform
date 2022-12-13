@@ -41,4 +41,15 @@
           and sub_id = #{subId}
     </update>
 
+    <select id="selectStars" resultType="map">
+        select qs.main_id as mainId, mq.title as title, qs.sub_id as subId, sq.description as description
+        from main_question mq,
+             sub_question sq,
+             (select *
+              from question_state
+              where user_id = #{userId}
+                and is_starred = 1) qs
+        where mq.id = qs.main_id and sq.id = qs.sub_id
+    </select>
+
 </mapper>
