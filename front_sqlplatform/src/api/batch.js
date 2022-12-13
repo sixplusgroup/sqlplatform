@@ -1,9 +1,10 @@
 import { axios } from '@/utils/request'
 import Qs from 'qs';
 
-export function createBatchAPI(data){
+export function runBatchAPI(data){
+  console.log(data)
   return axios({
-    url:`/api/batch/create`,
+    url:`/api/batch/run`,
     method: 'POST',
     data
   }).catch((r) => {

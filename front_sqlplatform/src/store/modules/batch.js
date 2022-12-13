@@ -4,7 +4,7 @@ import {resetRouter} from '@/router'
 import {message} from 'ant-design-vue'
 
 import {
-  createBatchAPI,getBatchAPI
+  runBatchAPI, getBatchAPI
 } from "../../api/batch";
 
 const batch = {
@@ -24,13 +24,14 @@ const batch = {
   },
   actions: {
     runTest: async ({commit}, data) => {
-      const res1 = await createBatchAPI(data);
+      const res = await runBatchAPI(data);
       // const res2 = await getBatchAPI(res1.msg)
-      console.log(res1)
+      console.log(res)
       // console.log(res2)
-      // if (res1) {
-      //   // commit('set_mainQuestion', res1.obj)
-      // }
+      if (res) {
+        // commit('set_mainQuestion', res1.obj)
+        return res;
+      }
     },
 
 

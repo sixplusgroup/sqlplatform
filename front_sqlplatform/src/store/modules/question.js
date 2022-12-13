@@ -20,7 +20,7 @@ const question = {
     },
     set_subQuestions: (state, data) => {
       state.subQuestions = data;
-      // console.log(data)
+      console.log(data)
     },
     set_questionList: (state, data) => {
       state.questionList = data;
@@ -57,6 +57,7 @@ const question = {
     },
     getDraft: async ({commit}, data) => {
       const res = await getDraftAPI(data)
+      // console.log(res)
       if (res.msg === '未保存过草稿') {
         commit('set_draft','SELECT * FROM')
       }else{
