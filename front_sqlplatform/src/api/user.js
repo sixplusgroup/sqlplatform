@@ -34,11 +34,15 @@ export function getUserInfoAPI(data){
   return axios({
     url:`/api/get_user_info`,
     method: 'GET',
-    data
+    params:{
+      userId: data
+    }
   }).catch((r) => {
     console.log("catch: " , r)
   })
 }
+
+
 
 
 

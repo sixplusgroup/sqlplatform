@@ -375,7 +375,7 @@ export default {
   height: 100vh;
   text-align: center;
   /*padding-top: 5em;*/
-  background-image: url('../assets/login_bg.jpg');
+  background-image: url('../assets/bg.jpeg');
   background-repeat: no-repeat;
   overflow: hidden;
   position: fixed;

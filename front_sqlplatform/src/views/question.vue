@@ -1,6 +1,9 @@
 <template>
   <div class="box" ref="box">
     <div class="left">
+      <a-button shape="round"
+                style="float: right;margin: .8em"
+                @click="back">返回</a-button>
       <v-md-preview :text="mainQuestion"></v-md-preview>
 
     </div>
@@ -8,6 +11,7 @@
     </div>
     <div class="mid">
       <div class="subQuestion">
+
         <a-tabs v-model:activeKey="activeKey" style="text-align: left"  @change="changePage(activeKey)">
           <a-tab-pane v-if="!loading"
             :key="index" v-for="(item,index) in subQuestions" :tab="'问题' + (index+1)">
@@ -26,11 +30,12 @@
             </div>
             <div class="footbar">
               <a-button shape="round" @click="runCode(item,index)"> 运行</a-button>
-              <a-button shape="round" @click="save(item,index)"> 保存</a-button>
+              <a-button shape="round" @click="star(item,index)"> 收藏本题</a-button>
+              <a-button shape="round" @click="save(item,index)"> 保存草稿</a-button>
               <a-button shape="round">提交</a-button>
             </div>
           </a-tab-pane>
-          <a-spin v-else></a-spin>
+          <a-spin v-else tab=""></a-spin>
         </a-tabs>
       </div>
     </div>
@@ -60,6 +65,7 @@ export default {
     await this.getQuestion(this.$route.params.mainId)
     // 获取本题所有小题的缓存数据
     for (let i in this.subQuestions) {
+      if(this.$route.params.subId == this.subQuestions[i].id){this.activeKey = i;}
       let data = {
         userId: localStorage.getItem('userId'),
         mainId: this.subQuestions[i].mainId,
@@ -67,8 +73,8 @@ export default {
       }
       await this.getDraft(data)
     }
-    // console.log(this.draft)
     this.codeSnippets = this.draft;
+
     this.dragControllerDiv();
     this.loading = false;
   },
@@ -81,6 +87,19 @@ export default {
     ...mapActions([
       'getQuestion', 'runTest', 'saveDraft', 'getDraft'
     ]),
+    back(){
+      let that = this;
+      this.$confirm({
+        okButtonProps: { props: { shape: 'round' } },
+        cancelButtonProps: { props: { shape: 'round' } },
+        title: '确认退出做题页面？',
+        content: '若希望保存当前代码，请点击\"保存草稿\"，否则记录将丢失。',
+        onOk() {
+            that.$router.push({name: 'exerciseList'})
+        },
+        onCancel() {},
+      });
+    },
     changePage(key){
       this.page = key;
     },
@@ -130,8 +149,10 @@ export default {
     },
 
     runCode(item, index) {
+      console.log(this.codeSnippets[index])
+      console.log(this.codeSnippets[index].replace(/\n/g,' '))
       this.runTest({
-        batch_text: this.codeSnippets[index],
+        batch_text: this.codeSnippets[index].replace(/\n/g,' ').replace(/\t/g,' '),
         user_id: localStorage.getItem('userId'),
         main_id: item.mainId,
         sub_id: item.id,
@@ -151,16 +172,9 @@ export default {
 </script>
 
 <style scoped>
-/*#question{*/
-/*  display: flex;*/
-/*}*/
-
-/* 拖拽相关样式 */
-/*包围div样式*/
 .box {
   width: 100%;
   height: 100%;
-  /*margin: 1% 0px;*/
   overflow: hidden;
 }
 

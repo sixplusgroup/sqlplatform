@@ -11,7 +11,7 @@
       >
         <span slot="action" slot-scope="text, record">
       <a @click="getQuestionDetail(record.id)">去做题</a>
-      <a-divider type="vertical"/><a>收藏(未实现)</a>
+<!--      <a-divider type="vertical"/><a>收藏(未实现)</a>-->
     </span>
 
 
@@ -23,8 +23,8 @@
     </div>
 
 
-    <a-button @click="getRandomQuestions">随机一题</a-button>
-    <a-button @click="handleLogout">Logout</a-button>
+<!--    <a-button @click="getRandomQuestions">随机一题</a-button>-->
+<!--    <a-button @click="handleLogout">Logout</a-button>-->
   </div>
 </template>
 
@@ -70,6 +70,7 @@ export default {
   mounted() {
     this.getQuestionList({page: 1, pageSize: 10})
     // this.dataSource = this.questionList
+    // if(this.userInfo)
     this.clear_draft()
 
   },

@@ -15,10 +15,10 @@
           <a-icon type="desktop"/>
           <span>题目列表</span>
         </a-menu-item>
-<!--        <a-menu-item class="menu-top-item" key="/recommend">-->
-<!--          <a-icon type="search"/>-->
-<!--          <span>推荐</span>-->
-<!--        </a-menu-item>-->
+        <a-menu-item class="menu-top-item" key="/userDetail">
+          <a-icon type="user"/>
+          <span>个人中心</span>
+        </a-menu-item>
 <!--        <a-menu-item class="menu-top-item" key="/selectCar">-->
 <!--          <a-icon type="car"/>-->
 <!--          <span>筛选</span>-->
@@ -35,7 +35,7 @@
       </a-menu>
 
       <a-dropdown class="userinfo" placement="bottomCenter">
-        <div id="user">{{ userInfo.username }}</div>
+        <div id="user">{{ userInfo.name }}</div>
         <a-menu slot="overlay" @click="onClickUser">
           <a-menu-item key="2">
             退出登录
@@ -63,12 +63,12 @@ export default {
 
   },
   async mounted() {
-    // if(this.userId === '') {this.getUserInfo()}
+    if(this.userInfo.name === null) {this.getUserInfoByToken()}
   },
   methods: {
     ...mapActions([
       'logout',
-      // 'getUserInfo'
+      'getUserInfoByToken'
     ]),
     // ...mapMutations([
     //   'set_message',

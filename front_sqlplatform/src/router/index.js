@@ -6,6 +6,7 @@ import Login from '../views/login.vue'
 import App from "../App";
 
 import exerciseList from '../views/exerciseList.vue'
+import userDetail from "../views/userDetail";
 
 import question from '../views/question.vue'
 import HelloWorld from '@/components/HelloWorld'
@@ -37,12 +38,22 @@ const routes = [
           component: exerciseList
         },
         {
-          path: '/question/:mainId',
-          name: 'question',
-          component: question
+          path: '/userDetail',
+          name: 'userDetail',
+          component: userDetail
         },
+        // {
+        //   path: '/question/:mainId',
+        //   name: 'question',
+        //   component: question
+        // },
       ]
-    }
+    },
+    {
+      path: '/question/:mainId',
+      name: 'question',
+      component: question,
+    },
   ]
 
 

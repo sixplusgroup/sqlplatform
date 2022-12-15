@@ -10,6 +10,8 @@ const getters = {
   questionList: state => state.question.questionList,
   draft: state => state.question.draft,
 
+  // passed: state => state.batch.passed,
+
 
 
 };
