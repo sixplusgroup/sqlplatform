@@ -59,7 +59,8 @@ public class UserController {
      */
     @GetMapping("/api/user/statistic")
     public ResponseVO getStatistic(String userId) {
-        return null;
+        Object statistic = userService.getStatistic(userId);
+        return ResponseVO.success(statistic);
     }
 
     /**

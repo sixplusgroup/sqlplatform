@@ -2,7 +2,6 @@ spring:
     application:
         name: sqlexercise
     datasource:
-#        url: jdbc:mysql://localhost:3306/sqlexercise
         url: jdbc:mysql://localhost:3306/sqlexercise?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8
 #        url: jdbc:mysql://localhost:3306/sqlexam?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8
         username: root

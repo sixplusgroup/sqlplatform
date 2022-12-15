@@ -5,13 +5,13 @@ import lombok.Data;
 @Data
 public class BatchVO {
 
-    private String batch_text;
+    private String batchText;
 
-    private String user_id;
+    private String userId;
 
-    private int main_id;
+    private int mainId;
 
-    private int sub_id;
+    private int subId;
 
     private String driver;
 

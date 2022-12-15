@@ -100,4 +100,13 @@ public class QuestionController {
         return ResponseVO.success(res);
     }
 
+    /**
+     * 查询某subQuestion是否已收藏
+     */
+    @GetMapping("/api/question/star_or_not")
+    public ResponseVO getStarOrNot(String userId, Integer mainId, Integer subId) {
+        String starOrNot = questionService.getStarOrNot(userId, mainId, subId);
+        return ResponseVO.success(starOrNot);
+    }
+
 }

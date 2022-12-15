@@ -13,4 +13,8 @@ public interface BatchMapper {
 
     Batch selectById(@Param("id") String id);
 
+    /**
+     * 查某用户总提交次数
+     */
+    int selectSubmitTimesByUserId(String userId);
 }

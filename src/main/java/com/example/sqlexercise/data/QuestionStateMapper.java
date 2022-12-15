@@ -33,7 +33,7 @@ public interface QuestionStateMapper {
     int updateState(@Param("userId") String userId,
                     @Param("mainId") int mainId,
                     @Param("subId") int subId,
-                    @Param("State") int state);
+                    @Param("state") int state);
 
     /**
      * 插入一条question state数
@@ -45,4 +45,17 @@ public interface QuestionStateMapper {
      */
     List<Map<String, Object>> selectStars(@Param("userId") String userId);
 
+    boolean selectIsStarredOf(@Param("userId") String userId,
+                              @Param("mainId") int mainId,
+                              @Param("subId") int subId);
+
+    /**
+     * 查某用户提交未通过的题目数
+     */
+    int selectSubmittedButNotPassByUserId(String userId);
+
+    /**
+     * 查某用户已通过的题目数
+     */
+    int selectPassedByUserId(String userId);
 }

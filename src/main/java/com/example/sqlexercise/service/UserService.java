@@ -20,4 +20,6 @@ public interface UserService {
     ResponseVO modifyInfo(UserVO userVO);
 
     Object getStars(String userId);
+
+    Object getStatistic(String userId);
 }

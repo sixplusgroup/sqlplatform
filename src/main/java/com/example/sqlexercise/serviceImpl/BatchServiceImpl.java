@@ -3,10 +3,12 @@ package com.example.sqlexercise.serviceImpl;
 import com.example.sqlexercise.data.AnswerSetMapper;
 import com.example.sqlexercise.data.BatchMapper;
 import com.example.sqlexercise.data.PassRecordMapper;
+import com.example.sqlexercise.data.QuestionStateMapper;
 import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.lib.ResultOfTask;
 import com.example.sqlexercise.po.Batch;
 import com.example.sqlexercise.po.PassRecord;
+import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.service.BatchService;
 import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
@@ -23,21 +25,23 @@ public class BatchServiceImpl implements BatchService {
 
     private final SqlDatabaseServiceImpl sqlDatabaseService;
     private final boolean useMessageQueue;
+
     private final ScoreService scoreService;
     private final AnswerSetMapper answerSetMapper;
     private PassRecordMapper passRecordMapper;
     private BatchMapper batchMapper;
-    // 这里加一个线程池用来执行提交的sql
+    private QuestionStateMapper questionStateMapper;
 
     @Autowired
     public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
-                            BatchMapper batchMapper) {
+                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
         this.scoreService = scoreService;
         this.answerSetMapper = answerSetMapper;
+        this.questionStateMapper = questionStateMapper;
         this.useMessageQueue = false;
     }
 
@@ -60,14 +64,16 @@ public class BatchServiceImpl implements BatchService {
         Batch batch = new Batch();
         BeanUtils.copyProperties(batchVO, batch);
         Date now = new Date();
-        batch.setCreated_at(now);
-        batch.setUpdated_at(now);
+        batch.setCreatedAt(now);
+        batch.setUpdatedAt(now);
         batch.setId(UUID.randomUUID().toString());
-        // 该条batch入库
-        batchMapper.insert(batch);
+        // 只有submit时，才将该条batch入库
+        if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+            batchMapper.insert(batch);
+        }
         // 执行
         log.info("batch " + batch.getId() + " is running. ");
-        String res = executeBatch(batch, batch.getMain_id(), batch.getSub_id(), driver, batchVO.getBatch_text(), processSqlMode);
+        String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
         return res;
     }
 
@@ -80,26 +86,26 @@ public class BatchServiceImpl implements BatchService {
         // 现在的判分是先运行一次标准答案，然后与结果比对
         // TODO 引入redis对频繁使用的标准结果集进行多级缓存
         ResultOfTask answer = sqlDatabaseService.getStandardAnswer(sub_id, driver);
-        Map options = new HashMap();
+        Map<String, Object> options = new HashMap<>();
         options.put("skipPre", false);
         ResultOfTask queryResult = (ResultOfTask) sqlDatabaseService.runSqlTask(main_id, driver, sqlText, options);
 
         if (isPass(queryResult, answer)) {
-            // 如果通过且是submit就将记录入库
+            // 如果通过且是submit就将记录入库，并修改该题目对于该用户的相关状态
             if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
                 PassRecord passRecord = new PassRecord();
                 passRecord.setBatchId(batch.getId());
                 passRecord.setMainId(main_id);
                 passRecord.setSubId(sub_id);
-                passRecord.setUserId(batch.getUser_id());
+                passRecord.setUserId(batch.getUserId());
                 passRecord.setCreatedAt(new Date());
                 passRecord.setUpdatedAt(new Date());
                 passRecord.setPoint(100);
                 passRecordMapper.insert(passRecord);
+                updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.PASSED);
             }
             // 如果是run则只返回结果
             log.info("batch " + batch.getId() + " passed. " + new Throwable().getStackTrace()[0]);
-            return "Passed";
             // 如果静态分析得到的评分非满分，需要将其加入答案集
 //            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
 //            float score = scoreService.getScore(getScoreVO);
@@ -118,9 +124,26 @@ public class BatchServiceImpl implements BatchService {
 //                    answerSetMapper.updateStatus(stuAnswer);
 //                }
 //            }
+            return "Passed";
+        } else {
+            updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
+            log.info("batch " + batch.getId() + " didn't pass. " + new Throwable().getStackTrace()[0]);
+            return "Didn't pass";
         }
-        log.info("batch " + batch.getId() + " didn't pass. " + new Throwable().getStackTrace()[0]);
-        return "Didn't pass";
+    }
+
+    private void updateQuestionState(String userId, int mainId, int subId, int toState) {
+        QuestionState questionState = questionStateMapper.select(userId, mainId, subId);
+        if (questionState == null) {
+            questionState = new QuestionState(userId, mainId, subId, false, toState);
+            questionStateMapper.insert(questionState);
+        } else {
+            // 未开始-0 < 提交未通过-1 < 已通过-2
+            // questionState只会单向变化
+            if (questionState.getState() < toState) {
+                questionStateMapper.updateState(userId, mainId, subId, toState);
+            }
+        }
     }
 
     //针对标准结果集和sql运行得到的结果集进行打分
@@ -133,14 +156,16 @@ public class BatchServiceImpl implements BatchService {
         if (queryResult.sheet.size() != standard.sheet.size()) {
             return false;
         }
-        //再比较列数是否一致
-        if (queryResult.sheet.get(0).size() != standard.sheet.get(0).size()) {
-            return false;
-        }
-        //逐行比较每一列
-        for (int i = 0; i < queryResult.sheet.size(); i++) {
-            if (!compareRow(queryResult.sheet.get(i), standard.sheet.get(i))) {
+        if (queryResult.sheet.size() != 0) {
+            //再比较列数是否一致
+            if (queryResult.sheet.get(0).size() != standard.sheet.get(0).size()) {
                 return false;
+            }
+            //逐行比较每一列
+            for (int i = 0; i < queryResult.sheet.size(); i++) {
+                if (!compareRow(queryResult.sheet.get(i), standard.sheet.get(i))) {
+                    return false;
+                }
             }
         }
         return true;
@@ -154,6 +179,5 @@ public class BatchServiceImpl implements BatchService {
         }
         return true;
     }
-
 
 }

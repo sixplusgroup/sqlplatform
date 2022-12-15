@@ -13,6 +13,14 @@ public interface PassRecordMapper {
 
     void insert(PassRecord passRecord);
 
+    /**
+     * 查某用户提交通过记录
+     */
     List<PassRecord> selectByUserId(@Param("userId") Integer userId);
+
+    /**
+     * 查某用户提交通过次数
+     */
+    int selectPassTimesByUserId(String userId);
 
 }

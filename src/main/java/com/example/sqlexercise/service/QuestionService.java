@@ -60,4 +60,11 @@ public interface QuestionService {
      * 获取单个subQuestion对于某用户的状态
      */
     Object getStateOf(String userId, Integer mainId, Integer subId);
+
+    /**
+     * 查某个subQuestion是否被收藏
+     *
+     * @return 已收藏 or 未收藏
+     */
+    String getStarOrNot(String userId, Integer mainId, Integer subId);
 }

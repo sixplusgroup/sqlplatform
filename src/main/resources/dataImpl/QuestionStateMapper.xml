@@ -49,7 +49,30 @@
               from question_state
               where user_id = #{userId}
                 and is_starred = 1) qs
-        where mq.id = qs.main_id and sq.id = qs.sub_id
+        where mq.id = qs.main_id
+          and sq.id = qs.sub_id
+    </select>
+
+    <select id="selectIsStarredOf">
+        select is_starred
+        from question_state
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </select>
+
+    <select id="selectSubmittedButNotPassByUserId" resultType="java.lang.Integer">
+        select count(*) as submittedButNotPass
+        from question_state
+        where user_id = #{userId}
+          and state = 1;
+    </select>
+
+    <select id="selectPassedByUserId" resultType="java.lang.Integer">
+        select count(*) as passed
+        from question_state
+        where user_id = #{userId}
+          and state = 2;
     </select>
 
 </mapper>

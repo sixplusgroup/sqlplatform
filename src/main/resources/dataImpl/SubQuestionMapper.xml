@@ -24,7 +24,12 @@
         where id = #{subId}
     </select>
 
-    <select id="countTotal">
+    <select id="selectAll" resultMap="SubQuestion">
+        select *
+        from sub_question
+    </select>
+
+    <select id="countTotal" resultType="java.lang.Integer">
         select COUNT(*)
         from sub_question
     </select>

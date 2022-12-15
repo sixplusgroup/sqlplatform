@@ -9,15 +9,15 @@ public class Batch {
 
     String id;
 
-    String batch_text;
+    String batchText;
 
-    String user_id;
+    String userId;
 
-    Date created_at;
+    Date createdAt;
 
-    Date updated_at;
+    Date updatedAt;
 
-    int main_id;
+    int mainId;
 
-    int sub_id;
+    int subId;
 }

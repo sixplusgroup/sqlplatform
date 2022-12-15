@@ -4,6 +4,7 @@ import com.example.sqlexercise.data.DraftMapper;
 import com.example.sqlexercise.data.MainQuestionMapper;
 import com.example.sqlexercise.data.QuestionStateMapper;
 import com.example.sqlexercise.data.SubQuestionMapper;
+import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.po.Draft;
 import com.example.sqlexercise.po.MainQuestion;
 import com.example.sqlexercise.po.QuestionState;
@@ -143,7 +144,7 @@ public class QuestionServiceImpl implements QuestionService {
         QuestionState questionState = questionStateMapper.select(userId, mainId, subId);
         if (questionState == null) {
             // 若没有，则insert
-            questionState = new QuestionState(userId, mainId, subId, true, 0);
+            questionState = new QuestionState(userId, mainId, subId, true, Constants.QuestionState.NOT_STARTED);
             questionStateMapper.insert(questionState);
         } else {
             // 若有，则update，is_starred字段更新为1，即已收藏
@@ -168,6 +169,12 @@ public class QuestionServiceImpl implements QuestionService {
     public Object getStateOf(String userId, Integer mainId, Integer subId) {
         QuestionState state = questionStateMapper.select(userId, mainId, subId);
         return state;
+    }
+
+    @Override
+    public String getStarOrNot(String userId, Integer mainId, Integer subId) {
+        boolean b = questionStateMapper.selectIsStarredOf(userId, mainId, subId);
+        return b ? "已收藏" : "未收藏";
     }
 
 }

@@ -3,12 +3,12 @@
 <mapper namespace="com.example.sqlexercise.data.BatchMapper">
     <resultMap id="Batch" type="com.example.sqlexercise.po.Batch">
         <id column="id" property="id"/>
-        <result column="batch_text" property="batch_text"/>
-        <result column="user_id" property="user_id"/>
-        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="created_at"/>
-        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updated_at"/>
-        <result column="main_id" property="main_id"/>
-        <result column="sub_id" property="sub_id"/>
+        <result column="batch_text" property="batchText"/>
+        <result column="user_id" property="userId"/>
+        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"/>
+        <result column="main_id" property="mainId"/>
+        <result column="sub_id" property="subId"/>
     </resultMap>
 
     <select id="selectById" resultMap="Batch">
@@ -19,6 +19,13 @@
 
     <insert id="insert" parameterType="com.example.sqlexercise.po.Batch" useGeneratedKeys="false">
         insert into batch
-        values (#{id}, #{batch_text}, #{user_id}, #{created_at}, #{updated_at}, #{main_id}, #{sub_id})
+        values (#{id}, #{batchText}, #{userId}, #{createdAt}, #{updatedAt}, #{mainId}, #{subId})
     </insert>
+
+    <select id="selectSubmitTimesByUserId" resultType="java.lang.Integer">
+        select count(*)
+        from batch
+        where user_id = #{userId}
+    </select>
+
 </mapper>

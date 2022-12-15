@@ -36,15 +36,23 @@ public class DockerServer {
         this.client = null;
     }
 
+    /**
+     * 连接docker
+     */
     public void connectDocker() {
         this.client = DockerClientBuilder.getInstance(this.protocol + "://" + this.host + ":" + this.port).build();
         log.info("Docker " + this.host + " 已连接！");
     }
 
+    /**
+     * 遍历本地image list，根据reference查找指定image
+     * @param reference image name. e.g. mysql
+     */
     public Image getDockerImageByReference(String reference) throws NullPointerException {
         if (this.client == null) {
             throw new NullPointerException("还未连接Docker");
         }
+        // 获取本地image list
         List<Image> images = this.client.listImagesCmd().exec();
         for (Image image : images) {
             for (String tag : image.getRepoTags()) {
@@ -56,14 +64,19 @@ public class DockerServer {
         return null;
     }
 
+    /**
+     * 拉取指定image
+     * @param repository e.g. mysql/redis
+     * @param tag e.g. 5.7/latest
+     */
     public void pullImageByRepository(String repository, String tag) {
         try {
             log.info("Please wait! Docker is starting to pull image " + repository + ":" + tag);
             this.client.pullImageCmd(repository).withTag(tag).start().awaitCompletion();
+            log.info("Image " + repository + ":" + tag + " is pulled successfully.");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        log.info("Image " + repository + ":" + tag + " is pulled successfully!");
     }
 
     public Container getDockerContainerByName(String name) {
