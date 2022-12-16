@@ -61,6 +61,9 @@ service.interceptors.response.use((response) => {
       if (response.data.res === 'success') {
         return response.data
       }
+      if (response.data.res === 'failure') {
+        return response.data
+      }
       message.error(response.data.msg)
       break
     case 404:

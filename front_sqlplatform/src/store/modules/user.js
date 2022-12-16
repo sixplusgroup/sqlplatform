@@ -7,7 +7,8 @@ import {message} from 'ant-design-vue'
 import {
   loginAPI,
   sendCodeAPI,
-  registerAPI
+  registerAPI,
+  getUserInfoAPI
 } from '../../api/user'
 
 const user = {
@@ -15,7 +16,7 @@ const user = {
     userId: '',
     token: '',
     userInfo: {
-      username: "未登录"
+      name: null
     }
   },
   mutations: {
@@ -28,19 +29,29 @@ const user = {
       state.userId = data
     },
     set_userInfo: (state, data) => {
-      state.userInfo.username = data.name;
+      state.userInfo = data;
     },
 
   },
   actions: {
+    getUserInfoByToken: async ({commit}) => {
+      let data = localStorage.getItem("userId")
+      console.log("获取token："+data)
+      const res = await getUserInfoAPI(data)
+      // console.log(res.obj)
+      if (res) {
+        commit('set_userInfo',res.obj)
+      }
+    },
     login: async ({dispatch, commit}, userData) => {
       const res = await loginAPI(userData)
-      console.log(res)
       if (res) {
         message.success("登录成功")
+        console.log(res)
         setToken(res.obj.id)
         // setSecretToken(res.token)
         localStorage.setItem("token", res.obj.id)
+        localStorage.setItem("userId", res.obj.id);
         commit('set_userId', res.obj.id)
         commit('set_userInfo', res.obj)
         // dispatch('getUserInfo')
@@ -51,7 +62,6 @@ const user = {
       }
     },
     register: async ({commit}, data) => {
-      console.log(data)
       const res = await registerAPI(data)
       if (res) {
         message.success('注册成功')

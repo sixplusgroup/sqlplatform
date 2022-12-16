@@ -64,6 +64,7 @@ public class MessageCodeServiceImpl implements MessageCodeService {
                     "            <p>您的网站账户注册验证码是：</p>\n" +
                     "        <span style=\"font-size: 24px; color: red\">" + code + "</span>", "text/html;charset=UTF-8");
             message.setSentDate(new Date());
+            System.out.println(code);
             Transport transport = session.getTransport();
             transport.connect("799580275@qq.com", "jobwdewvtwxbbcii");
             transport.sendMessage(message, message.getAllRecipients());
