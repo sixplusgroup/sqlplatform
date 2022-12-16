@@ -5,6 +5,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Mapper
 public interface BatchMapper {
@@ -16,5 +18,12 @@ public interface BatchMapper {
     /**
      * 查某用户总提交次数
      */
-    int selectSubmitTimesByUserId(String userId);
+    int selectSubmitTimesByUserId(@Param("userId") String userId);
+
+    /**
+     * 查某用户某题的全部提交记录
+     */
+    List<Object> selectSubmitRecord(@Param("userId") String userId,
+                                    @Param("mainId") int mainId,
+                                    @Param("subId") int subId);
 }

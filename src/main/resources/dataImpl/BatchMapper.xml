@@ -28,4 +28,16 @@
         where user_id = #{userId}
     </select>
 
+    <select id="selectSubmitRecord" resultType="map">
+        select batch.created_at                         as submitTime,
+               IF(pass_record.point = 100, '通过', '未通过') as passOrNot
+        from batch
+                 left join
+             pass_record on batch.id = pass_record.batch_id
+        where batch.user_id = #{userId}
+          and batch.main_id = #{mainId}
+          and batch.sub_id = #{subId}
+        order by submitTime desc
+    </select>
+
 </mapper>

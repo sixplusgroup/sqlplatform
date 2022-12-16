@@ -6,6 +6,8 @@ import com.example.sqlexercise.vo.ResponseVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 //处理获取题目信息等非sql请求
 @RestController
 public class QuestionController {
@@ -107,6 +109,15 @@ public class QuestionController {
     public ResponseVO getStarOrNot(String userId, Integer mainId, Integer subId) {
         String starOrNot = questionService.getStarOrNot(userId, mainId, subId);
         return ResponseVO.success(starOrNot);
+    }
+
+    /**
+     * 查询某用户对于某subQuestion的提交记录，包含通过和未通过的，且返回的记录列表按时间先后排序，越近的提交记录越靠前
+     */
+    @GetMapping("/api/question/submit_record")
+    public ResponseVO getSubmitRecord(String userId, Integer mainId, Integer subId) {
+        List<Object> submitRecord = questionService.getSubmitRecord(userId, mainId, subId);
+        return ResponseVO.success(submitRecord);
     }
 
 }

@@ -1,9 +1,6 @@
 package com.example.sqlexercise.serviceImpl;
 
-import com.example.sqlexercise.data.DraftMapper;
-import com.example.sqlexercise.data.MainQuestionMapper;
-import com.example.sqlexercise.data.QuestionStateMapper;
-import com.example.sqlexercise.data.SubQuestionMapper;
+import com.example.sqlexercise.data.*;
 import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.po.Draft;
 import com.example.sqlexercise.po.MainQuestion;
@@ -12,7 +9,6 @@ import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.vo.DraftVO;
 import com.example.sqlexercise.vo.MainQuestionVO;
-import com.example.sqlexercise.vo.ResponseVO;
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,15 +29,17 @@ public class QuestionServiceImpl implements QuestionService {
     private MainQuestionMapper mainQuestionMapper;
     private QuestionStateMapper questionStateMapper;
     private DraftMapper draftMapper;
+    private BatchMapper batchMapper;
 
     @Autowired
     public QuestionServiceImpl(SubQuestionMapper subQuestionMapper,
                                MainQuestionMapper mainQuestionMapper,
-                               QuestionStateMapper questionStateMapper, DraftMapper draftMapper) {
+                               QuestionStateMapper questionStateMapper, DraftMapper draftMapper, BatchMapper batchMapper) {
         this.subQuestionMapper = subQuestionMapper;
         this.mainQuestionMapper = mainQuestionMapper;
         this.questionStateMapper = questionStateMapper;
         this.draftMapper = draftMapper;
+        this.batchMapper = batchMapper;
     }
 
     @Override
@@ -175,6 +173,12 @@ public class QuestionServiceImpl implements QuestionService {
     public String getStarOrNot(String userId, Integer mainId, Integer subId) {
         boolean b = questionStateMapper.selectIsStarredOf(userId, mainId, subId);
         return b ? "已收藏" : "未收藏";
+    }
+
+    @Override
+    public List<Object> getSubmitRecord(String userId, Integer mainId, Integer subId) {
+        List<Object> submitRecord = batchMapper.selectSubmitRecord(userId, mainId, subId);
+        return submitRecord;
     }
 
 }
