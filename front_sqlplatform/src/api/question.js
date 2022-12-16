@@ -59,4 +59,47 @@ export function getDraftAPI(data) {
 }
 
 
+export function getStarStateAPI(data) {
+  return axios({
+    url: `/api/question/star_or_not`,
+    method: 'GET',
+    params: {
+      userId: data.userId,
+      mainId: data.mainId,
+      subId: data.subId
+    }
+  }).catch((r) => {
+    console.log("catch: ", r)
+  })
+}
+
+export function starSubQuestionAPI(data) {
+  return axios({
+    url: `/api/question/star`,
+    method: 'GET',
+    params: {
+      userId: data.userId,
+      mainId: data.mainId,
+      subId: data.subId
+    }
+  }).catch((r) => {
+    console.log("catch: ", r)
+  })
+}
+
+export function unStarSubQuestionAPI(data) {
+  return axios({
+    url: `/api/question/unStar`,
+    method: 'GET',
+    params: {
+      userId: data.userId,
+      mainId: data.mainId,
+      subId: data.subId
+    }
+  }).catch((r) => {
+    console.log("catch: ", r)
+  })
+}
+
+
 

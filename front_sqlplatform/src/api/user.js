@@ -42,6 +42,17 @@ export function getUserInfoAPI(data){
   })
 }
 
+export function getUserStarsAPI(data){
+  return axios({
+    url:`/api/user/stars`,
+    method: 'GET',
+    params:{
+      userId: data
+    }
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
 
 
 
