@@ -53,7 +53,7 @@
           and sq.id = qs.sub_id
     </select>
 
-    <select id="selectIsStarredOf">
+    <select id="selectIsStarredOf" resultType="java.lang.Boolean">
         select is_starred
         from question_state
         where user_id = #{userId}
