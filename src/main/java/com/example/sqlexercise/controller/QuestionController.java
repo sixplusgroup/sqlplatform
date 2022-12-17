@@ -92,23 +92,12 @@ public class QuestionController {
     }
 
     /**
-     * 获取某一题目对于某用户的状态，粒度为subQuestion
-     *
-     * @return JSON
+     * 查询某用户对某subQuestion是否收藏、是否通过
      */
-    @GetMapping("/api/question/state_of")
-    public ResponseVO getStateOf(String userId, Integer mainId, Integer subId) {
-        Object res = questionService.getStateOf(userId, mainId, subId);
+    @GetMapping("/api/question/isStarred_and_state")
+    public ResponseVO getIsStarredAndStateOf(String userId, Integer mainId, Integer subId) {
+        Object res = questionService.getIsStarredAndStateOf(userId, mainId, subId);
         return ResponseVO.success(res);
-    }
-
-    /**
-     * 查询某subQuestion是否已收藏
-     */
-    @GetMapping("/api/question/star_or_not")
-    public ResponseVO getStarOrNot(String userId, Integer mainId, Integer subId) {
-        String starOrNot = questionService.getStarOrNot(userId, mainId, subId);
-        return ResponseVO.success(starOrNot);
     }
 
     /**

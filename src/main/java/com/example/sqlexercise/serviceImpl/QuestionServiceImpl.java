@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -161,20 +162,22 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     /**
-     * 获取一个subQuestion的状态信息
+     * 获取某用户对某一个subQuestion是否收藏、是否通过
      */
     @Override
-    public Object getStateOf(String userId, Integer mainId, Integer subId) {
-        QuestionState state = questionStateMapper.select(userId, mainId, subId);
-        return state;
+    public Object getIsStarredAndStateOf(String userId, Integer mainId, Integer subId) {
+        Map<String, Object> res = questionStateMapper.selectIsStarredAndStateOf(userId, mainId, subId);
+        if (res == null) {
+            res = new HashMap<>();
+            res.put("isStarred", "未收藏");
+            res.put("state", "未开始");
+        }
+        return res;
     }
 
-    @Override
-    public String getStarOrNot(String userId, Integer mainId, Integer subId) {
-        boolean b = questionStateMapper.selectIsStarredOf(userId, mainId, subId);
-        return b ? "已收藏" : "未收藏";
-    }
-
+    /**
+     * 查询某用户对于某subQuestion的提交记录，包含通过和未通过的，且返回的记录列表按时间先后排序，越近的提交记录越靠前
+     */
     @Override
     public List<Object> getSubmitRecord(String userId, Integer mainId, Integer subId) {
         List<Object> submitRecord = batchMapper.selectSubmitRecord(userId, mainId, subId);

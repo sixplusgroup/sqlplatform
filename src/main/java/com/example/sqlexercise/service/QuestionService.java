@@ -57,16 +57,9 @@ public interface QuestionService {
     String unStar(String userId, Integer mainId, Integer subId);
 
     /**
-     * 获取单个subQuestion对于某用户的状态
+     * 获取某用户对某一个subQuestion是否收藏、是否通过
      */
-    Object getStateOf(String userId, Integer mainId, Integer subId);
-
-    /**
-     * 查某个subQuestion是否被收藏
-     *
-     * @return 已收藏 or 未收藏
-     */
-    String getStarOrNot(String userId, Integer mainId, Integer subId);
+    Object getIsStarredAndStateOf(String userId, Integer mainId, Integer subId);
 
     /**
      * 查询某用户对于某subQuestion的提交记录，包含通过和未通过的，且返回的记录列表按时间先后排序，越近的提交记录越靠前

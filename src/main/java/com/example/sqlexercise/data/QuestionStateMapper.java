@@ -13,11 +13,18 @@ import java.util.Map;
 public interface QuestionStateMapper {
 
     /**
-     * 查询一条question state数据
+     * 查一条记录 select *
      */
     QuestionState select(@Param("userId") String userId,
                          @Param("mainId") int mainId,
                          @Param("subId") int subId);
+
+    /**
+     * 查询是否收藏、是否通过
+     */
+    Map<String, Object> selectIsStarredAndStateOf(@Param("userId") String userId,
+                                                  @Param("mainId") int mainId,
+                                                  @Param("subId") int subId);
 
     /**
      * 更新一条question state数据的is_starred字段
@@ -44,10 +51,6 @@ public interface QuestionStateMapper {
      * 查询某一用户收藏的题目
      */
     List<Map<String, Object>> selectStars(@Param("userId") String userId);
-
-    boolean selectIsStarredOf(@Param("userId") String userId,
-                              @Param("mainId") int mainId,
-                              @Param("subId") int subId);
 
     /**
      * 查某用户提交未通过的题目数
