@@ -20,14 +20,21 @@
     </select>
 
     <select id="selectByPage" resultType="map">
-        select id,
-               title,
-               sub_count           as subCount,
-               case
-                   when total_difficulty &lt;= 5 then 'easy'
-                   when total_difficulty &lt;= 10 then 'medium'
-                   else 'hard' end as difficulty
+        select main_question.id                       as mainId,
+               main_question.title                    as title,
+               main_question.sub_count                as subCount,
+               coalesce(qs.submittedButNotPassNum, 0) as submittedButNotPassNum,
+               coalesce(qs.passedNum, 0)              as passedNum
         from main_question
+                 left join
+             (select main_id,
+                     sum(state = 1) as submittedButNotPassNum,
+                     sum(state = 2) as passedNum
+              from question_state
+              where user_id = #{userId}
+              group by main_id) as qs
+             on main_question.id = qs.main_id
+        order by main_question.id
         limit #{from}, #{size}
     </select>
 

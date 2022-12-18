@@ -3,7 +3,6 @@ package com.example.sqlexercise.service;
 import com.example.sqlexercise.po.MainQuestion;
 import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.vo.DraftVO;
-import com.example.sqlexercise.vo.MainQuestionVO;
 
 import java.util.List;
 
@@ -22,11 +21,12 @@ public interface QuestionService {
     /**
      * 分页查询mainQuestion
      *
-     * @param page     页数
+     * @param userId
      * @param pageSize 每页数据量
+     * @param page     页数
      * @return MainQuestionVO集合
      */
-    List<MainQuestionVO> getMainQuestionsByPage(int page, int pageSize);
+    Object getMainQuestionsByPage(String userId, int pageSize, int page);
 
     /**
      * 保存某题的草稿

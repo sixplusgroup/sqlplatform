@@ -63,7 +63,7 @@
               where user_id = #{userId}
               group by main_id, sub_id
               order by latestSubmitTime desc
-              limit 20) records
+              limit #{n}) records
         where records.main_id = main_question.id
           and records.sub_id = sub_question.id;
     </select>

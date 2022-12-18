@@ -15,7 +15,9 @@ public interface MainQuestionMapper {
 
     MainQuestion selectById(@Param("mainId") int mainId);
 
-    List<Map<String, Object>> selectByPage(@Param("from") int from, @Param("size") int size);
+    List<Map<String, Object>> selectByPage(@Param("userId") String userId,
+                                           @Param("from") int from,
+                                           @Param("size") int size);
 
     Integer countTotal();
 
