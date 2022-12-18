@@ -7,20 +7,16 @@
 </template>
 
 <script>
-import Header from './components/header.vue';
 import {mapGetters} from "vuex";
 
 export default {
-  components: { Header },
   name: 'App',
   computed: {
     ...mapGetters([
       // 'userInfo',
       'isLogin',
       'userId',
-      // 'chatMessages'
     ]),
-
   },
 }
 </script>

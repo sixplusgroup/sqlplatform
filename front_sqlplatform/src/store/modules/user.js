@@ -8,7 +8,7 @@ import {
   loginAPI,
   sendCodeAPI,
   registerAPI,
-  getUserInfoAPI,getUserStarsAPI
+  getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI
 } from '../../api/user'
 
 const user = {
@@ -18,7 +18,8 @@ const user = {
     userInfo: {
       name: null
     },
-    userStars: []
+    userStars: [],
+    statistic: {}
   },
   mutations: {
     reset_state: function (state) {
@@ -36,6 +37,9 @@ const user = {
     set_user_stars: (state, data) => {
       state.userStars = data;
     },
+    set_user_statistic: (state, data) => {
+      state.statistic = data;
+    },
 
   },
   actions: {
@@ -50,27 +54,24 @@ const user = {
       const res = await loginAPI(userData)
       if (res) {
         message.success("登录成功")
-        console.log(res)
         setToken(res.obj.id)
         // setSecretToken(res.token)
         localStorage.setItem("token", res.obj.id)
         localStorage.setItem("userId", res.obj.id);
         commit('set_userId', res.obj.id)
         commit('set_userInfo', res.obj)
-        // dispatch('getUserInfo')
         router.push('/')
-
       } else {
         message.error('用户名或密码错误！')
       }
     },
-    register: async ({commit}, data) => {
+    register: async (data) => {
       const res = await registerAPI(data)
       if (res) {
         message.success('注册成功')
       }
     },
-    sendCode: async ({commit}, email) => {
+    sendCode: async (email) => {
       const res = await sendCodeAPI(email)
       if (res) {
         message.success('验证码发送成功，请查收')
@@ -88,6 +89,20 @@ const user = {
       const res = await getUserStarsAPI(userId);
       if (res) {
         commit('set_user_stars',res.obj)
+      }
+    },
+    getUserStatistic: async({ commit }, userId) => {
+      const res = await getUserStatisticAPI(userId);
+
+      if (res) {
+        commit('set_user_statistic',res.obj)
+      }
+    },
+    modifyUserInfo: async({ dispatch }, data) => {
+      const res = await modifyInfoAPI(data);
+      if (res) {
+        message.success("修改成功！")
+        dispatch('getUserInfoByToken')
       }
     },
   }

@@ -36,9 +36,24 @@
               <a-button shape="round" @click="star(item,index)" v-if="!item.isStared"> 收藏本题</a-button>
               <a-button shape="round" @click="unStar(item,index)" v-else> 取消收藏</a-button>
               </span>
-              <a-spin v-else></a-spin>
+              <a-button shape="round" v-else>
+                <a-spin></a-spin>
+                加载中...
+              </a-button>
+
+
               <a-button shape="round" @click="save(item,index)"> 保存草稿</a-button>
-              <a-button shape="round">提交</a-button>
+              <a-button shape="round" @click="submitCode(item,index)">提交</a-button>
+            </div>
+            <div class="records">
+              <p v-if="item.record.length === 0">暂无提交记录</p>
+              <a-timeline>
+                <a-timeline-item
+                  v-for="(obj,idx) in item.record"
+                  :key="idx"
+                  :color="obj.passOrNot === '通过' ? 'green' : 'red'">
+                  {{obj.submitTime.replace('T',' ')}}&nbsp&nbsp {{obj.passOrNot}}</a-timeline-item>
+              </a-timeline>
             </div>
           </a-tab-pane>
           <a-spin v-else tab=""></a-spin>
@@ -83,7 +98,10 @@ export default {
       }
       await this.getDraft(data)
       data.idx = i;
-      await this.getStarState(data)
+
+      await this.getSubmitRecord(data)
+      await this.getQuestionState(data)
+
     }
     this.codeSnippets = this.draft;
 
@@ -98,8 +116,11 @@ export default {
   methods: {
     ...mapActions([
       'getUserInfoByToken',
-      'getQuestion', 'runTest', 'saveDraft', 'getDraft',
-      'getStarState', 'starSubQuestion', 'unStarSubQuestion'
+      'getQuestion', 'runTest', 'commit',
+      'saveDraft', 'getDraft',
+      'getQuestionState',
+      'starSubQuestion', 'unStarSubQuestion',
+      'getSubmitRecord'
     ]),
     back() {
       let that = this;
@@ -164,8 +185,6 @@ export default {
     },
 
     runCode(item, index) {
-      console.log(this.codeSnippets[index])
-      console.log(this.codeSnippets[index].replace(/\n/g, ' '))
       this.runTest({
         batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
         userId: this.userId,
@@ -173,6 +192,23 @@ export default {
         subId: item.id,
         driver: 'mysql'
       })
+    },
+    async submitCode(item, index) {
+      await this.commit({
+        batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
+        userId: this.userId,
+        mainId: item.mainId,
+        subId: item.id,
+        driver: 'mysql'
+      })
+      this.loading = true
+      await this.getSubmitRecord({
+        userId: this.userId,
+        mainId: item.mainId,
+        subId: item.id,
+        idx: index
+      })
+      this.loading = false;
     },
     save(item, index) {
       this.saveDraft({
@@ -273,6 +309,13 @@ export default {
   float: bottom;
   padding: 6px;
   text-align: right;
+}
+.records{
+  height: 20vh;
+  overflow: scroll;
+  padding: 1em;
+  background-color: rgb(247, 247, 247);
+  margin-top: 1em;;
 }
 
 </style>

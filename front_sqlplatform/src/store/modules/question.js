@@ -7,7 +7,7 @@ import {
   getMainQuestionAPI, getSubQuestionsAPI,
   getQuestionListAPI, saveDraftAPI,
   getDraftAPI, getStarStateAPI,
-  starSubQuestionAPI, unStarSubQuestionAPI
+  starSubQuestionAPI, unStarSubQuestionAPI,getSubmitRecordAPI
 } from "../../api/question";
 
 const question = {
@@ -36,6 +36,9 @@ const question = {
     set_star_state: (state, data) => {
       state.subQuestions[data.i].isStared = data.state;
     },
+    set_submit_record: (state, data) => {
+      state.subQuestions[data.i].record = data.obj;
+    },
   },
   actions: {
     getQuestion: async ({commit, dispatch}, data) => {
@@ -61,16 +64,15 @@ const question = {
     },
     getDraft: async ({commit}, data) => {
       const res = await getDraftAPI(data)
-      // console.log(res)
       if (res.msg === '未保存过草稿') {
         commit('set_draft', 'SELECT * FROM')
       } else {
         commit('set_draft', res.obj.draft)
       }
     },
-    getStarState: async ({commit}, data) => {
+    getQuestionState: async ({commit}, data) => {
       const res = await getStarStateAPI(data)
-      if (res.msg === '已收藏') {
+      if (res.obj.isStarred === '已收藏') {
         commit('set_star_state', {state: true, i: data.idx})
       } else {
         commit('set_star_state', {state: false, i: data.idx})
@@ -88,6 +90,12 @@ const question = {
       if (res) {
         commit('set_star_state', {state: false, i: data.idx})
         message.success(res.msg+'成功')
+      }
+    },
+    getSubmitRecord: async ({commit}, data) => {
+      const res = await getSubmitRecordAPI(data);
+      if (res) {
+        commit('set_submit_record', {obj: res.obj, i: data.idx})
       }
     },
 

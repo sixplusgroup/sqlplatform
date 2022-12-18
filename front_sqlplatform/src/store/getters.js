@@ -5,6 +5,7 @@ const getters = {
   userId: state => state.user.userId,
   userInfo: state => state.user.userInfo,
   userStars: state => state.user.userStars,
+  statistic: state => state.user.statistic,
 
   mainQuestion: state => state.question.mainQuestion,
   subQuestions: state => state.question.subQuestions,

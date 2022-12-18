@@ -20,12 +20,4 @@ export function commitAPI(data){
   })
 }
 
-export function getBatchAPI(id){
-  return axios({
-    url:`/api/batch/get`,
-    method: 'GET',
-    params: id
-  }).catch((r) => {
-    console.log("catch: " , r)
-  })
-}
+

@@ -1,26 +1,25 @@
 <template>
     <div id="layout">
-        <Header></Header>
+      <user-detail></user-detail>
         <transition name="fade-transform" mode="out-in">
             <router-view/>
         </transition>
-<!--        <footerPage/>-->
     </div>
 </template>
 <script>
-import Header from '../components/header'
-// import footerPage from "../components/footerPage";
+import userDetail from '../views/userDetail'
 export default {
     name: 'layout',
     components: {
-        Header,
-      // footerPage
+      userDetail,
     },
-    // data() {
-    //     return {
-    //        // routerpath:this.$route.path,
-    //
-    //     };
-    // },
+
 }
 </script>
+
+<style scoped>
+#layout{
+  display: inline-flex;
+}
+
+</style>
