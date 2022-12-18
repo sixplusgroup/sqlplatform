@@ -73,4 +73,15 @@ public class UserController {
         Object res = userService.getStars(userId);
         return ResponseVO.success(res);
     }
+
+    /**
+     * 获取用户最近20次提交记录
+     *
+     * @return JSON
+     */
+    @GetMapping("/api/user/recent_submits")
+    public ResponseVO getRecentSubmits(String userId) {
+        Object res = userService.getRecentSubmits(userId, 20);
+        return ResponseVO.success(res);
+    }
 }

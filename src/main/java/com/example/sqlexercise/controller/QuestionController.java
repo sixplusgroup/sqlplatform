@@ -37,11 +37,11 @@ public class QuestionController {
      * @return MainQuestionVO集合
      */
     @GetMapping("/api/question/get_main_question_by_page")
-    public ResponseVO getMainQuestionsByPage(Integer page, Integer pageSize) {
+    public ResponseVO getMainQuestionsByPage(String userId, Integer page, Integer pageSize) {
         if (page < 1) {
             return ResponseVO.failure("页码应当从1开始！");
         }
-        return ResponseVO.success(questionService.getMainQuestionsByPage(page, pageSize));
+        return ResponseVO.success(questionService.getMainQuestionsByPage(userId, pageSize, page));
     }
 
     /**

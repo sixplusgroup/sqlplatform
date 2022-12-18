@@ -40,4 +40,32 @@
         order by submitTime desc
     </select>
 
+    <select id="selectRecentSubmits" resultType="map">
+        select records.main_id          as mainId,
+               records.sub_id           as subId,
+               main_question.title      as title,
+               sub_question.description as description,
+               records.latestSubmitTime as latestSubmitTime,
+               case
+                   when sub_question.difficulty = 1 then 'easy'
+                   when sub_question.difficulty = 2 then 'medium'
+                   when sub_question.difficulty = 3 then 'hard'
+                   end                  as difficulty,
+               records.submitTimes      as submitTimes
+        from main_question,
+             sub_question,
+             (select main_id,
+                     sub_id,
+                     count(*)        as submitTimes,
+                     min(created_at) as firstSubmitTime,
+                     max(created_at) as latestSubmitTime
+              from batch
+              where user_id = #{userId}
+              group by main_id, sub_id
+              order by latestSubmitTime desc
+              limit #{n}) records
+        where records.main_id = main_question.id
+          and records.sub_id = sub_question.id;
+    </select>
+
 </mapper>

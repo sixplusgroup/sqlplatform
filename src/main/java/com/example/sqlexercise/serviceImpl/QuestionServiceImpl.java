@@ -8,12 +8,9 @@ import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.vo.DraftVO;
-import com.example.sqlexercise.vo.MainQuestionVO;
-import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,7 +18,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class QuestionServiceImpl implements QuestionService {
@@ -86,19 +82,10 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<MainQuestionVO> getMainQuestionsByPage(int page, int pageSize) {
+    public Object getMainQuestionsByPage(String userId, int pageSize, int page) {
         int from = (page - 1) * pageSize;
-        List<Map<String, Object>> maps = mainQuestionMapper.selectByPage(from, pageSize);
-        // 将PO转换为VO返回
-        return maps.stream().map(map -> {
-            MainQuestionVO mainQuestionVO = new MainQuestionVO();
-            try {
-                BeanUtils.populate(mainQuestionVO, map);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-            return mainQuestionVO;
-        }).collect(Collectors.toList());
+        List<Map<String, Object>> res = mainQuestionMapper.selectByPage(userId, from, pageSize);
+        return res;
     }
 
     /**
