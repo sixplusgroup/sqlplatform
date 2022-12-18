@@ -67,8 +67,9 @@ export default {
       ],
     }
   },
-  mounted() {
-    this.getQuestionList({page: 1, pageSize: 10})
+  async mounted() {
+    await this.getUserInfoByToken();
+    await this.getQuestionList({page: 1, pageSize: 10});
     // this.dataSource = this.questionList
     // if(this.userInfo)
     this.clear_draft()
@@ -82,7 +83,7 @@ export default {
   methods: {
     ...mapActions([
       'logout',
-      'getQuestionList', 'getQuestion'
+      'getQuestionList', 'getQuestion','getUserInfoByToken'
     ]),
     ...mapMutations([
       'clear_draft'

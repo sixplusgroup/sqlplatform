@@ -8,7 +8,7 @@ import {
   loginAPI,
   sendCodeAPI,
   registerAPI,
-  getUserInfoAPI
+  getUserInfoAPI,getUserStarsAPI
 } from '../../api/user'
 
 const user = {
@@ -17,7 +17,8 @@ const user = {
     token: '',
     userInfo: {
       name: null
-    }
+    },
+    userStars: []
   },
   mutations: {
     reset_state: function (state) {
@@ -29,18 +30,20 @@ const user = {
       state.userId = data
     },
     set_userInfo: (state, data) => {
-      state.userInfo = data;
+      state.userInfo = data.userInfo;
+      state.userId = data.userId;
+    },
+    set_user_stars: (state, data) => {
+      state.userStars = data;
     },
 
   },
   actions: {
     getUserInfoByToken: async ({commit}) => {
       let data = localStorage.getItem("userId")
-      console.log("获取token："+data)
       const res = await getUserInfoAPI(data)
-      // console.log(res.obj)
       if (res) {
-        commit('set_userInfo',res.obj)
+        commit('set_userInfo', {userInfo: res.obj, userId: data})
       }
     },
     login: async ({dispatch, commit}, userData) => {
@@ -80,6 +83,12 @@ const user = {
       resetRouter()
       router.push('/login')
       // const res = await logoutAPI();
+    },
+    getUserStars: async({ commit }, userId) => {
+      const res = await getUserStarsAPI(userId);
+      if (res) {
+        commit('set_user_stars',res.obj)
+      }
     },
   }
 }

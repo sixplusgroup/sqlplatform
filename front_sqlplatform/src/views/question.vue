@@ -3,7 +3,8 @@
     <div class="left">
       <a-button shape="round"
                 style="float: right;margin: .8em"
-                @click="back">返回</a-button>
+                @click="back">返回
+      </a-button>
       <v-md-preview :text="mainQuestion"></v-md-preview>
 
     </div>
@@ -12,9 +13,9 @@
     <div class="mid">
       <div class="subQuestion">
 
-        <a-tabs v-model:activeKey="activeKey" style="text-align: left"  @change="changePage(activeKey)">
+        <a-tabs v-model:activeKey="activeKey" style="text-align: left" @change="changePage(activeKey)">
           <a-tab-pane v-if="!loading"
-            :key="index" v-for="(item,index) in subQuestions" :tab="'问题' + (index+1)">
+                      :key="index" v-for="(item,index) in subQuestions" :tab="'问题' + (index+1)">
             <div
               style="padding: 1em"
             >{{ item.description }}
@@ -30,7 +31,12 @@
             </div>
             <div class="footbar">
               <a-button shape="round" @click="runCode(item,index)"> 运行</a-button>
-              <a-button shape="round" @click="star(item,index)"> 收藏本题</a-button>
+
+              <span v-if="!buttonLoading">
+              <a-button shape="round" @click="star(item,index)" v-if="!item.isStared"> 收藏本题</a-button>
+              <a-button shape="round" @click="unStar(item,index)" v-else> 取消收藏</a-button>
+              </span>
+              <a-spin v-else></a-spin>
               <a-button shape="round" @click="save(item,index)"> 保存草稿</a-button>
               <a-button shape="round">提交</a-button>
             </div>
@@ -55,23 +61,29 @@ export default {
   components: {CommonEditor},
   data() {
     return {
-      page:0,
+      page: 0,
       loading: true,
       codeSnippets: [],
       activeKey: ref(0),
+      buttonLoading: false
     }
   },
   async mounted() {
+    await this.getUserInfoByToken();
     await this.getQuestion(this.$route.params.mainId)
     // 获取本题所有小题的缓存数据
     for (let i in this.subQuestions) {
-      if(this.$route.params.subId == this.subQuestions[i].id){this.activeKey = i;}
+      if (this.$route.params.subId == this.subQuestions[i].id) {
+        this.activeKey = i;
+      }
       let data = {
-        userId: localStorage.getItem('userId'),
+        userId: this.userId,
         mainId: this.subQuestions[i].mainId,
         subId: this.subQuestions[i].id
       }
       await this.getDraft(data)
+      data.idx = i;
+      await this.getStarState(data)
     }
     this.codeSnippets = this.draft;
 
@@ -85,22 +97,25 @@ export default {
   },
   methods: {
     ...mapActions([
-      'getQuestion', 'runTest', 'saveDraft', 'getDraft'
+      'getUserInfoByToken',
+      'getQuestion', 'runTest', 'saveDraft', 'getDraft',
+      'getStarState', 'starSubQuestion', 'unStarSubQuestion'
     ]),
-    back(){
+    back() {
       let that = this;
       this.$confirm({
-        okButtonProps: { props: { shape: 'round' } },
-        cancelButtonProps: { props: { shape: 'round' } },
+        okButtonProps: {props: {shape: 'round'}},
+        cancelButtonProps: {props: {shape: 'round'}},
         title: '确认退出做题页面？',
         content: '若希望保存当前代码，请点击\"保存草稿\"，否则记录将丢失。',
         onOk() {
-            that.$router.push({name: 'exerciseList'})
+          that.$router.push({name: 'exerciseList'})
         },
-        onCancel() {},
+        onCancel() {
+        },
       });
     },
-    changePage(key){
+    changePage(key) {
       this.page = key;
     },
     dragControllerDiv() {
@@ -150,23 +165,43 @@ export default {
 
     runCode(item, index) {
       console.log(this.codeSnippets[index])
-      console.log(this.codeSnippets[index].replace(/\n/g,' '))
+      console.log(this.codeSnippets[index].replace(/\n/g, ' '))
       this.runTest({
-        batch_text: this.codeSnippets[index].replace(/\n/g,' ').replace(/\t/g,' '),
-        user_id: localStorage.getItem('userId'),
-        main_id: item.mainId,
-        sub_id: item.id,
+        batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
+        userId: this.userId,
+        mainId: item.mainId,
+        subId: item.id,
         driver: 'mysql'
       })
     },
     save(item, index) {
       this.saveDraft({
-        userId: localStorage.getItem('userId'),
+        userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
         draft: this.codeSnippets[index]
       })
-    }
+    },
+    async star(item, index) {
+      this.buttonLoading = true;
+      await this.starSubQuestion({
+        userId: this.userId,
+        mainId: item.mainId,
+        subId: item.id,
+        idx: index
+      })
+      this.buttonLoading = false;
+    },
+    async unStar(item, index) {
+      this.buttonLoading = true;
+      await this.unStarSubQuestion({
+        userId: this.userId,
+        mainId: item.mainId,
+        subId: item.id,
+        idx: index
+      })
+      this.buttonLoading = false;
+    },
   }
 }
 </script>
