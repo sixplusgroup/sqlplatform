@@ -26,4 +26,10 @@ public interface BatchMapper {
     List<Object> selectSubmitRecord(@Param("userId") String userId,
                                     @Param("mainId") int mainId,
                                     @Param("subId") int subId);
+
+    /**
+     * 查某用户最近 n 次提交记录
+     */
+    List<Object> selectRecentSubmits(@Param("userId") String userId,
+                                     @Param("n") int n);
 }

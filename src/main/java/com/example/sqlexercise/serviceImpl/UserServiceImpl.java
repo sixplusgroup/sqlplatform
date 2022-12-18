@@ -164,4 +164,13 @@ public class UserServiceImpl implements UserService {
         return res;
     }
 
+    /**
+     * 获取用户最近 n 条提交记录
+     */
+    @Override
+    public Object getRecentSubmits(String userId, int n) {
+        List<Object> res = batchMapper.selectRecentSubmits(userId, n);
+        return res;
+    }
+
 }
