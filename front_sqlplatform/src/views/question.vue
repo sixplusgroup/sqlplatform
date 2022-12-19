@@ -15,7 +15,19 @@
 
         <a-tabs v-model:activeKey="activeKey" style="text-align: left" @change="changePage(activeKey)">
           <a-tab-pane v-if="!loading"
-                      :key="index" v-for="(item,index) in subQuestions" :tab="'问题' + (index+1)">
+                      :key="index" v-for="(item,index) in subQuestions" >
+            <template #tab>
+              {{ '问题' + (index + 1) }} &nbsp
+              <span class="passState" v-if="item.state">
+                <a-tooltip placement="bottom" title="已通过">
+                  <a-icon type="check-circle" style="color: #52c41a"></a-icon>
+                </a-tooltip>
+              </span>
+              <span v-else class="passState">
+                <a-tooltip placement="bottom" title="未通过">
+                  <a-icon type="clock-circle" style="color: #faad14"></a-icon></a-tooltip>
+              </span>
+            </template>
             <div
               style="padding: 1em"
             >{{ item.description }}
@@ -52,7 +64,8 @@
                   v-for="(obj,idx) in item.record"
                   :key="idx"
                   :color="obj.passOrNot === '通过' ? 'green' : 'red'">
-                  {{obj.submitTime.replace('T',' ')}}&nbsp&nbsp {{obj.passOrNot}}</a-timeline-item>
+                  {{ obj.submitTime.replace('T', ' ') }}&nbsp&nbsp {{ obj.passOrNot }}
+                </a-timeline-item>
               </a-timeline>
             </div>
           </a-tab-pane>
@@ -88,7 +101,7 @@ export default {
     await this.getQuestion(this.$route.params.mainId)
     // 获取本题所有小题的缓存数据
     for (let i in this.subQuestions) {
-      if (this.$route.params.subId == this.subQuestions[i].id) {
+      if (this.$route.params.subId === this.subQuestions[i].id) {
         this.activeKey = i;
       }
       let data = {
@@ -310,12 +323,16 @@ export default {
   padding: 6px;
   text-align: right;
 }
-.records{
+
+.records {
   height: 20vh;
   overflow: scroll;
   padding: 1em;
   background-color: rgb(247, 247, 247);
   margin-top: 1em;;
+}
+.passState{
+  border-radius: 5px;
 }
 
 </style>

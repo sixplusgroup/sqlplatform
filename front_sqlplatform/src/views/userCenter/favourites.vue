@@ -2,12 +2,12 @@
 <div style="width: 80vw;">
   <div class="cardsWrapper">
 
-    <a-row :gutter="16">
+    <a-row :gutter="18">
       <a-col :span="8" v-for="item in userStars" :key="item.subId">
         <a-card
                 :title="item.title" class="starCards">
           <template #extra><a @click="getQuestionDetail(item.mainId)">去做题</a></template>
-          <p>{{item.description}}</p>
+          <p style="max-height: 105px;overflow: scroll">{{item.description}}</p>
         </a-card>
       </a-col>
     </a-row>
@@ -60,7 +60,7 @@ export default {
   display: inline-block;
   width: 16vw;
   text-align: left;
-  margin: 1em 0em 1em 0em;
+  margin: 1em 0 1em 0;
 }
 
 </style>

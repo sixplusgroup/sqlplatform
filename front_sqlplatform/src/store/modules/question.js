@@ -13,8 +13,8 @@ import {
 const question = {
   state: {
     mainQuestion: '',
-    subQuestions: {},
-    questionList: {},
+    subQuestions: [],
+    questionList: [],
     draft: [],
   },
   mutations: {
@@ -35,6 +35,9 @@ const question = {
     },
     set_star_state: (state, data) => {
       state.subQuestions[data.i].isStared = data.state;
+    },
+    set_commit_state: (state, data) => {
+      state.subQuestions[data.i].state = data.state;
     },
     set_submit_record: (state, data) => {
       state.subQuestions[data.i].record = data.obj;
@@ -76,6 +79,11 @@ const question = {
         commit('set_star_state', {state: true, i: data.idx})
       } else {
         commit('set_star_state', {state: false, i: data.idx})
+      }
+      if(res.obj.state ==='已通过'){
+        commit('set_commit_state',{state: true, i: data.idx})
+      } else{
+        commit('set_commit_state',{state: false, i: data.idx})
       }
     },
     starSubQuestion: async ({commit}, data) => {

@@ -25,6 +25,7 @@ export function getQuestionListAPI(queryParam) {
     url: `/api/question/get_main_question_by_page`,
     method: 'GET',
     params: {
+      userId: queryParam.userId,
       page: queryParam.page,
       pageSize: queryParam.pageSize
     }

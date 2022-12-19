@@ -77,6 +77,16 @@ export function modifyInfoAPI(data){
   })
 }
 
+export function getRecentSubmitAPI(data){
+  return axios({
+    url:`/api/user/recent_submits`,
+    method: 'GET',
+    params:{userId: data}
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
 
 
 

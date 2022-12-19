@@ -10,16 +10,15 @@
                class="mainTable"
       >
         <span slot="action" slot-scope="text, record">
-          <a @click="getQuestionDetail(record.id)">去做题</a>
+          <a @click="getQuestionDetail(record.mainId)">去做题</a>
         </span>
 
-        <span slot="difficulty" slot-scope="text, record">
-          <a-tag
-            :key="text"
-            :color="(text === 'hard') ? 'volcano' : (text === 'medium') ? 'geekblue' : 'green'"
-          >
-            {{ text.toUpperCase() }}
-          </a-tag>
+        <span slot="passedNum" slot-scope="text, record">
+          {{text+' / '+record.subCount}}
+        </span>
+
+        <span slot="submittedButNotPassNum" slot-scope="text, record">
+          {{text+' / '+record.subCount}}
         </span>
 
       </a-table>
@@ -42,11 +41,6 @@ export default {
       current: ref(1),
       loading: false,
       columns: [
-        // {
-        //   title: '题目编号',
-        //   dataIndex: 'id',
-        //   key: 'id',
-        // },
         {
           title: '题目名称',
           dataIndex: 'title',
@@ -55,17 +49,18 @@ export default {
           width: 250
         },
         {
-          title: '难度等级',
-          dataIndex: 'difficulty',
-          key: 'difficulty',
+          title: '已通过',
+          dataIndex: 'passedNum',
+          key: 'passedNum',
           align: 'center',
-          scopedSlots: {customRender: 'difficulty'}
+          scopedSlots: {customRender: 'passedNum'}
         },
         {
-          title: '小题数目',
-          dataIndex: 'subCount',
-          key: 'subCount',
+          title: '提交未通过',
+          dataIndex: 'submittedButNotPassNum',
+          key: 'submittedButNotPassNum',
           align: 'center',
+          scopedSlots: {customRender: 'submittedButNotPassNum'}
         },
         {
           title: '操作',
@@ -77,13 +72,13 @@ export default {
     }
   },
   async mounted() {
-    await this.getUserInfoByToken();
-    await this.getQuestionList({page: 1, pageSize: 10});
+    if (this.userId === '') await this.getUserInfoByToken();
+    await this.getQuestionList({userId: this.userId, page: 1, pageSize: 10});
     this.clear_draft()
   },
   computed: {
     ...mapGetters([
-      'questionList'
+      'questionList','userId'
     ])
   },
   methods: {
@@ -98,6 +93,7 @@ export default {
       this.loading = true
       this.current = page
       const params = {
+        userId: this.userId,
         pageSize: 10,
         page: page,
       }

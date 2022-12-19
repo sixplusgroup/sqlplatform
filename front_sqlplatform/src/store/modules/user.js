@@ -7,7 +7,7 @@ import {message} from 'ant-design-vue'
 import {
   loginAPI,
   sendCodeAPI,
-  registerAPI,
+  registerAPI,getRecentSubmitAPI,
   getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI
 } from '../../api/user'
 
@@ -19,7 +19,8 @@ const user = {
       name: null
     },
     userStars: [],
-    statistic: {}
+    statistic: {},
+    recentSubmit: []
   },
   mutations: {
     reset_state: function (state) {
@@ -39,6 +40,9 @@ const user = {
     },
     set_user_statistic: (state, data) => {
       state.statistic = data;
+    },
+    set_recent_submit: (state, data) => {
+      state.recentSubmit = data;
     },
 
   },
@@ -103,6 +107,12 @@ const user = {
       if (res) {
         message.success("修改成功！")
         dispatch('getUserInfoByToken')
+      }
+    },
+    getRecentSubmit: async({ commit }, data) => {
+      const res = await getRecentSubmitAPI(data);
+      if (res) {
+        commit('set_recent_submit',res.obj)
       }
     },
   }

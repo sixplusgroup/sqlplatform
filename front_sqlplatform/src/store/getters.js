@@ -6,6 +6,7 @@ const getters = {
   userInfo: state => state.user.userInfo,
   userStars: state => state.user.userStars,
   statistic: state => state.user.statistic,
+  recentSubmit: state => state.user.recentSubmit,
 
   mainQuestion: state => state.question.mainQuestion,
   subQuestions: state => state.question.subQuestions,
