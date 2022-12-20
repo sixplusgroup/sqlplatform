@@ -7,14 +7,14 @@ import {
   getMainQuestionAPI, getSubQuestionsAPI,
   getQuestionListAPI, saveDraftAPI,
   getDraftAPI, getStarStateAPI,
-  starSubQuestionAPI, unStarSubQuestionAPI
+  starSubQuestionAPI, unStarSubQuestionAPI,getSubmitRecordAPI
 } from "../../api/question";
 
 const question = {
   state: {
     mainQuestion: '',
-    subQuestions: {},
-    questionList: {},
+    subQuestions: [],
+    questionList: [],
     draft: [],
   },
   mutations: {
@@ -35,6 +35,12 @@ const question = {
     },
     set_star_state: (state, data) => {
       state.subQuestions[data.i].isStared = data.state;
+    },
+    set_commit_state: (state, data) => {
+      state.subQuestions[data.i].state = data.state;
+    },
+    set_submit_record: (state, data) => {
+      state.subQuestions[data.i].record = data.obj;
     },
   },
   actions: {
@@ -61,19 +67,23 @@ const question = {
     },
     getDraft: async ({commit}, data) => {
       const res = await getDraftAPI(data)
-      // console.log(res)
       if (res.msg === '未保存过草稿') {
         commit('set_draft', 'SELECT * FROM')
       } else {
         commit('set_draft', res.obj.draft)
       }
     },
-    getStarState: async ({commit}, data) => {
+    getQuestionState: async ({commit}, data) => {
       const res = await getStarStateAPI(data)
-      if (res.msg === '已收藏') {
+      if (res.obj.isStarred === '已收藏') {
         commit('set_star_state', {state: true, i: data.idx})
       } else {
         commit('set_star_state', {state: false, i: data.idx})
+      }
+      if(res.obj.state ==='已通过'){
+        commit('set_commit_state',{state: true, i: data.idx})
+      } else{
+        commit('set_commit_state',{state: false, i: data.idx})
       }
     },
     starSubQuestion: async ({commit}, data) => {
@@ -88,6 +98,12 @@ const question = {
       if (res) {
         commit('set_star_state', {state: false, i: data.idx})
         message.success(res.msg+'成功')
+      }
+    },
+    getSubmitRecord: async ({commit}, data) => {
+      const res = await getSubmitRecordAPI(data);
+      if (res) {
+        commit('set_submit_record', {obj: res.obj, i: data.idx})
       }
     },
 

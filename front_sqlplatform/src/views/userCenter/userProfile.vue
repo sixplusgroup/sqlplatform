@@ -1,5 +1,5 @@
 <template>
-  <!--  <div  class="mycontainer">-->
+    <div  class="mycontainer">
   <a-form :form="form" class="userinfofrom">
     <div class="infotitleswiper">
       <div>
@@ -48,11 +48,11 @@
       </a-button>
     </div>
   </a-form>
-  <!--  </div>-->
+    </div>
 </template>
 
 <script>
-import {mapGetters} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 
 export default {
   name: "userProfile",
@@ -63,21 +63,16 @@ export default {
       formLayout: 'horizontal',
       pagination: {},
       data: [],
-
     }
   },
   computed: {
     ...mapGetters([
-      // 'userId',
-      // 'creditInfo',
+      'userId',
       'userInfo',
-      // 'userOrderList',
-      // 'registeredMemberVisible',
-      // 'userpic'
     ]),
-
   },
   methods: {
+    ...mapActions(['modifyUserInfo']),
     modifyInfo() {
       setTimeout(() => {
         this.form.setFieldsValue({
@@ -95,11 +90,11 @@ export default {
         if (!err) {
           const data = {
             name: this.form.getFieldValue('name'),
-            email: this.form.getFieldValue('email'),
+            email: this.userInfo.email,
             password: this.form.getFieldValue('password')
           }
           console.log(data)
-          this.updateUserInfo(data).then(() => {
+          this.modifyUserInfo(data).then(() => {
             this.modify = false
           })
         }
@@ -110,6 +105,11 @@ export default {
 </script>
 
 <style lang="less">
+.mycontainer{
+  text-align: center;
+  width: 80vw;
+  padding-top: 5em;
+}
 
 .userdescript {
   color: #333333;
@@ -119,19 +119,20 @@ export default {
 }
 
 .userinfofrom {
+  display: inline-block;
   padding: 3em;
-  margin: .6em;
+  margin: 1em;
   //border: 1px solid #d9d9d9;
-  //box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
+  box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
   //width: 78vw;
-  height: calc(98vh - 47px);
+  height: 75vh;
   //border-radius: 8px;
   .userinfotitle {
     color: #333333;
     font-size: 28px;
     margin-top: 20px;
-    //text-align: left;
-    margin-left: 25px;
+    text-align: left;
+    //margin-left: 25px;
   }
 
   .userinfodisc {

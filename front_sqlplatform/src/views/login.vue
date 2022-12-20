@@ -395,6 +395,7 @@ export default {
   background: rgba(255, 255, 255, 0.91);
 
   padding: 40px 50px;
+  margin-left: 5em;
 
   width: 560px;
   height: 100vh;

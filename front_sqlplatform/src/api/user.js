@@ -54,6 +54,38 @@ export function getUserStarsAPI(data){
   })
 }
 
+export function getUserStatisticAPI(data){
+  return axios({
+    url:`/api/user/statistic`,
+    method: 'GET',
+    params:{
+      userId: data
+    }
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+
+export function modifyInfoAPI(data){
+  return axios({
+    url:`/api/modify_info`,
+    method: 'POST',
+    data
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+export function getRecentSubmitAPI(data){
+  return axios({
+    url:`/api/user/recent_submits`,
+    method: 'GET',
+    params:{userId: data}
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
 
 
 

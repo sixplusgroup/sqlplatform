@@ -21,11 +21,11 @@ export function getSubQuestionsAPI(mainId) {
 
 //获取题目列表
 export function getQuestionListAPI(queryParam) {
-  console.log(queryParam)
   return axios({
     url: `/api/question/get_main_question_by_page`,
     method: 'GET',
     params: {
+      userId: queryParam.userId,
       page: queryParam.page,
       pageSize: queryParam.pageSize
     }
@@ -61,7 +61,7 @@ export function getDraftAPI(data) {
 
 export function getStarStateAPI(data) {
   return axios({
-    url: `/api/question/star_or_not`,
+    url: `/api/question/isStarred_and_state`,
     method: 'GET',
     params: {
       userId: data.userId,
@@ -98,6 +98,16 @@ export function unStarSubQuestionAPI(data) {
     }
   }).catch((r) => {
     console.log("catch: ", r)
+  })
+}
+
+export function getSubmitRecordAPI(id){
+  return axios({
+    url:`/api/question/submit_record`,
+    method: 'GET',
+    params: id
+  }).catch((r) => {
+    console.log("catch: " , r)
   })
 }
 

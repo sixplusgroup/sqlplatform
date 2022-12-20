@@ -1,89 +1,90 @@
 <template>
-  <div style="text-align: center;">
+  <div style="text-align: center;width: 80vw;">
     <div
       class="questionList"
     >
       <a-table :dataSource="questionList" :columns="columns"
-               bordered
+               :key="questionList.id"
                :pagination="false"
                :loading="loading"
-               style="margin-bottom: 1em"
+               class="mainTable"
       >
         <span slot="action" slot-scope="text, record">
-      <a @click="getQuestionDetail(record.id)">去做题</a>
-<!--      <a-divider type="vertical"/><a>收藏(未实现)</a>-->
-    </span>
+          <a @click="getQuestionDetail(record.mainId)">去做题</a>
+        </span>
 
+        <span slot="passedNum" slot-scope="text, record">
+          {{text+' / '+record.subCount}}
+        </span>
+
+        <span slot="submittedButNotPassNum" slot-scope="text, record">
+          {{text+' / '+record.subCount}}
+        </span>
 
       </a-table>
       <a-pagination v-model:current="current"
                     @change="pageChange"
-                    :total="20"
+                    :total="30"
                     show-less-items></a-pagination>
     </div>
-
-
-<!--    <a-button @click="getRandomQuestions">随机一题</a-button>-->
-<!--    <a-button @click="handleLogout">Logout</a-button>-->
   </div>
 </template>
 
 <script>
 import {mapGetters, mapActions, mapMutations} from 'vuex'
-import { ref } from 'vue';
+import {ref} from 'vue';
+
 export default {
   name: "exerciseList",
   data() {
     return {
-      // dataSource: {},
       current: ref(1),
       loading: false,
       columns: [
         {
-          title: '题目编号',
-          dataIndex: 'id',
-          key: 'id',
-        }, ,
-        {
           title: '题目名称',
           dataIndex: 'title',
           key: 'title',
+          align: 'center',
+          width: 250
         },
         {
-          title: '难度等级',
-          dataIndex: 'difficulty',
-          key: 'difficulty',
+          title: '已通过',
+          dataIndex: 'passedNum',
+          key: 'passedNum',
+          align: 'center',
+          scopedSlots: {customRender: 'passedNum'}
         },
         {
-          title: '小题数目',
-          dataIndex: 'subCount',
-          key: 'subCount',
+          title: '提交未通过',
+          dataIndex: 'submittedButNotPassNum',
+          key: 'submittedButNotPassNum',
+          align: 'center',
+          scopedSlots: {customRender: 'submittedButNotPassNum'}
         },
         {
           title: '操作',
           key: 'action',
-          scopedSlots: { customRender: 'action' }
+          align: 'center',
+          scopedSlots: {customRender: 'action'}
         },
       ],
     }
   },
   async mounted() {
-    await this.getUserInfoByToken();
-    await this.getQuestionList({page: 1, pageSize: 10});
-    // this.dataSource = this.questionList
-    // if(this.userInfo)
+    if (this.userId === '') await this.getUserInfoByToken();
+    await this.getQuestionList({userId: this.userId, page: 1, pageSize: 10});
     this.clear_draft()
-
   },
   computed: {
     ...mapGetters([
-      'questionList'
+      'questionList','userId'
     ])
   },
   methods: {
     ...mapActions([
       'logout',
-      'getQuestionList', 'getQuestion','getUserInfoByToken'
+      'getQuestionList', 'getQuestion', 'getUserInfoByToken'
     ]),
     ...mapMutations([
       'clear_draft'
@@ -92,6 +93,7 @@ export default {
       this.loading = true
       this.current = page
       const params = {
+        userId: this.userId,
         pageSize: 10,
         page: page,
       }
@@ -101,12 +103,7 @@ export default {
     handleLogout() {
       this.logout()
     },
-    getRandomQuestions() {
-      let mainId = Math.floor(Math.random() * 20);
-      this.$router.push({name: 'question', params: {mainId: (mainId)}})
-    },
     getQuestionDetail(id) {
-
       this.$router.push({name: 'question', params: {mainId: id}})
     }
   }
@@ -115,8 +112,14 @@ export default {
 
 <style scoped>
 .questionList {
-  padding: 2em 10em 1em 10em;
+  padding: 4em 0 1em 0;
   text-align: center;
+}
+.mainTable{
+  margin-bottom: 1em;
+  display: inline-block;
+  width: 60vw;
+  box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
 }
 
 </style>
