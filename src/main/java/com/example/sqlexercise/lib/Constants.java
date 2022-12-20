@@ -32,4 +32,26 @@ public class Constants {
         public static final int PASSED = 2;
     }
 
+    /**
+     * Docker相关
+     */
+    public static class DockerRelated {
+        /**
+         * MySQL docker image     的名称、版本号
+         * docker container 的默认端口
+         */
+        public static final String MYSQL_IMAGE_NAME = "mysql";
+        public static final String MYSQL_IMAGE_TAG = "5.7";
+        public static final String MYSQL_IMAGE = MYSQL_IMAGE_NAME + ":" + MYSQL_IMAGE_TAG;
+        public static final int MYSQL_CONTAINER_DEFAULT_PORT = 3310;
+        /**
+         * Redis docker image     的名称、版本号
+         * docker container 的默认端口
+         */
+        public static final String REDIS_IMAGE_NAME = "redis";
+        public static final String REDIS_IMAGE_TAG = "7.0";
+        public static final String REDIS_IMAGE = REDIS_IMAGE_NAME + ":" + REDIS_IMAGE_TAG;
+        public static final int REDIS_CONTAINER_DEFAULT_PORT = 6379;
+    }
+
 }
