@@ -21,16 +21,16 @@ public class CacheTest {
     public void cacheTest() {
         System.out.println("=============第一次查询：=============");
         ResultOfTask result = sqlDatabaseService.getStandardAnswer(10, "mysql");
-        System.out.println(result);
+        System.out.println(result.toString());
         System.out.println("=============第二次查询：=============");
         result = sqlDatabaseService.getStandardAnswer(10, "mysql");
-        System.out.println(result);
+        System.out.println(result.toString());
         System.out.println("=============第三次查询：=============");
         try {
             //休眠7s后再次查询，主要是模拟Caffeine过期
             TimeUnit.SECONDS.sleep(7);
             result = sqlDatabaseService.getStandardAnswer(10, "mysql");
-            System.out.println(result);
+            System.out.println(result.toString());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -39,7 +39,7 @@ public class CacheTest {
             //休眠30s后再次查询，主要是模拟Redis过期
             TimeUnit.SECONDS.sleep(30);
             result = sqlDatabaseService.getStandardAnswer(10, "mysql");
-            System.out.println(result);
+            System.out.println(result.toString());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

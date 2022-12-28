@@ -72,7 +72,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
     }
 
     @Override
-    @Cacheable("standardAnswer")
+//    @Cacheable("standardAnswer")
     public ResultOfTask getStandardAnswer(int subId, String driver) {
         // 1.先从Caffeine缓存中读取
         Object o = caffeineCache.getIfPresent(subId);
@@ -107,7 +107,7 @@ public class SqlDatabaseServiceImpl implements SqlDatabaseService {
             caffeineCache.put(subId, result);
 
             // 保存Redis缓存,20s后过期
-            redisTemplate.opsForValue().set(subId, JSON.toJSONString(result), 20, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(subId, JSON.toJSONString(result), 15, TimeUnit.MINUTES);
         }
         System.out.println("从数据库中查询到数据...");
         return result;
