@@ -2,20 +2,70 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.sqlexercise.data.BatchMapper">
     <resultMap id="Batch" type="com.example.sqlexercise.po.Batch">
-        <id column="id" property="id"></id>
-        <result column="batch_text" property="batch_text"></result>
-        <result column="user_id" property="user_id"></result>
-        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="created_at"></result>
-        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updated_at"></result>
-        <result column="main_id" property="main_id"></result>
-        <result column="sub_id" property="sub_id"></result>
+        <id column="id" property="id"/>
+        <result column="batch_text" property="batchText"/>
+        <result column="user_id" property="userId"/>
+        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"/>
+        <result column="main_id" property="mainId"/>
+        <result column="sub_id" property="subId"/>
     </resultMap>
 
-    <select id="getById" resultMap="Batch">
-        select * from batches where id=#{id}
+    <select id="selectById" resultMap="Batch">
+        select *
+        from batch
+        where id = #{id}
     </select>
 
-    <insert id="create" parameterType="com.example.sqlexercise.po.Batch" useGeneratedKeys="false">
-        insert into batches values (#{id},#{batch_text},#{user_id},#{created_at},#{updated_at},#{main_id},#{sub_id})
+    <insert id="insert" parameterType="com.example.sqlexercise.po.Batch" useGeneratedKeys="false">
+        insert into batch
+        values (#{id}, #{batchText}, #{userId}, #{createdAt}, #{updatedAt}, #{mainId}, #{subId})
     </insert>
+
+    <select id="selectSubmitTimesByUserId" resultType="java.lang.Integer">
+        select count(*)
+        from batch
+        where user_id = #{userId}
+    </select>
+
+    <select id="selectSubmitRecord" resultType="map">
+        select batch.created_at                         as submitTime,
+               IF(pass_record.point = 100, '通过', '未通过') as passOrNot
+        from batch
+                 left join
+             pass_record on batch.id = pass_record.batch_id
+        where batch.user_id = #{userId}
+          and batch.main_id = #{mainId}
+          and batch.sub_id = #{subId}
+        order by submitTime desc
+    </select>
+
+    <select id="selectRecentSubmits" resultType="map">
+        select records.main_id          as mainId,
+               records.sub_id           as subId,
+               main_question.title      as title,
+               sub_question.description as description,
+               records.latestSubmitTime as latestSubmitTime,
+               case
+                   when sub_question.difficulty = 1 then 'easy'
+                   when sub_question.difficulty = 2 then 'medium'
+                   when sub_question.difficulty = 3 then 'hard'
+                   end                  as difficulty,
+               records.submitTimes      as submitTimes
+        from main_question,
+             sub_question,
+             (select main_id,
+                     sub_id,
+                     count(*)        as submitTimes,
+                     min(created_at) as firstSubmitTime,
+                     max(created_at) as latestSubmitTime
+              from batch
+              where user_id = #{userId}
+              group by main_id, sub_id
+              order by latestSubmitTime desc
+              limit #{n}) records
+        where records.main_id = main_question.id
+          and records.sub_id = sub_question.id;
+    </select>
+
 </mapper>

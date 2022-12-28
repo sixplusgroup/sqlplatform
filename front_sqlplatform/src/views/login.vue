@@ -122,7 +122,7 @@
                 <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
               </a-input>
             </a-form-item>
-            <a-form-item class="register-formItem">
+            <a-form-item class="register-formItem" style="margin-top: 3em">
               <a-button
                 size="large"
                 type="primary"
@@ -259,7 +259,7 @@ export default {
             name: this.form.getFieldValue('registerUsername'),
             code: this.form.getFieldValue('registerCode'),
             password: this.form.getFieldValue('registerPassword'),
-            passwordComfirmation: this.form.getFieldValue('registerPasswordconfirm'),
+            passwordConfirmation: this.form.getFieldValue('registerPasswordconfirm'),
           };
           await this.register(data).then(() => {
             // this.customActiveKey = 'tab1';
@@ -373,10 +373,9 @@ export default {
   min-width: 260px;
   width: 100vw;
   height: 100vh;
-  /*background: #000000 url('https://files.porsche.cn/filestore/image/multimedia/none/banner-ww-pds/normal/976296d6-15b6-11ea-80c6-005056bbdc38;s4/porsche-normal.jpg') no-repeat center;*/
   text-align: center;
   /*padding-top: 5em;*/
-  background-image: url('../assets/login_bg.jpg');
+  background-image: url('../assets/bg.jpeg');
   background-repeat: no-repeat;
   overflow: hidden;
   position: fixed;
@@ -389,14 +388,16 @@ export default {
   margin-bottom: 3em;
 }
 .register-formItem {
-  //margin-bottom: -2px;
+  margin-top: 2em;
   //margin-bottom: -1em;
 }
 .login-left{
   background: rgba(255, 255, 255, 0.91);
-  padding: 40px 50px;
 
-  width: 600px;
+  padding: 40px 50px;
+  margin-left: 5em;
+
+  width: 560px;
   height: 100vh;
   box-shadow: 0 5px 5px rgba(0, 0, 0, .4);
 

@@ -1,5 +1,6 @@
 package com.example.sqlexercise.controller;
 
+import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.service.BatchService;
 import com.example.sqlexercise.vo.BatchVO;
 import com.example.sqlexercise.vo.ResponseVO;
@@ -18,13 +19,31 @@ public class BatchController {
         this.batchService = batchService;
     }
 
-    @PostMapping("/api/batch/create")
-    public ResponseVO createBatch(@RequestBody BatchVO batchVO){
-        return batchService.createBatch(batchVO);
+    /**
+     * 提交
+     *
+     * @return ResponseVO
+     */
+    @PostMapping("/api/batch/submit")
+    public ResponseVO submitBatch(@RequestBody BatchVO batchVO) {
+        String res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
+        return ResponseVO.success(res);
+    }
+
+    /**
+     * 运行
+     *
+     * @return 返回单次运行结果给前端
+     */
+    @PostMapping("/api/batch/run")
+    public ResponseVO runBatch(@RequestBody BatchVO batchVO) {
+        String res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+        return ResponseVO.success(res);
     }
 
     @GetMapping("/api/batch/get")
-    public ResponseVO getBatch(@RequestParam String batchId){
+    public ResponseVO getBatch(@RequestParam("batchId") String batchId) {
         return ResponseVO.success(batchService.getBatch(batchId));
     }
+
 }

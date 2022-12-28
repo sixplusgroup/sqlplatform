@@ -18,7 +18,7 @@ public class UserServiceTest {
         userVO.setEmail("181250043@smail.nju.edu.cn");
         userVO.setCode("4m24n6");
         userVO.setPassword("123456");
-        userVO.setPasswordComfirmation("123456");
+        userVO.setPasswordConfirmation("123456");
         userService.signUp(userVO);
     }
 }

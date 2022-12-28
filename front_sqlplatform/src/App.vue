@@ -1,20 +1,23 @@
 <template>
-  <div id="layout">
-    <Header class="outHeaderStyle"></Header>
-    <!--        引入了一个全局父样式，通过router view进行局部内容切换-->
+  <div id="app">
     <transition name="fade-transform" mode="out-in">
       <router-view/>
     </transition>
-    <!--        <footerPage/>-->
   </div>
 </template>
 
 <script>
-import Header from './components/header.vue';
+import {mapGetters} from "vuex";
 
 export default {
-  components: { Header },
-  name: 'App'
+  name: 'App',
+  computed: {
+    ...mapGetters([
+      // 'userInfo',
+      'isLogin',
+      'userId',
+    ]),
+  },
 }
 </script>
 
@@ -25,13 +28,8 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
-}
-.outHeaderStyle{
-  position:fixed;
-  top:0px;
-  width: 100vw;
-  z-index:999;
+  /*margin-top: 60px;*/
+
 }
 .fade-enter-active {
   transition: all .3s ease;

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Mapper
 public interface AnswerSetMapper {
     AnswerSet getByAnswer(AnswerSet answerSet);
+
     void create(AnswerSet answerSet);
+
     int updateStatus(AnswerSet answerSet);
 }

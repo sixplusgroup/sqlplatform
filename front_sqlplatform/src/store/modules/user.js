@@ -7,14 +7,20 @@ import {message} from 'ant-design-vue'
 import {
   loginAPI,
   sendCodeAPI,
-  registerAPI
+  registerAPI,getRecentSubmitAPI,
+  getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI
 } from '../../api/user'
 
 const user = {
   state: {
     userId: '',
     token: '',
-    userInfo: {}
+    userInfo: {
+      name: null
+    },
+    userStars: [],
+    statistic: {},
+    recentSubmit: []
   },
   mutations: {
     reset_state: function (state) {
@@ -25,31 +31,51 @@ const user = {
     set_userId: (state, data) => {
       state.userId = data
     },
+    set_userInfo: (state, data) => {
+      state.userInfo = data.userInfo;
+      state.userId = data.userId;
+    },
+    set_user_stars: (state, data) => {
+      state.userStars = data;
+    },
+    set_user_statistic: (state, data) => {
+      state.statistic = data;
+    },
+    set_recent_submit: (state, data) => {
+      state.recentSubmit = data;
+    },
 
   },
   actions: {
+    getUserInfoByToken: async ({commit}) => {
+      let data = localStorage.getItem("userId")
+      const res = await getUserInfoAPI(data)
+      if (res) {
+        commit('set_userInfo', {userInfo: res.obj, userId: data})
+      }
+    },
     login: async ({dispatch, commit}, userData) => {
       const res = await loginAPI(userData)
-      console.log(res)
       if (res) {
-        setToken(res.id)
-        // setSecretToken(res.token)
-        localStorage.setItem("token", res.token)
-        commit('set_userId', res.id)
-        // dispatch('getUserInfo')
-        router.push('/')
         message.success("登录成功")
+        setToken(res.obj.id)
+        // setSecretToken(res.token)
+        localStorage.setItem("token", res.obj.id)
+        localStorage.setItem("userId", res.obj.id);
+        commit('set_userId', res.obj.id)
+        commit('set_userInfo', res.obj)
+        router.push('/')
       } else {
         message.error('用户名或密码错误！')
       }
     },
-    register: async ({commit}, data) => {
+    register: async (data) => {
       const res = await registerAPI(data)
       if (res) {
         message.success('注册成功')
       }
     },
-    sendCode: async ({commit}, email) => {
+    sendCode: async (email) => {
       const res = await sendCodeAPI(email)
       if (res) {
         message.success('验证码发送成功，请查收')
@@ -62,6 +88,32 @@ const user = {
       resetRouter()
       router.push('/login')
       // const res = await logoutAPI();
+    },
+    getUserStars: async({ commit }, userId) => {
+      const res = await getUserStarsAPI(userId);
+      if (res) {
+        commit('set_user_stars',res.obj)
+      }
+    },
+    getUserStatistic: async({ commit }, userId) => {
+      const res = await getUserStatisticAPI(userId);
+
+      if (res) {
+        commit('set_user_statistic',res.obj)
+      }
+    },
+    modifyUserInfo: async({ dispatch }, data) => {
+      const res = await modifyInfoAPI(data);
+      if (res) {
+        message.success("修改成功！")
+        dispatch('getUserInfoByToken')
+      }
+    },
+    getRecentSubmit: async({ commit }, data) => {
+      const res = await getRecentSubmitAPI(data);
+      if (res) {
+        commit('set_recent_submit',res.obj)
+      }
     },
   }
 }

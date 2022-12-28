@@ -48,7 +48,7 @@ service.interceptors.request.use(
     }
     if (localStorage.getItem("token")) {
       const token = localStorage.getItem("token");
-      console.log("TokenFromLocalStore ", token)
+      // console.log("TokenFromLocalStore ", token)
       requestConfig.headers.token = token;
     }
     return requestConfig
@@ -59,6 +59,9 @@ service.interceptors.response.use((response) => {
   switch (response.status) {
     case 200:
       if (response.data.res === 'success') {
+        return response.data
+      }
+      if (response.data.res === 'failure') {
         return response.data
       }
       message.error(response.data.msg)

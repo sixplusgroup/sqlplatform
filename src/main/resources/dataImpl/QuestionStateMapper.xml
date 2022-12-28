@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.sqlexercise.data.QuestionStateMapper">
+
+    <resultMap id="QuestionState" type="com.example.sqlexercise.po.QuestionState">
+        <id column="id" property="id"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="main_id" property="mainId"/>
+        <result column="sub_id" property="subId"/>
+        <result column="is_starred" jdbcType="TINYINT" javaType="BOOLEAN" property="isStarred"/>
+        <result column="state" jdbcType="TINYINT" property="state"/>
+    </resultMap>
+
+    <select id="select" resultMap="QuestionState">
+        select *
+        from question_state
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </select>
+
+    <select id="selectIsStarredAndStateOf" resultType="map">
+        select case
+                   when is_starred = 0 then '未收藏'
+                   when is_starred = 1 then '已收藏'
+                   end as isStarred,
+               case
+                   when state = 0 then '未开始'
+                   when state = 1 then '提交未通过'
+                   when state = 2 then '已通过'
+                   end as state
+        from question_state
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sqlexercise.po.QuestionState">
+        insert into question_state
+            (user_id, main_id, sub_id, is_starred, state)
+        values (#{userId}, #{mainId}, #{subId}, #{isStarred}, #{state})
+    </insert>
+
+    <update id="updateIsStarred" parameterType="com.example.sqlexercise.po.QuestionState">
+        update question_state
+        set is_starred = #{isStarred}
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </update>
+
+    <update id="updateState" parameterType="com.example.sqlexercise.po.QuestionState">
+        update question_state
+        set state=#{state}
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </update>
+
+    <select id="selectStars" resultType="map">
+        select qs.main_id as mainId, mq.title as title, qs.sub_id as subId, sq.description as description
+        from main_question mq,
+             sub_question sq,
+             (select *
+              from question_state
+              where user_id = #{userId}
+                and is_starred = 1) qs
+        where mq.id = qs.main_id
+          and sq.id = qs.sub_id
+    </select>
+
+    <select id="selectSubmittedButNotPassByUserId" resultType="java.lang.Integer">
+        select count(*) as submittedButNotPass
+        from question_state
+        where user_id = #{userId}
+          and state = 1;
+    </select>
+
+    <select id="selectPassedByUserId" resultType="java.lang.Integer">
+        select count(*) as passed
+        from question_state
+        where user_id = #{userId}
+          and state = 2;
+    </select>
+
+</mapper>

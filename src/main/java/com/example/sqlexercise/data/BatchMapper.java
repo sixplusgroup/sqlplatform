@@ -5,12 +5,31 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Mapper
 public interface BatchMapper {
 
-    void create(Batch batch);
+    void insert(Batch batch);
 
-    Batch getById(@Param("id") String id);
+    Batch selectById(@Param("id") String id);
 
+    /**
+     * 查某用户总提交次数
+     */
+    int selectSubmitTimesByUserId(@Param("userId") String userId);
+
+    /**
+     * 查某用户某题的全部提交记录
+     */
+    List<Object> selectSubmitRecord(@Param("userId") String userId,
+                                    @Param("mainId") int mainId,
+                                    @Param("subId") int subId);
+
+    /**
+     * 查某用户最近 n 次提交记录
+     */
+    List<Object> selectRecentSubmits(@Param("userId") String userId,
+                                     @Param("n") int n);
 }

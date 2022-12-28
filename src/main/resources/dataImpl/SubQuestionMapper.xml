@@ -2,18 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.sqlexercise.data.SubQuestionMapper">
     <resultMap id="SubQuestion" type="com.example.sqlexercise.po.SubQuestion">
-        <id column="id" property="id"></id>
-        <result column="main_id" property="mainId"></result>
-        <result column="desc" property="desc"></result>
-        <result column="answer" property="answer"></result>
-        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"></result>
-        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"></result>
-        <result column="difficulty" property="difficulty"></result>
-        <result column="ordered" jdbcType="TINYINT" javaType="BOOLEAN" property="ordered"></result>
+        <id column="id" property="id"/>
+        <result column="main_id" property="mainId"/>
+        <result column="description" property="description"/>
+        <result column="answer" property="answer"/>
+        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"/>
+        <result column="difficulty" property="difficulty"/>
+        <result column="ordered" jdbcType="TINYINT" javaType="BOOLEAN" property="ordered"/>
     </resultMap>
 
-    <select id="getBySubId" resultMap="SubQuestion">
-        select * from sub_questions where id=#{subId}
+    <select id="selectByMainId" resultMap="SubQuestion">
+        select *
+        from sub_question
+        where main_id = #{mainId}
+    </select>
+
+    <select id="selectBySubId" resultMap="SubQuestion">
+        select *
+        from sub_question
+        where id = #{subId}
+    </select>
+
+    <select id="selectAll" resultMap="SubQuestion">
+        select *
+        from sub_question
+    </select>
+
+    <select id="countTotal" resultType="java.lang.Integer">
+        select COUNT(*)
+        from sub_question
     </select>
 
 </mapper>
