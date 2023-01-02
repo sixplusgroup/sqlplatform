@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<PassRecord> getRecords(Integer userId) {
+    public List<PassRecord> getRecords(String userId) {
         return passRecordMapper.selectByUserId(userId);
     }
 

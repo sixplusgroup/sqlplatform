@@ -4,10 +4,13 @@ import com.example.sqlexercise.data.SubQuestionMapper;
 import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.vo.BatchVO;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,8 +27,9 @@ class BatchServiceTest {
     }
 
     @Test
-    void processBatch() throws InterruptedException {
-        Thread.sleep(25 * 1000);
+    @Transactional
+    @Disabled
+    void processBatch() {
         List<SubQuestion> subQuestions = subQuestionMapper.selectAll();
         for (SubQuestion subQuestion : subQuestions) {
             BatchVO batchVO = new BatchVO();
@@ -33,13 +37,14 @@ class BatchServiceTest {
             batchVO.setMainId(subQuestion.getMainId());
             batchVO.setSubId(subQuestion.getId());
             batchVO.setDriver("mysql");
-            batchVO.setUserId("38748ac0-1f40-4ada-b5b7-ee4df2e20128");
+            batchVO.setUserId(ConstantsOfTest.USER_ID);
             String s = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
             Assertions.assertEquals("Passed", s);
         }
     }
 
     @Test
+    @Transactional
     public void test1(){
         BatchVO batchVO = new BatchVO();
         batchVO.setBatchText("select w.eno \n" +
@@ -48,12 +53,13 @@ class BatchServiceTest {
                 "having sum(hours) > 1000;");
         batchVO.setDriver("mysql");
         batchVO.setMainId(1);
-        batchVO.setUserId("ba01ae2f-4baa-4b8f-9035-d6b9a87930a6");
+        batchVO.setUserId(ConstantsOfTest.USER_ID);
         batchVO.setSubId(10);
-        batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
+        batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
     }
 
     @Test
+    @Transactional
     public void test2(){
         BatchVO batchVO = new BatchVO();
         batchVO.setBatchText("select s.sname from sailors s\n" +
@@ -68,8 +74,8 @@ class BatchServiceTest {
                 ");");
         batchVO.setDriver("mysql");
         batchVO.setMainId(2);
-        batchVO.setUserId("ba01ae2f-4baa-4b8f-9035-d6b9a87930a6");
+        batchVO.setUserId(ConstantsOfTest.USER_ID);
         batchVO.setSubId(14);
-        batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
+        batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
     }
 }

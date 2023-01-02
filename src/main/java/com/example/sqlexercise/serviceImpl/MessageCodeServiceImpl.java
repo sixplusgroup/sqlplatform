@@ -62,7 +62,8 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             message.setContent("\n\n" +
                     "            <p>欢迎来到 SQL Exercise</p>\n" +
                     "            <p>您的网站账户注册验证码是：</p>\n" +
-                    "        <span style=\"font-size: 24px; color: red\">" + code + "</span>", "text/html;charset=UTF-8");
+                    "        <p><span style=\"font-size: 24px; color: red\">" + code + "</span></p>" +
+                    "            <p>验证码有效期为3分钟</p>", "text/html;charset=UTF-8");
             message.setSentDate(new Date());
             System.out.println(code);
             Transport transport = session.getTransport();
@@ -81,7 +82,7 @@ public class MessageCodeServiceImpl implements MessageCodeService {
     }
 
     @Override
-    public String generateMessageCode(String email) {
+    public String generateMessageCode() {
         StringBuilder newCode = new StringBuilder();
         String all = "0123456789abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         for (int i = 0; i < 6; i++) {

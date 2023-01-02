@@ -4,7 +4,7 @@ import com.example.sqlexercise.vo.ResponseVO;
 
 public interface MessageCodeService {
 
-    String generateMessageCode(String email);
+    String generateMessageCode();
 
     ResponseVO sendMessageCode(String email, String code);
 

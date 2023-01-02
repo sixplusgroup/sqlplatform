@@ -16,7 +16,7 @@ public interface PassRecordMapper {
     /**
      * 查某用户提交通过记录
      */
-    List<PassRecord> selectByUserId(@Param("userId") Integer userId);
+    List<PassRecord> selectByUserId(@Param("userId") String userId);
 
     /**
      * 查某用户提交通过次数
