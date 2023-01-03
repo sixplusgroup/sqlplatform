@@ -10,7 +10,14 @@
                class="mainTable"
       >
         <span slot="action" slot-scope="text, record">
-          <a @click="getQuestionDetail(record.mainId)">去做题</a>
+          <a @click="getQuestionDetail(record.mainId)">
+            <a-icon type="edit"/>&nbsp去做题</a>
+        </span>
+        <span slot="progress" slot-scope="text, record">
+          <a-progress
+            :percent="(record.passedNum)/record.subCount*100"
+            size="small"
+             />
         </span>
 
         <span slot="passedNum" slot-scope="text, record">
@@ -19,6 +26,7 @@
 
         <span slot="submittedButNotPassNum" slot-scope="text, record">
           {{text+' / '+record.subCount}}
+
         </span>
 
       </a-table>
@@ -60,7 +68,16 @@ export default {
           dataIndex: 'submittedButNotPassNum',
           key: 'submittedButNotPassNum',
           align: 'center',
+          width: '20%',
           scopedSlots: {customRender: 'submittedButNotPassNum'}
+        },
+        {
+          title: '完成进度',
+          dataIndex: 'progress',
+          key: 'progress',
+          align: 'center',
+          // width: '40%',
+          scopedSlots: {customRender: 'progress'}
         },
         {
           title: '操作',
@@ -72,7 +89,7 @@ export default {
     }
   },
   async mounted() {
-    if (this.userId === '') await this.getUserInfoByToken();
+    await this.getUserInfoByToken();
     await this.getQuestionList({userId: this.userId, page: 1, pageSize: 10});
     this.clear_draft()
   },

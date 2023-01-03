@@ -2,7 +2,7 @@
   <div class="info-wrapper">
     <div class="leftInfo">
       <img class="userimg"
-           :src=" userInfo.pic?'data:image/png;base64,'+userInfo.pic:'https://avatars.githubusercontent.com/u/93194072?s=200&v=4'">
+           :src=" userInfo.pic?'data:image/png;base64,'+userInfo.pic:'https://spring-security.oss-cn-beijing.aliyuncs.com/img/93194072.jpeg'">
       <div class="usernamesty">{{ userInfo.name }}</div>
       <div class="userdescript">{{ "欢迎使用数据库练习平台" }}</div>
       <div class="useriteminfo">

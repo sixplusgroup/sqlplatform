@@ -93,10 +93,11 @@ const question = {
         message.success(res.msg)
       }
     },
-    unStarSubQuestion: async ({commit}, data) => {
+    unStarSubQuestion: async ({commit,dispatch}, data) => {
       const res = await unStarSubQuestionAPI(data)
       if (res) {
-        commit('set_star_state', {state: false, i: data.idx})
+        if(data.idx !== null) commit('set_star_state', {state: false, i: data.idx})
+        dispatch('getUserStars', data.userId)
         message.success(res.msg+'成功')
       }
     },

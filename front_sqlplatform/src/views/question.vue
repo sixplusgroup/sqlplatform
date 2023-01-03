@@ -13,9 +13,9 @@
     <div class="mid">
       <div class="subQuestion">
 
-        <a-tabs v-model:activeKey="activeKey" style="text-align: left" @change="changePage(activeKey)">
+        <a-tabs v-model="activeKey" style="text-align: left" @change="changePage(activeKey)">
           <a-tab-pane v-if="!loading"
-                      :key="index" v-for="(item,index) in subQuestions" >
+                      :key="index" v-for="(item,index) in subQuestions">
             <template #tab>
               {{ '问题' + (index + 1) }} &nbsp
               <span class="passState" v-if="item.state">
@@ -30,7 +30,11 @@
             </template>
             <div
               style="padding: 1em"
-            >{{ item.description }}
+            ><a-tag v-if="item.difficulty == 1" color="green" class="tag">EASY</a-tag>
+              <a-tag v-else-if="item.difficulty == 2" color="geekblue" class="tag">MEDIUM</a-tag>
+              <a-tag v-else-if="item.difficulty == 3" color="volcano" class="tag">HARD</a-tag>
+
+              {{ item.description }}
             </div>
             <div style="background-color: rgb(247,247,247);padding: 5px;margin-top: 1em "></div>
             <div class="commonEditor">
@@ -99,10 +103,11 @@ export default {
   async mounted() {
     await this.getUserInfoByToken();
     await this.getQuestion(this.$route.params.mainId)
+
     // 获取本题所有小题的缓存数据
     for (let i in this.subQuestions) {
       if (this.$route.params.subId === this.subQuestions[i].id) {
-        this.activeKey = i;
+        this.activeKey = Number(i);
       }
       let data = {
         userId: this.userId,
@@ -119,6 +124,7 @@ export default {
     this.codeSnippets = this.draft;
 
     this.dragControllerDiv();
+    console.log(this.subQuestions)
     this.loading = false;
   },
   computed: {
@@ -256,6 +262,9 @@ export default {
 </script>
 
 <style scoped>
+.tag{
+  margin-bottom: 3px;
+}
 .box {
   width: 100%;
   height: 100%;
@@ -331,7 +340,8 @@ export default {
   background-color: rgb(247, 247, 247);
   margin-top: 1em;;
 }
-.passState{
+
+.passState {
   border-radius: 5px;
 }
 
