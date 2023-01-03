@@ -1,16 +1,21 @@
 <template>
 <div style="width: 80vw;">
   <div class="cardsWrapper">
+    <a-table :dataSource="userStars" :columns="columns"
+             :key="userStars.id"
+             :pagination="false"
+    >
 
-    <a-row :gutter="18">
-      <a-col :span="8" v-for="item in userStars" :key="item.subId">
-        <a-card
-                :title="item.title" class="starCards">
-          <template #extra><a @click="getQuestionDetail(item.mainId)">去做题</a></template>
-          <p style="max-height: 105px;overflow: scroll">{{item.description}}</p>
-        </a-card>
-      </a-col>
-    </a-row>
+      <span slot="action" slot-scope="text, record">
+          <a @click="getQuestionDetail(record)">
+            <a-icon type="edit"/>&nbsp去做题</a>
+        <a-divider type="vertical"></a-divider>
+        <a @click="unStar(record)"><a-icon type="star"/>取消收藏</a>
+        </span>
+      <template #title>
+        <h2 style="float: left;margin-left: 1em">收藏夹</h2>
+      </template>
+    </a-table>
 
   </div>
 </div>
@@ -22,24 +27,61 @@ import {mapActions, mapGetters} from "vuex";
 
 export default {
   name: "favourites",
+  data(){
+    return {
+      columns: [
+        {
+          title: '题目名称',
+          dataIndex: 'title',
+          key: 'title',
+          align: 'center',
+          // width: 250
+        },
+        {
+          title: '小题描述',
+          dataIndex: 'description',
+          key: 'description',
+          align: 'center',
+          width: '50%',
+        },
+        {
+          title: '操作',
+          key: 'action',
+          align: 'center',
+          scopedSlots: {customRender: 'action'}
+        },
+      ]
+    }
+  },
 
   computed: {
     ...mapGetters([
       'userStars',
+      'userId'
 
     ]),
 
   },
-  mounted() {
-    this.getUserStars(localStorage.getItem('userId'))
+  async mounted() {
+    await this.getUserInfoByToken()
+    await this.getUserStars(this.userId)
 
   },
   methods: {
     ...mapActions([
-      'getUserStars',
+      'getUserStars','unStarSubQuestion','getUserInfoByToken'
     ]),
-    getQuestionDetail(id) {
-      this.$router.push({name: 'question', params: {mainId: id}})
+    getQuestionDetail(record) {
+      this.$router.push({name: 'question', params: {mainId: record.mainId, subId: record.subId}})
+    },
+    unStar(item){
+
+      this.unStarSubQuestion({
+        userId: this.userId,
+        mainId: item.mainId,
+        subId: item.subId,
+        idx: null
+      })
     }
   }
 }

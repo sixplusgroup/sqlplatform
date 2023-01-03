@@ -7,10 +7,10 @@
                :pagination="false"
       >
         <span slot="latestSubmitTime" slot-scope="text, record">
-          {{text.replace('T',' ')}}
+          {{ text.replace('T', ' ') }}
         </span>
         <span slot="action" slot-scope="text, record">
-          <a @click="getQuestionDetail(record.mainId)">去做题</a>
+          <a @click="getQuestionDetail(record)">去做题</a>
         </span>
         <span slot="difficulty" slot-scope="text, record">
           <a-tag
@@ -22,7 +22,7 @@
         </span>
         <template #title>
           <h2 style="float: left;margin-left: 1em">最近提交记录</h2>
-          </template>
+        </template>
       </a-table>
     </div>
   </div>
@@ -34,7 +34,7 @@ import {mapActions, mapGetters} from "vuex";
 
 export default {
   name: "history",
-  data(){
+  data() {
     return {
       columns: [
         {
@@ -97,15 +97,15 @@ export default {
     ...mapGetters([
       'userId',
       'userInfo',
-      'statistic','recentSubmit'
+      'statistic', 'recentSubmit'
     ]),
   },
   methods: {
     ...mapActions([
-      'getUserInfoByToken', 'getUserStatistic','getRecentSubmit'
+      'getUserInfoByToken', 'getUserStatistic', 'getRecentSubmit'
     ]),
-    getQuestionDetail(id){
-      this.$router.push({name: 'question', params: {mainId: id}})
+    getQuestionDetail(record) {
+      this.$router.push({name: 'question', params: {mainId: record.mainId, subId: record.subId}})
     },
     drawEcharts() {
       var chartDom = document.getElementById('chart');
@@ -113,8 +113,8 @@ export default {
       var option;
 
       option = {
-        title:{
-          text: this.statistic.passRate.replace('NaN','0'),
+        title: {
+          text: this.statistic.passRate.replace('NaN', '0'),
           subtext: '提交通过率',
           left: "center",
           top: '40%',
@@ -125,10 +125,11 @@ export default {
             fontSize: 15
           }
         },
-        legend:{
+        legend: {
           orient: 'vertical',
           left: '70%',
-          top: 'center'},
+          top: 'center'
+        },
 
         tooltip: {
           trigger: 'item'
@@ -173,7 +174,7 @@ export default {
 </script>
 
 <style scoped>
-.box{
+.box {
   /*display: flex;*/
   /*justify-content: space-around;*/
   width: 80vw;
@@ -181,6 +182,7 @@ export default {
   height: 100vh;
   overflow: scroll;
 }
+
 #chart {
   width: 40vw;
   height: 30vh;
@@ -190,7 +192,8 @@ export default {
   text-align: center;
 
 }
-#info_1{
+
+#info_1 {
   width: 76vw;
   /*height: 90vh;*/
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
