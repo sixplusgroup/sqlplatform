@@ -69,9 +69,8 @@ const user = {
         message.error('用户名或密码错误！')
       }
     },
-    register: async (data) => {
+    register: async ({},data) => {
       const res = await registerAPI(data)
-      console.log(res)
       if (res.res === 'success') {
         message.success('注册成功')
       }else{
