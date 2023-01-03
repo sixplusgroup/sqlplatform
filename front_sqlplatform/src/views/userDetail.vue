@@ -12,6 +12,7 @@
       <a-menu
         style="width: 100%; background-color: transparent;margin-top: 3em"
         default-selected-keys="exerciseList"
+        v-model:activeKey="selectedKey"
         mode="inline"
         theme="dark"
         @click="handleSelectMenu"
@@ -62,6 +63,7 @@ export default {
     ]),
   },
   mounted() {
+    this.selectedKey = window.location.hash.split('/')[2];
     this.getUserInfoByToken()
   },
   methods: {
