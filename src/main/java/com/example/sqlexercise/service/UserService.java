@@ -9,11 +9,17 @@ import java.util.List;
 
 public interface UserService {
 
+    /**
+     * 注册
+     */
     ResponseVO signUp(UserVO userVO);
 
+    /**
+     * 登录
+     */
     ResponseVO signIn(SignVO signVO);
 
-    List<PassRecord> getRecords(Integer userId);
+    List<PassRecord> getRecords(String userId);
 
     /**
      * 获取用户信息

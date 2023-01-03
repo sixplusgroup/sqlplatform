@@ -67,7 +67,7 @@ public class DockerServer {
     /**
      * 拉取指定image
      * @param repository e.g. mysql/redis
-     * @param tag e.g. 5.7/latest
+     * @param tag e.g. 5.7/7.0
      */
     public void pullImageByRepository(String repository, String tag) {
         try {
@@ -89,10 +89,20 @@ public class DockerServer {
         return null;
     }
 
-    public void removeDockerContainerById(String Id) {
-        this.client.removeContainerCmd(Id).exec();
+    /**
+     * 根据 docker 容器 id 删除容器
+     * @param id container id
+     */
+    public void removeDockerContainerById(String id) {
+        this.client.removeContainerCmd(id).exec();
     }
 
+    /**
+     * 创建 MySQL docker container
+     * @param name 容器名
+     * @param password 容器密码
+     * @param port 容器端口
+     */
     public void createDockerContainerForMysql57(String name, String password, int port) {
         HostConfig hostConfig = new HostConfig();
         PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(3306));
@@ -100,14 +110,28 @@ public class DockerServer {
         List<String> cmd = new ArrayList<>();
         cmd.add("--lower_case_table_names=1");
         cmd.add("--max_connections=1024");
-        CreateContainerResponse response = this.client.createContainerCmd("mysql:5.7").withName(name)
+        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.MYSQL_IMAGE).withName(name)
                 .withHostConfig(hostConfig)
                 .withEnv("MYSQL_ROOT_PASSWORD=" + password).withCmd(cmd).exec();
         log.info(name + " container " + response.getId() + " is created successfully!");
     }
 
+    /**
+     * 创建 Redis docker container
+     * @param name 容器名
+     * @param password 容器密码
+     * @param port 容器端口
+     */
     public void createDockerContainerForRedis(String name, String password, int port) {
-        // TODO 创建redis容器
+        HostConfig hostConfig = new HostConfig();
+        PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(6379));
+        hostConfig.withPortBindings(portBinding);
+        List<String> cmd = new ArrayList<>();
+//        cmd.add("--requirepass=" + password);
+        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.REDIS_IMAGE).withName(name)
+                .withHostConfig(hostConfig)
+                .withCmd(cmd).exec();
+        log.info(name + " container " + response.getId() + " is created successfully!");
     }
 
     public void startDockerContainer(String containerName) {

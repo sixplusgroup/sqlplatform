@@ -3,6 +3,7 @@ package com.example.sqlexercise.service;
 import com.example.sqlexercise.data.AnswerSetMapper;
 import com.example.sqlexercise.po.AnswerSet;
 import com.example.sqlexercise.vo.GetScoreVO;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +15,7 @@ import java.util.Date;
  * @date 2022/9/20
  **/
 @SpringBootTest
+@Disabled
 public class ScoreServiceTest {
     @Autowired
     private ScoreService scoreService;

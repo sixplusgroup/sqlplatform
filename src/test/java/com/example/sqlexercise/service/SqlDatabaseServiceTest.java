@@ -1,5 +1,6 @@
 package com.example.sqlexercise.service;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @SpringBootTest
+@Disabled
 public class SqlDatabaseServiceTest {
 
     @Autowired

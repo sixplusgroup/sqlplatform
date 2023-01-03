@@ -8,6 +8,7 @@ import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.vo.DraftVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j(topic = "com.example.sqlexercise.serviceImpl.QuestionServiceImpl")
 @Service
 public class QuestionServiceImpl implements QuestionService {
 
@@ -42,8 +44,8 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public String getSchemaNameByMainId(int mainId) {
         if (mainQuestionMapper.selectById(mainId) == null) {
-            System.out.println("Info of main question " + mainId + " is not found!");
-            return "error!";
+            log.info("Info of main question " + mainId + " is not found!");
+            return "该mainId不存在";
         }
         return "main_" + mainId;
     }
@@ -52,12 +54,12 @@ public class QuestionServiceImpl implements QuestionService {
     public String getSchemaConstructorByMainId(int mainId) {
         MainQuestion mainQuestion = mainQuestionMapper.selectById(mainId);
         if (mainQuestion == null) {
-            System.out.println("Info of main question " + mainId + " is not found!");
+            log.info("Info of main question " + mainId + " is not found!");
         }
         try {
             Path dbPath = Paths.get("src/main/resources/" + mainQuestion.getDbPath());
             if (!Files.exists(dbPath)) {
-                System.out.println("File of main question" + mainId + "is not found!");
+                log.info("File of main question" + mainId + "is not found!");
             }
             return Files.readString(dbPath);
         } catch (Exception e) {

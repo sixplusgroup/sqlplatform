@@ -1,5 +1,6 @@
 package com.example.sqlexercise.controller;
 
+import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.UserService;
 import com.example.sqlexercise.vo.ResponseVO;
@@ -9,6 +10,8 @@ import com.example.sqlexercise.vo.UserVO;
 import com.example.sqlexercise.service.MessageCodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class UserController {
@@ -22,31 +25,49 @@ public class UserController {
         this.userService = userService;
     }
 
+    /**
+     * 发邮箱验证码
+     */
     @GetMapping("/api/signup/sendMessageCode/{email}")
     public ResponseVO sendMessageCode(@PathVariable String email) {
-        return messageCodeService.sendMessageCode(email, messageCodeService.generateMessageCode(email));
+        String code = messageCodeService.generateMessageCode();
+        ResponseVO responseVO = messageCodeService.sendMessageCode(email, code);
+        return responseVO;
     }
 
+    /**
+     * 注册
+     */
     @PostMapping("/api/signup")
     public ResponseVO signUp(@RequestBody UserVO userVO) {
         return userService.signUp(userVO);
     }
 
+    /**
+     * 登录
+     */
     @PostMapping("/api/signin")
     public ResponseVO signIn(@RequestBody SignVO signVO) {
         return userService.signIn(signVO);
     }
 
     @GetMapping("/api/get_records")
-    public ResponseVO getRecords(Integer userId) {
-        return ResponseVO.success(userService.getRecords(userId));
+    public ResponseVO getRecords(String userId) {
+        List<PassRecord> res = userService.getRecords(userId);
+        return ResponseVO.success(res);
     }
 
+    /**
+     * 修改用户信息
+     */
     @PostMapping("/api/modify_info")
     public ResponseVO modifyInfo(@RequestBody UserVO userVO) {
         return userService.modifyInfo(userVO);
     }
 
+    /**
+     * 获取用户信息
+     */
     @GetMapping("/api/get_user_info")
     public ResponseVO getUserInfo(String userId) {
         return ResponseVO.success(userService.getUserInfo(userId));
