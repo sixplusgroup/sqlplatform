@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j(topic = "com.example.sqlexercise.serviceImpl.QuestionServiceImpl")
 @Service
@@ -86,7 +83,15 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public Object getMainQuestionsByPage(String userId, int pageSize, int page) {
         int from = (page - 1) * pageSize;
-        List<Map<String, Object>> res = mainQuestionMapper.selectByPage(userId, from, pageSize);
+        List<Map<String, Object>> res = new ArrayList<>();
+        // 获取大题总数
+        Integer total = mainQuestionMapper.countTotal();
+        Map<String, Object> map = new HashMap<>();
+        map.put("totalMainQuestionNum", total);
+        res.add(map);
+        // 查一页大题信息
+        List<Map<String, Object>> questions = mainQuestionMapper.selectByPage(userId, from, pageSize);
+        res.addAll(questions);
         return res;
     }
 
