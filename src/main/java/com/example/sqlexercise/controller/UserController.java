@@ -51,6 +51,15 @@ public class UserController {
         return userService.signIn(signVO);
     }
 
+    /**
+     * 忘记密码重置
+     * @param userVO 只需传email, code, password, passwordConfirmation四个参数
+     */
+    @PostMapping("/api/reset_password")
+    public ResponseVO resetPassword(@RequestBody UserVO userVO) {
+        return userService.resetPassword(userVO);
+    }
+
     @GetMapping("/api/get_records")
     public ResponseVO getRecords(String userId) {
         List<PassRecord> res = userService.getRecords(userId);

@@ -1,6 +1,7 @@
 package com.example.sqlexercise.service;
 
 import com.example.sqlexercise.data.QuestionStateMapper;
+import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.po.MainQuestion;
 import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.po.SubQuestion;
@@ -89,8 +90,7 @@ class QuestionServiceTest {
         Date saveTime = new Date();
         DraftVO draftVO = new DraftVO(ConstantsOfTest.USER_ID, mainId, subId, draft, saveTime);
         String res = questionService.saveDraft(draftVO);
-        String expected = "保存成功";
-        Assertions.assertEquals(expected, res);
+        Assertions.assertEquals(Constants.Message.SAVE_DRAFT_SUCCEED, res);
     }
 
     @Test
@@ -107,9 +107,8 @@ class QuestionServiceTest {
         int mainId = 1;
         int subId = 10;
         String res = questionService.star(ConstantsOfTest.USER_ID, mainId, subId);
-        String expected = "已收藏";
         // 校验返回结果
-        Assertions.assertEquals(expected, res);
+        Assertions.assertEquals(Constants.Message.STAR_SUCCEED, res);
         QuestionState state = questionStateMapper.select(ConstantsOfTest.USER_ID, mainId, subId);
         // 校验数据库中状态
         Assertions.assertEquals(true, state.getIsStarred());
@@ -121,9 +120,8 @@ class QuestionServiceTest {
         int mainId = 1;
         int subId = 10;
         String res = questionService.unStar(ConstantsOfTest.USER_ID, mainId, subId);
-        String expected = "取消收藏";
         // 校验返回结果
-        Assertions.assertEquals(expected, res);
+        Assertions.assertEquals(Constants.Message.UNSTAR_SUCCEED, res);
         QuestionState state = questionStateMapper.select(ConstantsOfTest.USER_ID, mainId, subId);
         // 校验数据库中状态
         Assertions.assertEquals(false, state.getIsStarred());

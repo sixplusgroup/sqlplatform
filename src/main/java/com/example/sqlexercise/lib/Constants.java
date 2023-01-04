@@ -10,9 +10,9 @@ public class Constants {
      */
     public static class RedisKey {
         /**
-         * 注册验证码前缀
+         * 验证码前缀
          */
-        public static final String SIGN_UP_CODE_KEY_PREFIX = "SIGNUP:CODE:";
+        public static final String CODE_KEY_PREFIX = "CODE:";
     }
 
     /**
@@ -52,6 +52,44 @@ public class Constants {
         public static final String REDIS_IMAGE_TAG = "7.0";
         public static final String REDIS_IMAGE = REDIS_IMAGE_NAME + ":" + REDIS_IMAGE_TAG;
         public static final int REDIS_CONTAINER_DEFAULT_PORT = 6379;
+    }
+
+    /**
+     * 返回给前端的提示信息
+     */
+    public static class Message {
+        /**
+         * 验证码校验相关
+         */
+        public static final String CODE_EXPIRED = "验证码已过期";
+        public static final String CODE_WRONG = "验证码错误";
+        /**
+         * 密码校验相关
+         */
+        public static final String PASSWORD_CONFIRMATION_WRONG = "两次输入的密码不一致";
+        public static final String EMAIL_OR_PASSWORD_WRONG = "邮箱或密码错误";
+        /**
+         * 邮箱校验相关
+         */
+        public static final String EMAIL_EXISTED = "该邮箱已注册";
+        public static final String EMAIL_NOT_EXISTED = "该邮箱未注册";
+        /**
+         * 成功失败相关
+         */
+        public static final String SIGNUP_SUCCEED = "注册成功";
+        public static final String MODIFY_USER_INFO_SUCCEED = "修改个人信息成功";
+        public static final String MODIFY_USER_INFO_FAILED = "修改个人信息失败";
+        public static final String RESET_PASSWORD_SUCCEED = "重置密码成功";
+        public static final String RESET_PASSWORD_FAILED = "重置密码失败";
+        public static final String CODE_SEND_SUCCEED = "发送成功";
+        public static final String SAVE_DRAFT_SUCCEED = "保存成功";
+        public static final String STAR_SUCCEED = "已收藏";
+        public static final String UNSTAR_SUCCEED = "取消收藏";
+        /**
+         * SQL运行相关
+         */
+        public static final String PASSED = "Passed";   // SQL运行通过
+        public static final String NOT_PASSED = "Didn't pass";   // SQL运行未通过
     }
 
 }

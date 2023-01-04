@@ -29,7 +29,7 @@ class UserServiceTest {
         String name = "testUserName";
         String email = "testEmail";
         String code = "testCode";
-        stringRedisTemplate.opsForValue().set(Constants.RedisKey.SIGN_UP_CODE_KEY_PREFIX + email, code);
+        stringRedisTemplate.opsForValue().set(Constants.RedisKey.CODE_KEY_PREFIX + email, code);
         String password = "testPassword";
         String passwordConfirmation = "testPassword";
         UserVO userVO = new UserVO();
@@ -39,9 +39,8 @@ class UserServiceTest {
         userVO.setPassword(password);
         userVO.setPasswordConfirmation(passwordConfirmation);
         ResponseVO responseVO = userService.signUp(userVO);
-        String expected = "success";
-        Assertions.assertEquals(expected, responseVO.getRes());
-        stringRedisTemplate.opsForValue().getAndDelete(Constants.RedisKey.SIGN_UP_CODE_KEY_PREFIX + email);
+        Assertions.assertTrue(responseVO.isSuccess());
+        stringRedisTemplate.opsForValue().getAndDelete(Constants.RedisKey.CODE_KEY_PREFIX + email);
     }
 
     @Test
@@ -51,8 +50,7 @@ class UserServiceTest {
         signVO.setEmail(ConstantsOfTest.USER_EMAIL);
         signVO.setPassword(password);
         ResponseVO responseVO = userService.signIn(signVO);
-        String expected = "success";
-        Assertions.assertEquals(expected, responseVO.getRes());
+        Assertions.assertTrue(responseVO.isSuccess());
     }
 
     @Test
@@ -76,8 +74,7 @@ class UserServiceTest {
         userVO.setPassword("modifyPassword");
         userVO.setName("modifyUserName");
         ResponseVO responseVO = userService.modifyInfo(userVO);
-        String expected = "success";
-        Assertions.assertEquals(expected, responseVO.getRes());
+        Assertions.assertTrue(responseVO.isSuccess());
     }
 
     @Test
@@ -96,5 +93,23 @@ class UserServiceTest {
     void getRecentSubmits() {
         Object res = userService.getRecentSubmits(ConstantsOfTest.USER_ID, 20);
         Assertions.assertNotNull(res);
+    }
+
+    @Test
+    @Transactional
+    void resetPassword() {
+        String email = ConstantsOfTest.USER_EMAIL;
+        String code = "testCode";
+        stringRedisTemplate.opsForValue().set(Constants.RedisKey.CODE_KEY_PREFIX + email, code);
+        String password = "testPassword";
+        String passwordConfirmation = "testPassword";
+        UserVO userVO = new UserVO();
+        userVO.setEmail(email);
+        userVO.setCode(code);
+        userVO.setPassword(password);
+        userVO.setPasswordConfirmation(passwordConfirmation);
+        ResponseVO responseVO = userService.resetPassword(userVO);
+        Assertions.assertTrue(responseVO.isSuccess());
+        stringRedisTemplate.opsForValue().getAndDelete(Constants.RedisKey.CODE_KEY_PREFIX + email);
     }
 }

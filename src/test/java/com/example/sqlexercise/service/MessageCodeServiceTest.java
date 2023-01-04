@@ -22,7 +22,7 @@ class MessageCodeServiceTest {
     @Test
     void sendMessageCode() {
         String code = "a1b2c3";
-        ResponseVO res = messageCodeService.sendMessageCode(ConstantsOfTest.USER_EMAIL, code);
-        Assertions.assertEquals("success", res.getRes());
+        ResponseVO responseVO = messageCodeService.sendMessageCode(ConstantsOfTest.USER_EMAIL, code);
+        Assertions.assertTrue(responseVO.isSuccess());
     }
 }

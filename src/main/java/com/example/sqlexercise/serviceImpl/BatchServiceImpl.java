@@ -105,7 +105,7 @@ public class BatchServiceImpl implements BatchService {
                 updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.PASSED);
             }
             // 如果是run则只返回结果
-            log.info("batch " + batch.getId() + " passed. " + new Throwable().getStackTrace()[0]);
+            log.info("batch " + batch.getId() + " passed.");
             // 如果静态分析得到的评分非满分，需要将其加入答案集
 //            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
 //            float score = scoreService.getScore(getScoreVO);
@@ -124,11 +124,14 @@ public class BatchServiceImpl implements BatchService {
 //                    answerSetMapper.updateStatus(stuAnswer);
 //                }
 //            }
-            return "Passed";
+            return Constants.Message.PASSED;
         } else {
-            updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
-            log.info("batch " + batch.getId() + " didn't pass. " + new Throwable().getStackTrace()[0]);
-            return "Didn't pass";
+            // 如果是提交，才会修改题目状态；运行则不会
+            if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+                updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
+            }
+            log.info("batch " + batch.getId() + " didn't pass.");
+            return Constants.Message.NOT_PASSED;
         }
     }
 

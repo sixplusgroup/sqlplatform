@@ -105,7 +105,7 @@ public class QuestionServiceImpl implements QuestionService {
         } else {
             draftMapper.update(draft);
         }
-        return "保存成功";
+        return Constants.Message.SAVE_DRAFT_SUCCEED;
     }
 
     /**
@@ -138,7 +138,7 @@ public class QuestionServiceImpl implements QuestionService {
             // 若有，则update，is_starred字段更新为1，即已收藏
             questionStateMapper.updateIsStarred(userId, mainId, subId, true);
         }
-        return "已收藏";
+        return Constants.Message.STAR_SUCCEED;
     }
 
     /**
@@ -147,7 +147,7 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public String unStar(String userId, Integer mainId, Integer subId) {
         questionStateMapper.updateIsStarred(userId, mainId, subId, false);
-        return "取消收藏";
+        return Constants.Message.UNSTAR_SUCCEED;
     }
 
     /**
