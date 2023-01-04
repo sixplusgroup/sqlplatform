@@ -38,7 +38,7 @@
         limit #{from}, #{size}
     </select>
 
-    <select id="countTotal">
+    <select id="countTotal" resultType="java.lang.Integer">
         select count(*)
         from main_question
     </select>
