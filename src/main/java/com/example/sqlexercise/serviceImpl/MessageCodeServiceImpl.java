@@ -72,13 +72,13 @@ public class MessageCodeServiceImpl implements MessageCodeService {
             transport.close();
 
             // 在redis中缓存登录验证码，过期时间 3min
-            String key = Constants.RedisKey.SIGN_UP_CODE_KEY_PREFIX + email;
+            String key = Constants.RedisKey.CODE_KEY_PREFIX + email;
             stringRedisTemplate.opsForValue().set(key, code, 3, TimeUnit.MINUTES);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ResponseVO.success("发送成功");
+        return ResponseVO.success(Constants.Message.CODE_SEND_SUCCEED);
     }
 
     @Override

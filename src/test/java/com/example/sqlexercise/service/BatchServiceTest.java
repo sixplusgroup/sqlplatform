@@ -29,7 +29,7 @@ class BatchServiceTest {
     @Test
     @Transactional
     @Disabled
-    void processBatch() {
+    void processBatch_all() {
         List<SubQuestion> subQuestions = subQuestionMapper.selectAll();
         for (SubQuestion subQuestion : subQuestions) {
             BatchVO batchVO = new BatchVO();
@@ -39,13 +39,13 @@ class BatchServiceTest {
             batchVO.setDriver("mysql");
             batchVO.setUserId(ConstantsOfTest.USER_ID);
             String s = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
-            Assertions.assertEquals("Passed", s);
+            Assertions.assertEquals(Constants.Message.PASSED, s);
         }
     }
 
     @Test
     @Transactional
-    public void test1(){
+    public void processBatch_1(){
         BatchVO batchVO = new BatchVO();
         batchVO.setBatchText("select w.eno \n" +
                 "from works w\n" +
@@ -60,7 +60,7 @@ class BatchServiceTest {
 
     @Test
     @Transactional
-    public void test2(){
+    public void processBatch_2(){
         BatchVO batchVO = new BatchVO();
         batchVO.setBatchText("select s.sname from sailors s\n" +
                 "where s.age > 35 and not exists (\n" +
