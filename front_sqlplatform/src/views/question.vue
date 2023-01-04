@@ -278,7 +278,7 @@ export default {
   /*background: #c74c4c;*/
   float: left;
   text-align: left;
-  overflow: scroll;
+  overflow: auto;
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
 
 }
@@ -313,7 +313,7 @@ export default {
   height: 100vh;
   /*background: #226fa1;*/
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
-  overflow: scroll;
+  overflow: auto;
 }
 
 .subQuestion {
@@ -335,7 +335,7 @@ export default {
 
 .records {
   height: 20vh;
-  overflow: scroll;
+  overflow: auto;
   padding: 1em;
   background-color: rgb(247, 247, 247);
   margin-top: 1em;;

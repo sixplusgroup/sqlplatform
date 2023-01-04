@@ -78,7 +78,6 @@ const user = {
       }
     },
     sendCode: async ({},data) => {
-      console.log(data)
       const res = await sendCodeAPI(data)
       if (res) {
         message.success('验证码发送成功，请查收')

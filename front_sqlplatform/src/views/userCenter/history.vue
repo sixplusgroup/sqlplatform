@@ -180,7 +180,7 @@ export default {
   width: 80vw;
   padding: 1em;
   height: 100vh;
-  overflow: scroll;
+  overflow: auto;
 }
 
 #chart {

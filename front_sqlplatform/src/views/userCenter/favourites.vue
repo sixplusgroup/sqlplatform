@@ -92,7 +92,8 @@ export default {
   padding: 1em;
   display: inline-block;
   margin: 2vh;
-  overflow: scroll;
+  /*overflow: scroll;*/
+  overflow:auto;
   height: 95vh;
   width: 60vw;
   text-align: center;
