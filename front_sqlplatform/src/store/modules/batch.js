@@ -9,34 +9,25 @@ import {
 
 const batch = {
   state: {
-    // passed: false,
-
   },
   mutations: {
-    // set_mainQuestion: (state, data) => {
-    //   state.mainQuestion = "## "+data.title+"\n"+data.description;
-    // },
-    // set_subQuestions: (state, data) => {
-    //   state.subQuestions = data;
-    // },
-    // set_passed: (state, data) => {
-    //   state.passed = data;
-    // },
   },
   actions: {
-    runTest: async ({commit}, data) => {
+    runTest: async ({commit, dispatch}, data) => {
       const res = await runBatchAPI(data);
       if (res.msg === 'Passed') {
         message.success('Passed!')
-      }else if(res.msg === 'Didn\'t pass'){
+
+      } else if (res.msg === 'Didn\'t pass') {
         message.warning('Didn\'t pass, please check!')
       }
     },
-    commit: async ({commit}, data) => {
+    commit: async ({commit, dispatch}, data) => {
       const res = await commitAPI(data);
       if (res.msg === 'Passed') {
         message.success('Passed!')
-      }else if(res.msg === 'Didn\'t pass'){
+        commit('set_commit_state', {i: data.idx, state: true})
+      } else if (res.msg === 'Didn\'t pass') {
         message.warning('Didn\'t pass, please check!')
       }
     },

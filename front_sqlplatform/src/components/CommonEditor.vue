@@ -88,7 +88,14 @@ export default {
         lineWrapping: 'wrap', // 文字过长时，是换行(wrap)还是滚动(scroll),默认是滚动
         showCursorWhenSelecting: true, // 文本选中时显示光标
         smartIndent: true, // 智能缩进
-        completeSingle: false // 当匹配只有一项的时候是否自动补全
+        completeSingle: false ,// 当匹配只有一项的时候是否自动补全
+        hintOptions: {//自定义提示选项
+          tables: {
+            customers: ['name', 'customer_id'],
+            orders: ['order_id', 'order_date', 'customer_id','product_id'],
+            products: ['product_id', 'product_name', 'price']
+          }
+        }
       }
     }
   },
@@ -170,6 +177,8 @@ export default {
 </script>
 <style lang="less">
 .common-editor {
+  font-size: 15px;
+  font-family: monospace;
   width: 100%;
   height: 100%;
   .CodeMirror {

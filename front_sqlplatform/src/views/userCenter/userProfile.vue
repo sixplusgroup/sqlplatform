@@ -18,7 +18,7 @@
         <div class="itemlabel">用户名</div>
         <a-input
           placeholder="请填写用户名"
-          v-decorator="['name', { rules: [{ required: true, message: '请输入用户名' }] }]"
+          v-decorator="['name', { rules: [{ required: true, message: '请输入用户名' }],validateTrigger: 'submit' }]"
           v-if="modify"
           class="info-input"
         />
@@ -30,7 +30,7 @@
         <a-input
           type="password"
           placeholder="请输入新密码"
-          v-decorator="['password', { rules: [{ required: true, message: '请输入新密码' }],validateTrigger: 'blur' }]"
+          v-decorator="['password', { rules: [{ required: true, message: '请输入新密码' }],validateTrigger: 'submit' }]"
           class="info-input"
         />
       </a-form-item>
@@ -40,7 +40,7 @@
         <a-input
           type="password"
           placeholder="请再次输入新密码"
-          v-decorator="['passwordConfirm', { rules: [{ required: true, message: '请输入新密码' },{ validator: this.handlePasswordCheck }],validateTrigger: 'blur' }]"
+          v-decorator="['passwordConfirm', { rules: [{ required: true, message: '请输入新密码' },{ validator: this.handlePasswordCheck }],validateTrigger: 'submit' }]"
           class="info-input"
         />
       </a-form-item>
@@ -124,6 +124,21 @@ export default {
 }
 </script>
 
+<style scoped>
+#coordinated_name,#coordinated_password,#coordinated_passwordConfirm {
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  background-color: transparent;
+  /*font-size: 18px;*/
+}
+#coordinated_name:focus,#coordinated_password:focus,#coordinated_passwordConfirm:focus{
+  box-shadow: 0 0 0;
+  background-color: transparent;
+  /*font-size: 18px;*/
+}
+</style>
+
 <style lang="less">
 .mycontainer {
   text-align: center;
@@ -146,7 +161,6 @@ export default {
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
   //width: 78vw;
   height: 75vh;
-  //border-radius: 8px;
   .userinfotitle {
     color: #333333;
     font-size: 28px;
@@ -173,8 +187,6 @@ export default {
     border-bottom: 1px solid #d9d9d9;
     display: flex;
     flex-direction: row;
-    //margin-left: 30px;
-    //width: 668px;
   }
 }
 
@@ -203,7 +215,6 @@ export default {
 }
 
 .bottom {
-  margin: 1em 0 2em 5em;
-  float: left;
+  margin-top: 2em;
 }
 </style>

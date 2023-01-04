@@ -36,10 +36,38 @@
 
       </a-menu>
       <a-button type="round" ghost
+                @click="showAboutUs(e)"
+                style="margin-top: 3em"
+                id="about"
+      > About Us
+      </a-button>
+
+      <a-button type="round" ghost
                 @click="this.logout"
                 style="margin-top: 3em"
       > Logout
       </a-button>
+
+      <a-modal
+        title="关于我们"
+        :visible="aboutUsVisible"
+        @cancel="closeAboutUs"
+        :footer=[]
+      >
+        <p>若您发现系统存在任何漏洞，或希望提出优化建议，欢迎联系我们：</p>
+        <h3>何文兵</h3>
+        <p> 邮箱：522022320047@smail.nju.edu.cn</p>
+        <p> QQ：826947112</p>
+        <h3>王宇博</h3>
+        <p> 邮箱：522022320147@smail.nju.edu.cn</p>
+        <p> QQ：799580275</p>
+        <h3>王馨逸</h3>
+        <p> 邮箱：522022320146@smail.nju.edu.cn</p>
+        <p> QQ：2671913949</p>
+        <h3>沈祎辰</h3>
+        <p> 邮箱：522022320117@smail.nju.edu.cn</p>
+        <p> QQ：2624020095</p>
+      </a-modal>
     </div>
   </div>
 </template>
@@ -55,6 +83,7 @@ export default {
       modify: false,
       data: [],
       form: this.$form.createForm(this, {name: 'coordinated'}),
+      aboutUsVisible: false
     }
   },
   computed: {
@@ -77,7 +106,13 @@ export default {
       this.$router.push({name: e.key})
       this.loading = false;
     },
-
+    showAboutUs(e){
+      this.aboutUsVisible = true;
+    },
+    closeAboutUs(){
+      this.aboutUsVisible = false;
+      // window.blur();
+    }
   }
 }
 </script>

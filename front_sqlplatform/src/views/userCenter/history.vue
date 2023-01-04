@@ -10,7 +10,7 @@
           {{ text.replace('T', ' ') }}
         </span>
         <span slot="action" slot-scope="text, record">
-          <a @click="getQuestionDetail(record)">去做题</a>
+          <a @click="getQuestionDetail(record)"><a-icon type="edit"/>&nbsp去做题</a>
         </span>
         <span slot="difficulty" slot-scope="text, record">
           <a-tag
