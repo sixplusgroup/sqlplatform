@@ -20,4 +20,14 @@ export function commitAPI(data){
   })
 }
 
+export function getHintsAPI(data){
+  return axios({
+    url:`http://localhost:8000/api/score/getHints`,
+    method: 'POST',
+    data
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
 

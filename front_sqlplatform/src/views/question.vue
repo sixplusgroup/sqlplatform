@@ -89,6 +89,7 @@ import CommonEditor from '@/components/CommonEditor.vue'
 
 
 import {ref} from 'vue';
+import {message} from "ant-design-vue";
 
 export default {
   name: "question",
@@ -131,7 +132,7 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'mainQuestion', 'subQuestions', 'userId', 'subQuestions', 'draft'
+      'mainQuestion', 'subQuestions', 'userId', 'subQuestions', 'draft', 'hint'
     ])
   },
   methods: {

@@ -33,7 +33,7 @@
 <!--      TODO: 写死了共30条数据，若数据量变更，需要改-->
       <a-pagination v-model:current="current"
                     @change="pageChange"
-                    :total="30"
+                    :total="totalMainQuestionNum"
                     show-less-items></a-pagination>
     </div>
   </div>
@@ -96,7 +96,7 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'questionList','userId'
+      'questionList','userId','totalMainQuestionNum'
     ])
   },
   methods: {
