@@ -60,6 +60,7 @@ const question = {
       const res = await getQuestionListAPI(queryParam)
       if (res) {
         commit('set_questionList', res.obj)
+        console.log(res.obj)
       }
     },
     saveDraft: async ({commit}, data) => {

@@ -12,9 +12,19 @@
         <a-divider type="vertical"></a-divider>
         <a @click="unStar(record)"><a-icon type="star"/>取消收藏</a>
         </span>
+
+      <span slot="tags" slot-scope="text, record">
+        <a-tag v-for="(tag) in text"
+               color="blue"
+               :key="tag"
+               style="margin: 4px">
+              {{ tag }}
+              </a-tag>
+      </span>
       <template #title>
-        <h2 style="float: left;margin-left: 1em">收藏夹</h2>
+        <h4>收藏夹</h4>
       </template>
+
     </a-table>
 
   </div>
@@ -42,7 +52,29 @@ export default {
           dataIndex: 'description',
           key: 'description',
           align: 'center',
-          width: '50%',
+          width: '40%',
+        },
+        {
+          title: '知识点',
+          dataIndex: 'tags',
+          key: 'tags',
+          align: 'center',
+          scopedSlots: {customRender: 'tags'},
+          width: 200,
+          filters: [
+            { text: '时间和日期', value: '时间和日期' },
+            { text: '字符串', value: '字符串' },
+            { text: '数值', value: '数值' },
+            { text: '集合', value: '集合' },
+            { text: '聚合函数', value: '聚合函数' },
+            { text: '模糊查询', value: '模糊查询' },
+            { text: '排序', value: '排序' },
+            { text: '分组', value: '分组' },
+            { text: '多表连接', value: '多表连接' },
+            { text: '子查询', value: '子查询' },
+            { text: '条件判断', value: '条件判断' },
+          ],
+          onFilter: (value, record) => record.tags.indexOf(value) !== -1,
         },
         {
           title: '操作',
@@ -95,7 +127,7 @@ export default {
   /*overflow: scroll;*/
   overflow:auto;
   height: 95vh;
-  width: 60vw;
+  width: 76vw;
   text-align: center;
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
 }

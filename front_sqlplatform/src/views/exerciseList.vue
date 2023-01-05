@@ -9,28 +9,48 @@
                :loading="loading"
                class="mainTable"
       >
+
+        <span slot="titles" slot-scope="text, record">
+          <a-popover
+            title="知识点"
+            trigger="hover"
+            :overlayStyle="{width:'25vw'}"
+            placement="right">
+            <template slot="content">
+              <a-tag v-for="(tag,index) in record.tags"
+                     color="blue"
+                     :key="tag"
+                     style="margin: 3px">
+              {{ tag }}
+              </a-tag>
+            </template>
+            {{ text }}
+          </a-popover>
+        </span>
+
         <span slot="action" slot-scope="text, record">
           <a @click="getQuestionDetail(record.mainId)">
             <a-icon type="edit"/>&nbsp去做题</a>
         </span>
+
         <span slot="progress" slot-scope="text, record">
           <a-progress
             :percent="(record.passedNum)/record.subCount*100"
             size="small"
-             />
+          />
         </span>
 
         <span slot="passedNum" slot-scope="text, record">
-          {{text+' / '+record.subCount}}
+          {{ text + ' / ' + record.subCount }}
         </span>
 
         <span slot="submittedButNotPassNum" slot-scope="text, record">
-          {{text+' / '+record.subCount}}
+          {{ text + ' / ' + record.subCount }}
 
         </span>
 
+        <span slot="tags" style="display: none"></span>
       </a-table>
-<!--      TODO: 写死了共30条数据，若数据量变更，需要改-->
       <a-pagination v-model:current="current"
                     @change="pageChange"
                     :total="totalMainQuestionNum"
@@ -49,14 +69,42 @@ export default {
     return {
       current: ref(1),
       loading: false,
+      colors:["rgb(111,176,224)", "rgb(154,229,193)",
+        "rgb(160,166,227)", "rgb(240,205,52)",
+        "rgb(221,174,216)","rgb(194,123,123)",
+        "rgb(184,194,68)", "rgb(208,124,48)", "rgb(241,231,200)"],
       columns: [
+        {
+          title: '',
+          dataIndex: 'tags',
+          key: 'tags',
+          align: 'center',
+          scopedSlots: {customRender: 'tags'},
+          width: 0,
+          filters: [
+            { text: '时间和日期', value: '时间和日期' },
+            { text: '字符串', value: '字符串' },
+            { text: '数值', value: '数值' },
+            { text: '集合', value: '集合' },
+            { text: '聚合函数', value: '聚合函数' },
+            { text: '模糊查询', value: '模糊查询' },
+            { text: '排序', value: '排序' },
+            { text: '分组', value: '分组' },
+            { text: '多表连接', value: '多表连接' },
+            { text: '子查询', value: '子查询' },
+            { text: '条件判断', value: '条件判断' },
+          ],
+          onFilter: (value, record) => record.tags.indexOf(value) !== -1,
+        },
         {
           title: '题目名称',
           dataIndex: 'title',
           key: 'title',
           align: 'center',
-          width: 250
+          // width: 250,
+          scopedSlots: {customRender: 'titles'}
         },
+
         {
           title: '已通过',
           dataIndex: 'passedNum',
@@ -96,7 +144,7 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'questionList','userId','totalMainQuestionNum'
+      'questionList', 'userId', 'totalMainQuestionNum'
     ])
   },
   methods: {
@@ -133,7 +181,9 @@ export default {
   padding: 4em 0 1em 0;
   text-align: center;
 }
-.mainTable{
+
+.mainTable {
+  color: ;
   margin-bottom: 1em;
   display: inline-block;
   width: 60vw;
