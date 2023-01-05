@@ -12,8 +12,11 @@
         <result column="ordered" jdbcType="TINYINT" javaType="BOOLEAN" property="ordered"/>
     </resultMap>
 
-    <select id="selectByMainId" resultMap="SubQuestion">
-        select *
+    <select id="selectByMainId" resultType="map">
+        select id,
+               main_id as mainId,
+               description,
+               difficulty
         from sub_question
         where main_id = #{mainId}
     </select>

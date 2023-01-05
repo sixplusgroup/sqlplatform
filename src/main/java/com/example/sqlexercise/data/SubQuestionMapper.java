@@ -6,12 +6,16 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 @Repository
 public interface SubQuestionMapper {
 
-    List<SubQuestion> selectByMainId(@Param("mainId") int mainId);
+    /**
+     * 查询某一大题下所有小题信息
+     */
+    List<Map<String, Object>> selectByMainId(@Param("mainId") int mainId);
 
     SubQuestion selectBySubId(@Param("subId") int subId);
 

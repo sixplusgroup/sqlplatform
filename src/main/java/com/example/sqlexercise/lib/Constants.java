@@ -1,5 +1,8 @@
 package com.example.sqlexercise.lib;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 常量类
  */
@@ -90,6 +93,55 @@ public class Constants {
          */
         public static final String PASSED = "Passed";   // SQL运行通过
         public static final String NOT_PASSED = "Didn't pass";   // SQL运行未通过
+    }
+
+    /**
+     * Question标签相关
+     */
+    public static class QuestionTag {
+        public static final String DATE_AND_TIME = "时间和日期";
+        public static final String STRING = "字符串";
+        public static final String NUMBER = "数值";
+        public static final String SET = "集合";
+        public static final String AGGREGATE = "聚合函数";
+        public static final String LIKE_QUERY = "模糊查询";
+        public static final String ORDER = "排序";
+        public static final String GROUP = "分组";
+        public static final String MULTI_TABLE_CONNECTION = "多表连接";
+        public static final String SUB_QUERY = "子查询";
+        public static final String CONNECTION_JUDGE = "条件判断";
+        public static final String UNDEFINE_TAG = "未知标签";
+
+        /**
+         * 把数据库中存储的标签类型编号转换为标签名称
+         */
+        public static String tagTypeToName(int tagType) {
+            switch (tagType) {
+                case 0: return DATE_AND_TIME;
+                case 1: return STRING;
+                case 2: return NUMBER;
+                case 3: return SET;
+                case 4: return AGGREGATE;
+                case 5: return LIKE_QUERY;
+                case 6: return ORDER;
+                case 7: return GROUP;
+                case 8: return MULTI_TABLE_CONNECTION;
+                case 9: return SUB_QUERY;
+                case 10: return CONNECTION_JUDGE;
+            }
+            return UNDEFINE_TAG;
+        }
+
+        /**
+         * 将标签类型编号列表转换为标签名称列表
+         */
+        public static List<String> tagTypeListToNameList(List<Integer> tagTypes) {
+            List<String> tagNames = new ArrayList<>();
+            for (Integer tagType : tagTypes) {
+                tagNames.add(tagTypeToName(tagType));
+            }
+            return tagNames;
+        }
     }
 
 }

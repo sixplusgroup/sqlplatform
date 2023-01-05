@@ -10,8 +10,10 @@ import com.example.sqlexercise.po.Batch;
 import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.service.BatchService;
+import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
+import com.example.sqlexercise.vo.DraftVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,17 +33,19 @@ public class BatchServiceImpl implements BatchService {
     private PassRecordMapper passRecordMapper;
     private BatchMapper batchMapper;
     private QuestionStateMapper questionStateMapper;
+    private QuestionService questionService;
 
     @Autowired
     public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
-                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper) {
+                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper, QuestionService questionService) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
         this.scoreService = scoreService;
         this.answerSetMapper = answerSetMapper;
         this.questionStateMapper = questionStateMapper;
+        this.questionService = questionService;
         this.useMessageQueue = false;
     }
 
@@ -67,12 +71,23 @@ public class BatchServiceImpl implements BatchService {
         batch.setCreatedAt(now);
         batch.setUpdatedAt(now);
         batch.setId(UUID.randomUUID().toString());
-        // 只有submit时，才将该条batch入库
+        // 只有submit时，才将该条batch入库，并保存草稿
         if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+            // batch入库
             batchMapper.insert(batch);
+
+            // 保存草稿
+            DraftVO draftVO = new DraftVO(
+                    batchVO.getUserId(),
+                    batchVO.getMainId(),
+                    batchVO.getSubId(),
+                    batchVO.getBatchText(),
+                    now
+            );
+            questionService.saveDraft(draftVO);
         }
         // 执行
-        log.info("batch " + batch.getId() + " is running. ");
+        log.info("batch " + batch.getId() + " is running.");
         String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
         return res;
     }

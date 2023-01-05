@@ -9,6 +9,7 @@ import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.vo.DraftVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,16 +27,18 @@ public class QuestionServiceImpl implements QuestionService {
     private QuestionStateMapper questionStateMapper;
     private DraftMapper draftMapper;
     private BatchMapper batchMapper;
+    private QuestionTagsMapper questionTagsMapper;
 
     @Autowired
     public QuestionServiceImpl(SubQuestionMapper subQuestionMapper,
                                MainQuestionMapper mainQuestionMapper,
-                               QuestionStateMapper questionStateMapper, DraftMapper draftMapper, BatchMapper batchMapper) {
+                               QuestionStateMapper questionStateMapper, DraftMapper draftMapper, BatchMapper batchMapper, QuestionTagsMapper questionTagsMapper) {
         this.subQuestionMapper = subQuestionMapper;
         this.mainQuestionMapper = mainQuestionMapper;
         this.questionStateMapper = questionStateMapper;
         this.draftMapper = draftMapper;
         this.batchMapper = batchMapper;
+        this.questionTagsMapper = questionTagsMapper;
     }
 
     @Override
@@ -65,9 +68,24 @@ public class QuestionServiceImpl implements QuestionService {
         }
     }
 
+    /**
+     * 获取某一大题下所有小题信息
+     */
     @Override
-    public List<SubQuestion> getSubQuestionByMainId(int mainId) {
-        return subQuestionMapper.selectByMainId(mainId);
+    public List<Map<String, Object>> getSubQuestionByMainId(int mainId) {
+        List<Map<String, Object>> res = subQuestionMapper.selectByMainId(mainId);
+        // 遍历列表中的每一个小题，添加标签数据
+        for (Map<String, Object> subQuestionInfo : res) {
+            // 获取当前小题的subId
+            Integer subId = (Integer) subQuestionInfo.get("id");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagBySubId(subId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            subQuestionInfo.put("tags", tagNames);
+        }
+        return res;
     }
 
     @Override
@@ -75,13 +93,35 @@ public class QuestionServiceImpl implements QuestionService {
         return subQuestionMapper.selectBySubId(subId);
     }
 
+    /**
+     * 获取某一大题信息
+     */
     @Override
-    public MainQuestion getMainQuestionByMainId(int mainId) {
-        return mainQuestionMapper.selectById(mainId);
+    public Map<String, Object> getMainQuestionByMainId(int mainId) {
+        MainQuestion mainQuestion = mainQuestionMapper.selectById(mainId);
+        Map<String, Object> res = new HashMap<>();
+        res.put("id", mainQuestion.getId());
+        res.put("title", mainQuestion.getTitle());
+        res.put("description", mainQuestion.getDescription());
+        res.put("subCount", mainQuestion.getSubCount());
+        // 查数据库，获取该大题下所有小题的标签，结果集合中为标签编号
+        List<Integer> tagTypes = questionTagsMapper.selectTagByMainId(mainId);
+        // 将标签编号转换为标签名
+        List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+        // 将标签信息添加进结果map中
+        res.put("tags", tagNames);
+        return res;
     }
 
+    /**
+     * 分页查询mainQuestion
+     *
+     * @param userId    userId
+     * @param pageSize  每页数据量
+     * @param page      页数
+     */
     @Override
-    public Object getMainQuestionsByPage(String userId, int pageSize, int page) {
+    public List<Map<String, Object>> getMainQuestionsByPage(String userId, int pageSize, int page) {
         int from = (page - 1) * pageSize;
         List<Map<String, Object>> res = new ArrayList<>();
         // 获取大题总数
@@ -91,6 +131,17 @@ public class QuestionServiceImpl implements QuestionService {
         res.add(map);
         // 查一页大题信息
         List<Map<String, Object>> questions = mainQuestionMapper.selectByPage(userId, from, pageSize);
+        // 遍历每一个大题信息，添加标签数据
+        for (Map<String, Object> mainQuestionInfo : questions) {
+            // 获取当前小题的subId
+            Integer mainId = (Integer) mainQuestionInfo.get("mainId");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagByMainId(mainId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            mainQuestionInfo.put("tags", tagNames);
+        }
         res.addAll(questions);
         return res;
     }
