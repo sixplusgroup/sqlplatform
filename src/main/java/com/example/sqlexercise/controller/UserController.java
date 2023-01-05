@@ -96,7 +96,7 @@ public class UserController {
     /**
      * 获取用户收藏的题目
      *
-     * @return JSON，[{main_id: xx, main_question.title: xx, sub_id: xx}, {}, {}, ...]
+     * @return JSON
      */
     @GetMapping("/api/user/stars")
     public ResponseVO getStars(String userId) {

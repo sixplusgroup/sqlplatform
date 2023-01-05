@@ -10,6 +10,7 @@ import com.example.sqlexercise.vo.ResponseVO;
 import com.example.sqlexercise.vo.SignVO;
 import com.example.sqlexercise.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -26,16 +27,18 @@ public class UserServiceImpl implements UserService {
     private QuestionStateMapper questionStateMapper;
     private BatchMapper batchMapper;
     private SubQuestionMapper subQuestionMapper;
+    private QuestionTagsMapper questionTagsMapper;
 
     private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
-    public UserServiceImpl(UserMapper userMapper, PassRecordMapper passRecordMapper, QuestionStateMapper questionStateMapper, BatchMapper batchMapper, SubQuestionMapper subQuestionMapper, StringRedisTemplate stringRedisTemplate) {
+    public UserServiceImpl(UserMapper userMapper, PassRecordMapper passRecordMapper, QuestionStateMapper questionStateMapper, BatchMapper batchMapper, SubQuestionMapper subQuestionMapper, QuestionTagsMapper questionTagsMapper, StringRedisTemplate stringRedisTemplate) {
         this.userMapper = userMapper;
         this.passRecordMapper = passRecordMapper;
         this.questionStateMapper = questionStateMapper;
         this.batchMapper = batchMapper;
         this.subQuestionMapper = subQuestionMapper;
+        this.questionTagsMapper = questionTagsMapper;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -132,6 +135,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public Object getStars(String userId) {
         List<Map<String, Object>> res = questionStateMapper.selectStars(userId);
+        // 遍历列表中的每一个小题，添加标签数据
+        for (Map<String, Object> subQuestionInfo : res) {
+            // 获取当前小题的subId
+            Integer subId = (Integer) subQuestionInfo.get("subId");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagBySubId(subId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            subQuestionInfo.put("tags", tagNames);
+        }
         return res;
     }
 
@@ -178,7 +192,19 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Object getRecentSubmits(String userId, int n) {
-        List<Object> res = batchMapper.selectRecentSubmits(userId, n);
+        List<Map<String, Object>> res = batchMapper.selectRecentSubmits(userId, n);
+        // 由于提交记录也是以小题为单位，故此处查询标签信息并添加进结果集的逻辑与getStars()方法中相同
+        // 遍历列表中的每一条记录，添加标签数据
+        for (Map<String, Object> recordInfo : res) {
+            // 获取当前记录的subId
+            Integer subId = (Integer) recordInfo.get("subId");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagBySubId(subId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            recordInfo.put("tags", tagNames);
+        }
         return res;
     }
 

@@ -19,11 +19,17 @@ public class QuestionController {
         this.questionService = questionService;
     }
 
+    /**
+     * 获取某大题信息
+     */
     @GetMapping("/api/question/getMainQuestion/{mainId}")
     public ResponseVO getMainQuestion(@PathVariable("mainId") int mainId) {
         return ResponseVO.success(questionService.getMainQuestionByMainId(mainId));
     }
 
+    /**
+     * 获取某一大题下所有小题信息
+     */
     @GetMapping("/api/question/getSubQuestion/{mainId}")
     public ResponseVO getSubQuestion(@PathVariable("mainId") int mainId) {
         return ResponseVO.success(questionService.getSubQuestionByMainId(mainId));
