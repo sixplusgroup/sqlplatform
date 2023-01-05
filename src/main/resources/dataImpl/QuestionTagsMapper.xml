@@ -15,4 +15,28 @@
         where question_tags.question_id = subIds.id
     </select>
 
+    <select id="selectTotalSubQuestionNumOfEachTag" resultType="map">
+        select question_tags.tag      as tag,
+               count(sub_question.id) as totalSubQuestionNum
+        from sub_question
+                 left join question_tags on sub_question.id = question_tags.question_id
+        where tag is not null
+        group by tag;
+    </select>
+
+    <select id="selectPassedSubQuestionNumOfEachTag" resultType="map">
+        select result.tag            as tag,
+               result.subQuestionNum as passedNum
+        from (select count(sub_question.id) as subQuestionNum,
+                     question_tags.tag      as tag,
+                     coalesce(qs.state, 0)  as state
+              from (sub_question
+                  left join question_tags on sub_question.id = question_tags.question_id)
+                       left join (select * from question_state where user_id = #{userId}) as qs
+                                 on sub_question.id = qs.sub_id
+              group by tag, state) as result
+        where result.state = 2
+        order by tag;
+    </select>
+
 </mapper>

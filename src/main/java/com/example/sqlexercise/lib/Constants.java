@@ -99,6 +99,9 @@ public class Constants {
      * Question标签相关
      */
     public static class QuestionTag {
+        // 标签总数
+        public static final int TOTAL_TAG_NUM = 11;
+
         public static final String DATE_AND_TIME = "时间和日期";
         public static final String STRING = "字符串";
         public static final String NUMBER = "数值";
@@ -110,6 +113,7 @@ public class Constants {
         public static final String MULTI_TABLE_CONNECTION = "多表连接";
         public static final String SUB_QUERY = "子查询";
         public static final String CONNECTION_JUDGE = "条件判断";
+
         public static final String UNDEFINE_TAG = "未知标签";
 
         /**

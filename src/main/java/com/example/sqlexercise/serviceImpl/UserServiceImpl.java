@@ -10,7 +10,6 @@ import com.example.sqlexercise.vo.ResponseVO;
 import com.example.sqlexercise.vo.SignVO;
 import com.example.sqlexercise.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -183,7 +182,37 @@ public class UserServiceImpl implements UserService {
         // 计算用户提交通过率
         String passRate = String.format("%.2f", (double) passTimes / (double) submitTimes * 100) + '%';
         res.put("passRate", passRate);
-        
+
+        // 查每个标签分别有多少道小题
+        Map<Integer, Long> totalSubQuestionNumOfEachTag = new HashMap<>();
+        for (Map<String, Object> item : questionTagsMapper.selectTotalSubQuestionNumOfEachTag()) {
+            totalSubQuestionNumOfEachTag.put((Integer) item.get("tag"), (Long) item.get("totalSubQuestionNum"));
+        }
+
+        // 查当前用户在每个标签对应的小题中通过了多少道
+        Map<Integer, Long> passedSubQuestionNumOfEachTag = new HashMap<>();
+        for (Map<String, Object> item : questionTagsMapper.selectPassedSubQuestionNumOfEachTag(userId)) {
+            passedSubQuestionNumOfEachTag.put((Integer) item.get("tag"), (Long) item.get("passedNum"));
+        }
+
+        // 整理为标签雷达图所需数据结构，并添加进结果集中
+        // 例，[
+        //         {"标签1": {"该标签小题总数": xx, "该用户在该标签小题中通过数": xx}},
+        //         {"标签2": {"该标签小题总数": xx, "该用户在该标签小题中通过数": xx}},
+        //         ...
+        //     ]
+        List<Map<String, Map<String, Object>>> tagRadar = new ArrayList<>();
+        for (int tagType = 0; tagType < Constants.QuestionTag.TOTAL_TAG_NUM; tagType++) {
+            String tagName = Constants.QuestionTag.tagTypeToName(tagType);
+            Map<String, Object> curTagStatistic = new HashMap<>();
+            curTagStatistic.put("totalNum", totalSubQuestionNumOfEachTag.getOrDefault(tagType, 0L));
+            curTagStatistic.put("passedNum", passedSubQuestionNumOfEachTag.getOrDefault(tagType, 0L));
+            Map<String, Map<String, Object>> curTag = new HashMap<>();
+            curTag.put(tagName, curTagStatistic);
+            tagRadar.add(curTag);
+        }
+        res.put("tagRadar", tagRadar);
+
         return res;
     }
 
