@@ -1,6 +1,9 @@
 <template>
   <div class="box">
-    <div id="chart"></div>
+    <div class="chartBox">
+      <div id="pieChart" class="chart"></div>
+      <div id="radarChart" class="chart"></div>
+    </div>
     <div id="info_1">
       <a-table :dataSource="recentSubmit" :columns="columns"
                :key="recentSubmit.id"
@@ -118,7 +121,8 @@ export default {
   async mounted() {
     if (this.userId === '') await this.getUserInfoByToken();
     await this.getUserStatistic(this.userId)
-    this.drawEcharts()
+    this.drawPieEcharts()
+    this.drawRadarChart()
     await this.getRecentSubmit(this.userId);
   },
   computed: {
@@ -135,12 +139,10 @@ export default {
     getQuestionDetail(record) {
       this.$router.push({name: 'question', params: {mainId: record.mainId, subId: record.subId}})
     },
-    drawEcharts() {
-      var chartDom = document.getElementById('chart');
-      var myChart = echarts.init(chartDom);
-      var option;
-
-      option = {
+    drawPieEcharts() {
+      let pieChart = document.getElementById('pieChart');
+      let myChart = echarts.init(pieChart);
+      let option = {
         title: {
           text: this.statistic.passRate.replace('NaN', '0'),
           subtext: '提交通过率',
@@ -177,13 +179,6 @@ export default {
               show: false,
               position: 'center'
             },
-            // emphasis: {
-            //   label: {
-            //     show: true,
-            //     fontSize: 40,
-            //     fontWeight: 'bold'
-            //   }
-            // },
             labelLine: {
               show: false
             },
@@ -196,6 +191,84 @@ export default {
         ]
       };
       option && myChart.setOption(option);
+    },
+    drawRadarChart(){
+      let radarChart = document.getElementById('radarChart');
+      let myChart = echarts.init(radarChart);
+      let tagData = this.statistic.tagRadar;
+      // console.log(tagData)
+      let option ={
+        title: {
+          text: '完成进度',
+          left: '15%',
+          top: '43%'
+        },
+        legend: {
+          data: ['Allocated Budget', 'Actual Spending']
+        },
+        radar: {
+          shape: 'circle',
+          radius: 70,
+          indicator: [
+            { name: '时间和日期', max: tagData[0].时间和日期.totalNum },
+            { name: '字符串', max: tagData[1].字符串.totlNum },
+            { name: '数值', max: tagData[2].数值.totalNum },
+            { name: '集合', max: tagData[3].集合.totalNum },
+            { name: '聚合函数', max: tagData[4].聚合函数.totalNum },
+            { name: '模糊查询', max: tagData[5].模糊查询.totalNum },
+            { name: '排序', max: tagData[6].排序.totalNum },
+            { name: '分组', max: tagData[7].分组.totalNum },
+            { name: '多表连接', max: tagData[8].多表连接.totalNum },
+            { name: '子查询', max: tagData[9].子查询.totalNum },
+            { name: '条件判断', max: tagData[10].条件判断.totalNum },
+          ],
+          splitArea: {
+            // show: false,
+            areaStyle:{color: ['rgba(102,202,238,0.2)','rgba(200,207,208,0.2)']}
+          },
+          splitNumber: 3,
+          axisLine: {
+            lineStyle: {
+              color: 'rgba(102,202,238,0.33)'
+            }
+          },
+          axisName: {
+            color: 'gray'
+          },
+        },
+        series: [
+          {
+            // name: 'Budget vs spending',
+            type: 'radar',
+            symbol: 'none',
+            data: [
+              {
+                value: [tagData[0].时间和日期.passedNum,
+                  tagData[1].字符串.passedNum,
+                  tagData[2].数值.passedNum,
+                  tagData[3].集合.passedNum,
+                  tagData[4].聚合函数.passedNum,
+                  tagData[5].模糊查询.passedNum,
+                  tagData[6].排序.passedNum,
+                  tagData[7].分组.passedNum,
+                  tagData[8].多表连接.passedNum,
+                  tagData[9].子查询.passedNum,
+                  tagData[10].条件判断.passedNum],
+                name: '完成度',
+                lineStyle: {
+                  width: 1,
+                  opacity: 0.5
+                },
+                areaStyle: {
+                  color: 'rgba(115,185,252,0.7)'
+                }
+              }
+            ]
+          }
+        ]
+      };
+      console.log(option.series[0].data)
+      option && myChart.setOption(option);
     }
   }
 }
@@ -203,7 +276,7 @@ export default {
 
 <style scoped>
 .box {
-  /*display: flex;*/
+
   /*justify-content: space-around;*/
   width: 80vw;
   padding: 1em;
@@ -211,15 +284,21 @@ export default {
   overflow: auto;
 }
 
-#chart {
+.chartBox{
+  display: flex;
+}
+
+.chart {
   width: 40vw;
   height: 30vh;
   display: inline-block;
   /*box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);*/
   /*display: inline-block;*/
   text-align: center;
-
 }
+/*#radarChart{*/
+/*  margin: 2em;*/
+/*}*/
 
 #info_1 {
   width: 76vw;
