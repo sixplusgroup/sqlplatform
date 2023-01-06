@@ -6,9 +6,9 @@
         select table_name as tableName,
                column_name as columnName
         from question_related_table_info
-        where question_related_table_info.db_path = (select db_path
-                                                     from main_question
-                                                     where main_question.id = #{mainId});
+        where db_path = (select db_path
+                           from main_question
+                           where main_question.id = #{mainId});
     </select>
 
 </mapper>

@@ -2,10 +2,7 @@ package com.example.sqlexercise.serviceImpl;
 
 import com.example.sqlexercise.data.*;
 import com.example.sqlexercise.lib.Constants;
-import com.example.sqlexercise.po.Draft;
-import com.example.sqlexercise.po.MainQuestion;
-import com.example.sqlexercise.po.QuestionState;
-import com.example.sqlexercise.po.SubQuestion;
+import com.example.sqlexercise.po.*;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.vo.DraftVO;
 import lombok.extern.slf4j.Slf4j;
@@ -115,16 +112,23 @@ public class QuestionServiceImpl implements QuestionService {
 
         // 查数据库，获取该大题相关表信息
         List<Map<String, Object>> tableInfoByMainId = questionRelatedTableInfoMapper.selectTableInfoByMainId(mainId);
-        // 遍历整理结果集 <K, V> -> <表名, 列名list>
-        Map<String, List<String>> relatedTableInfo = new HashMap<>();
+        // 遍历整理结果集
+        Map<String, List<String>> tableInfoMap = new HashMap<>();
         for (Map<String, Object> info : tableInfoByMainId) {
             String tableName = (String) info.get("tableName");
-            List<String> columnList = relatedTableInfo.get(tableName);
+            List<String> columnList = tableInfoMap.get(tableName);
             if (columnList == null) {
                 columnList = new ArrayList<>();
             }
             columnList.add((String) info.get("columnName"));
-            relatedTableInfo.put(tableName, columnList);
+            tableInfoMap.put(tableName, columnList);
+        }
+        List<Map<String, Object>> relatedTableInfo = new ArrayList<>();
+        for (Map.Entry<String, List<String>> entry : tableInfoMap.entrySet()) {
+            Map<String, Object> tmp = new HashMap<>();
+            tmp.put("table", entry.getKey());
+            tmp.put("columns", entry.getValue());
+            relatedTableInfo.add(tmp);
         }
         // 将相关表信息添加进结果map中
         res.put("relatedTableInfo", relatedTableInfo);
