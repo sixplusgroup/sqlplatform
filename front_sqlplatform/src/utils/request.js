@@ -58,13 +58,13 @@ service.interceptors.response.use((response) => {
   // console.log(response)
   switch (response.status) {
     case 200:
-      if (response.data.res === 'success') {
+      // if (response.data.res === 'success') {
         return response.data
-      }
-      if (response.data.res === 'failure') {
-        return response.data
-      }
-      message.error(response.data.msg)
+      // }
+      // if (response.data.res === 'failure') {
+      //   return response.data
+      // }
+      // message.error(response.data.msg)
       break
     case 404:
       return false

@@ -8,7 +8,7 @@ import {
   loginAPI,
   sendCodeAPI,
   registerAPI, getRecentSubmitAPI,
-  getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI
+  getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI, resetPasswordAPI
 } from '../../api/user'
 
 const user = {
@@ -78,7 +78,6 @@ const user = {
       }
     },
     sendCode: async ({},data) => {
-      console.log(data)
       const res = await sendCodeAPI(data)
       if (res) {
         message.success('验证码发送成功，请查收')
@@ -116,6 +115,14 @@ const user = {
       const res = await getRecentSubmitAPI(data);
       if (res) {
         commit('set_recent_submit', res.obj)
+      }
+    },
+    resetPassword: async ({commit}, data) => {
+      const res = await resetPasswordAPI(data);
+      if (res.res === 'success') {
+        message.success(res.msg)
+      }else{
+        message.error(res.msg)
       }
     },
   }

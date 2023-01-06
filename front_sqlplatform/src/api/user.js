@@ -87,6 +87,15 @@ export function getRecentSubmitAPI(data){
   })
 }
 
+export function resetPasswordAPI(data){
+  return axios({
+    url:`/api/reset_password`,
+    method: 'POST',
+    data
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
 
 
 

@@ -12,10 +12,9 @@ const getters = {
   subQuestions: state => state.question.subQuestions,
   questionList: state => state.question.questionList,
   draft: state => state.question.draft,
+  totalMainQuestionNum: state => state.question.totalMainQuestionNum,
 
-  // passed: state => state.batch.passed,
-
-
+  hint: state => state.batch.hint,
 
 };
 

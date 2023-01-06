@@ -16,6 +16,7 @@ const question = {
     subQuestions: [],
     questionList: [],
     draft: [],
+    totalMainQuestionNum: 0
   },
   mutations: {
     set_mainQuestion: (state, data) => {
@@ -25,6 +26,8 @@ const question = {
       state.subQuestions = data;
     },
     set_questionList: (state, data) => {
+      state.totalMainQuestionNum = data[0].totalMainQuestionNum
+      data.shift()
       state.questionList = data;
     },
     set_draft: (state, data) => {
@@ -57,6 +60,7 @@ const question = {
       const res = await getQuestionListAPI(queryParam)
       if (res) {
         commit('set_questionList', res.obj)
+        console.log(res.obj)
       }
     },
     saveDraft: async ({commit}, data) => {
