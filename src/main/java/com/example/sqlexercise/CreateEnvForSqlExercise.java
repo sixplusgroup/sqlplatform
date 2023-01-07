@@ -79,25 +79,25 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             }
             log.info("After checking, image " + Constants.DockerRelated.MYSQL_IMAGE + " exists.");
             // 检查 Redis 镜像
-            image = dockerServer.getDockerImageByReference(Constants.DockerRelated.REDIS_IMAGE);
-            if (image == null) {
-                dockerServer.pullImageByRepository(Constants.DockerRelated.REDIS_IMAGE_NAME, Constants.DockerRelated.REDIS_IMAGE_TAG);
-            }
-            log.info("After checking, image " + Constants.DockerRelated.REDIS_IMAGE + " exists.");
+//            image = dockerServer.getDockerImageByReference(Constants.DockerRelated.REDIS_IMAGE);
+//            if (image == null) {
+//                dockerServer.pullImageByRepository(Constants.DockerRelated.REDIS_IMAGE_NAME, Constants.DockerRelated.REDIS_IMAGE_TAG);
+//            }
+//            log.info("After checking, image " + Constants.DockerRelated.REDIS_IMAGE + " exists.");
             // 若生成容器信息
             UUID namespace = Generators.nameBasedGenerator(UUID.fromString(NAMESPACE_URL)).generate(SALT);
             List<DockerContainer> dockerMysqlContainers =
                     createContainerInfos(dockerServer, namespace, Constants.DockerRelated.MYSQL_IMAGE_NAME,
                             Constants.DockerRelated.MYSQL_CONTAINER_DEFAULT_PORT, 1);
-            List<DockerContainer> dockerRedisContainers =
-                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.REDIS_IMAGE_NAME,
-                            Constants.DockerRelated.REDIS_CONTAINER_DEFAULT_PORT, 1);
+//            List<DockerContainer> dockerRedisContainers =
+//                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.REDIS_IMAGE_NAME,
+//                            Constants.DockerRelated.REDIS_CONTAINER_DEFAULT_PORT, 1);
             // 检查dockerServer中现有容器实例情况
             checkExistingContainerInstance(dockerMysqlContainers, dockerServer, recreate);
-            checkExistingContainerInstance(dockerRedisContainers, dockerServer, recreate);
+//            checkExistingContainerInstance(dockerRedisContainers, dockerServer, recreate);
             // 根据容器信息创建容器实例
             createMysqlContainerInstance(dockerMysqlContainers, dockerServer, server);
-            createRedisContainerInstance(dockerRedisContainers, dockerServer, server);
+//            createRedisContainerInstance(dockerRedisContainers, dockerServer, server);
         }
     }
 
