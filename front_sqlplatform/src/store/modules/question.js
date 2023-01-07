@@ -7,12 +7,13 @@ import {
   getMainQuestionAPI, getSubQuestionsAPI,
   getQuestionListAPI, saveDraftAPI,
   getDraftAPI, getStarStateAPI,
-  starSubQuestionAPI, unStarSubQuestionAPI,getSubmitRecordAPI
+  starSubQuestionAPI, unStarSubQuestionAPI, getSubmitRecordAPI, getQuestionListByTagsAPI
 } from "../../api/question";
 
 const question = {
   state: {
     mainQuestion: '',
+    relatedTableInfo: {},
     subQuestions: [],
     questionList: [],
     draft: [],
@@ -21,6 +22,10 @@ const question = {
   mutations: {
     set_mainQuestion: (state, data) => {
       state.mainQuestion = "## " + data.title + "\n" + data.description;
+      for(let i in data.relatedTableInfo){
+        state.relatedTableInfo[data.relatedTableInfo[i].table]
+          = data.relatedTableInfo[i].columns;
+      }
     },
     set_subQuestions: (state, data) => {
       state.subQuestions = data;
@@ -60,7 +65,12 @@ const question = {
       const res = await getQuestionListAPI(queryParam)
       if (res) {
         commit('set_questionList', res.obj)
-        console.log(res.obj)
+      }
+    },
+    getQuestionListByTags: async ({commit}, queryParam) => {
+      const res = await getQuestionListByTagsAPI(queryParam)
+      if (res) {
+        commit('set_questionList', res.obj)
       }
     },
     saveDraft: async ({commit}, data) => {

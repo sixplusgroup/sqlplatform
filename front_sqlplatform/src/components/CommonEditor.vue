@@ -74,7 +74,12 @@ export default {
       immediate: true
     }
   },
+
   computed: {
+    ...mapGetters([
+      'relatedTableInfo'
+
+    ]),
     coderOptions() {
       return {
         line: true,
@@ -90,11 +95,7 @@ export default {
         smartIndent: true, // 智能缩进
         completeSingle: false ,// 当匹配只有一项的时候是否自动补全
         hintOptions: {//自定义提示选项
-          tables: {
-            customers: ['name', 'customer_id'],
-            orders: ['order_id', 'order_date', 'customer_id','product_id'],
-            products: ['product_id', 'product_name', 'price']
-          }
+          tables: this.relatedTableInfo
         }
       }
     }

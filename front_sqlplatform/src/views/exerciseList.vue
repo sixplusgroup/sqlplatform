@@ -74,28 +74,28 @@ export default {
         "rgb(221,174,216)","rgb(194,123,123)",
         "rgb(184,194,68)", "rgb(208,124,48)", "rgb(241,231,200)"],
       columns: [
-        {
-          title: '',
-          dataIndex: 'tags',
-          key: 'tags',
-          align: 'center',
-          scopedSlots: {customRender: 'tags'},
-          width: 0,
-          filters: [
-            { text: '时间和日期', value: '时间和日期' },
-            { text: '字符串', value: '字符串' },
-            { text: '数值', value: '数值' },
-            { text: '集合', value: '集合' },
-            { text: '聚合函数', value: '聚合函数' },
-            { text: '模糊查询', value: '模糊查询' },
-            { text: '排序', value: '排序' },
-            { text: '分组', value: '分组' },
-            { text: '多表连接', value: '多表连接' },
-            { text: '子查询', value: '子查询' },
-            { text: '条件判断', value: '条件判断' },
-          ],
-          onFilter: (value, record) => record.tags.indexOf(value) !== -1,
-        },
+        // {
+        //   title: '',
+        //   dataIndex: 'tags',
+        //   key: 'tags',
+        //   align: 'center',
+        //   scopedSlots: {customRender: 'tags'},
+        //   width: 0,
+        //   filters: [
+        //     { text: '时间和日期', value: '时间和日期' },
+        //     { text: '字符串', value: '字符串' },
+        //     { text: '数值', value: '数值' },
+        //     { text: '集合', value: '集合' },
+        //     { text: '聚合函数', value: '聚合函数' },
+        //     { text: '模糊查询', value: '模糊查询' },
+        //     { text: '排序', value: '排序' },
+        //     { text: '分组', value: '分组' },
+        //     { text: '多表连接', value: '多表连接' },
+        //     { text: '子查询', value: '子查询' },
+        //     { text: '条件判断', value: '条件判断' },
+        //   ],
+        //   onFilter: (value, record) => record.tags.indexOf(value) !== -1,
+        // },
         {
           title: '题目名称',
           dataIndex: 'title',
@@ -135,6 +135,7 @@ export default {
           scopedSlots: {customRender: 'action'}
         },
       ],
+      filter: false,
     }
   },
   async mounted() {
@@ -149,7 +150,7 @@ export default {
   },
   methods: {
     ...mapActions([
-      'logout',
+      'logout','getQuestionListByTags',
       'getQuestionList', 'getQuestion', 'getUserInfoByToken'
     ]),
     ...mapMutations([
