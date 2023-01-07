@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +77,17 @@ class QuestionServiceTest {
     void getMainQuestionsByPage() {
         int pageSize = 5;
         int page = 1;
+        List<Map<String, Object>> res = questionService.getMainQuestionsByPage(ConstantsOfTest.USER_ID, pageSize, page);
+        Assertions.assertNotNull(res);
+    }
+
+    @Test
+    void getMainQuestionsByPageFilterByTags() {
+        int pageSize = 5;
+        int page = 1;
         List<Map<String, Object>> res =
-                (List<Map<String, Object>>) questionService.getMainQuestionsByPage(ConstantsOfTest.USER_ID, pageSize, page);
+                questionService.getMainQuestionsByPageFilterByTags(ConstantsOfTest.USER_ID, pageSize, page,
+                        Arrays.asList("时间和日期", "字符串"));
         Assertions.assertNotNull(res);
     }
 
@@ -142,4 +152,5 @@ class QuestionServiceTest {
         List<Object> res = questionService.getSubmitRecord(ConstantsOfTest.USER_ID, mainId, subId);
         Assertions.assertNotNull(res);
     }
+
 }

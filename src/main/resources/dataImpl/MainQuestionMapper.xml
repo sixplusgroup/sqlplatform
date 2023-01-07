@@ -38,6 +38,39 @@
         limit #{from}, #{size}
     </select>
 
+    <select id="selectByPageFilterByTags" resultType="map">
+        select main_question.id                       as mainId,
+               main_question.title                    as title,
+               main_question.sub_count                as subCount,
+               coalesce(qs.submittedButNotPassNum, 0) as submittedButNotPassNum,
+               coalesce(qs.passedNum, 0)              as passedNum
+        from (select main_question.id as id,
+                     main_question.title as title,
+                     main_question.sub_count as sub_count
+              from main_question, (select distinct sub_question.main_id as main_id
+                                   from question_tags,
+                                        sub_question
+                                   where tag in
+                                   <foreach collection="tags" item="tag" index="index"
+                                            open="(" close=")" separator=",">
+                                       #{tag}
+                                   </foreach>
+                                     and question_id in (select id as subId
+                                                         from sub_question)
+                                     and question_id = sub_question.id) as main_id_after_filter
+              where main_question.id = main_id_after_filter.main_id) as main_question
+                 left join
+             (select main_id,
+                     sum(state = 1) as submittedButNotPassNum,
+                     sum(state = 2) as passedNum
+              from question_state
+              where user_id = #{userId}
+              group by main_id) as qs
+             on main_question.id = qs.main_id
+        order by main_question.id
+        limit #{from}, #{size};
+    </select>
+
     <select id="countTotal" resultType="java.lang.Integer">
         select count(*)
         from main_question

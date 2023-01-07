@@ -132,8 +132,28 @@ public class Constants {
                 case 8: return MULTI_TABLE_CONNECTION;
                 case 9: return SUB_QUERY;
                 case 10: return CONNECTION_JUDGE;
+                default: return UNDEFINE_TAG;
             }
-            return UNDEFINE_TAG;
+        }
+
+        /**
+         * 标签名称转换为对应类型编号
+         */
+        public static int tagNameToType(String tagName) {
+            switch (tagName) {
+                case DATE_AND_TIME: return 0;
+                case STRING: return 1;
+                case NUMBER: return 2;
+                case SET: return 3;
+                case AGGREGATE: return 4;
+                case LIKE_QUERY: return 5;
+                case ORDER: return 6;
+                case GROUP: return 7;
+                case MULTI_TABLE_CONNECTION: return 8;
+                case SUB_QUERY: return 9;
+                case CONNECTION_JUDGE: return 10;
+                default: return -1;
+            }
         }
 
         /**
@@ -145,6 +165,17 @@ public class Constants {
                 tagNames.add(tagTypeToName(tagType));
             }
             return tagNames;
+        }
+
+        /**
+         * 将标签名称列表转换为标签类型编号列表
+         */
+        public static List<Integer> tagNameListToTypeList(List<String> tagNames) {
+            List<Integer> tagTypes = new ArrayList<>();
+            for (String tagName : tagNames) {
+                tagTypes.add(tagNameToType(tagName));
+            }
+            return tagTypes;
         }
     }
 

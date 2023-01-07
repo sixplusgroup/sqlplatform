@@ -170,6 +170,42 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     /**
+     * 根据标签筛选mainQuestion，并分页返回
+     *
+     * @param userId    userId
+     * @param page      页数
+     * @param pageSize  每页数据量
+     * @param tags      筛选条件，标签列表
+     */
+    @Override
+    public List<Map<String, Object>> getMainQuestionsByPageFilterByTags(String userId, Integer pageSize, Integer page, List<String> tags) {
+        int from = (page - 1) * pageSize;
+        List<Map<String, Object>> res = new ArrayList<>();
+        // 获取大题总数
+        Integer total = mainQuestionMapper.countTotal();
+        Map<String, Object> map = new HashMap<>();
+        map.put("totalMainQuestionNum", total);
+        res.add(map);
+        // 将前端传来的标签名称列表转换为标签类型编号列表
+        List<Integer> tagTypeList = Constants.QuestionTag.tagNameListToTypeList(tags);
+        // 根据标签，查一页大题信息
+        List<Map<String, Object>> questions = mainQuestionMapper.selectByPageFilterByTags(userId, from, pageSize, tagTypeList);
+        // 遍历每一个大题信息，添加标签数据
+        for (Map<String, Object> mainQuestionInfo : questions) {
+            // 获取当前小题的subId
+            Integer mainId = (Integer) mainQuestionInfo.get("mainId");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagByMainId(mainId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            mainQuestionInfo.put("tags", tagNames);
+        }
+        res.addAll(questions);
+        return res;
+    }
+
+    /**
      * 保存用户做题草稿
      */
     @Override

@@ -31,9 +31,18 @@ public interface QuestionService {
      * @param userId    userId
      * @param pageSize  每页数据量
      * @param page      页数
-     * @return MainQuestionVO集合
      */
     List<Map<String, Object>> getMainQuestionsByPage(String userId, int pageSize, int page);
+
+    /**
+     * 根据标签筛选mainQuestion，并分页返回
+     *
+     * @param userId    userId
+     * @param page      页数
+     * @param pageSize  每页数据量
+     * @param tags      筛选条件，标签列表
+     */
+    List<Map<String, Object>> getMainQuestionsByPageFilterByTags(String userId, Integer pageSize, Integer page, List<String> tags);
 
     /**
      * 保存某题的草稿

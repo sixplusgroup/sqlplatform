@@ -19,8 +19,14 @@ public interface SubQuestionMapper {
 
     SubQuestion selectBySubId(@Param("subId") int subId);
 
+    /**
+     * 查小题总数
+     */
     int countTotal();
 
+    /**
+     * 查所有小题信息
+     */
     List<SubQuestion> selectAll();
 
 }

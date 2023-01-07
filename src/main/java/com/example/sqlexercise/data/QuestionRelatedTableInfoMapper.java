@@ -11,6 +11,9 @@ import java.util.Map;
 @Repository
 public interface QuestionRelatedTableInfoMapper {
 
+    /**
+     * 查跟某大题相关的表列信息
+     */
     List<Map<String, Object>> selectTableInfoByMainId(@Param("mainId") int mainId);
 
 }
