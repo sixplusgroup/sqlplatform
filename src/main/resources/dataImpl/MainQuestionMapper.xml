@@ -76,4 +76,20 @@
         from main_question
     </select>
 
+    <select id="countTotalAfterFilter" resultType="java.lang.Integer">
+        select count(*)
+        from (select distinct sub_question.main_id
+              from question_tags,
+                   sub_question
+              where tag in
+                        <foreach collection="tags" item="tag" index="index"
+                                 open="(" close=")" separator=",">
+                            #{tag}
+                        </foreach>
+                and question_id in (select id as subId
+                                    from sub_question)
+                and question_id = sub_question.id
+              group by sub_question.main_id) as tmp;
+    </select>
+
 </mapper>

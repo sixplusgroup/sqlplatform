@@ -181,13 +181,13 @@ public class QuestionServiceImpl implements QuestionService {
     public List<Map<String, Object>> getMainQuestionsByPageFilterByTags(String userId, Integer pageSize, Integer page, List<String> tags) {
         int from = (page - 1) * pageSize;
         List<Map<String, Object>> res = new ArrayList<>();
-        // 获取大题总数
-        Integer total = mainQuestionMapper.countTotal();
-        Map<String, Object> map = new HashMap<>();
-        map.put("totalMainQuestionNum", total);
-        res.add(map);
         // 将前端传来的标签名称列表转换为标签类型编号列表
         List<Integer> tagTypeList = Constants.QuestionTag.tagNameListToTypeList(tags);
+        // 获取包含这些标签的大题总数
+        Integer total = mainQuestionMapper.countTotalAfterFilter(tagTypeList);
+        Map<String, Object> map = new HashMap<>();
+        map.put("totalMainQuestionNumAfterFilter", total);
+        res.add(map);
         // 根据标签，查一页大题信息
         List<Map<String, Object>> questions = mainQuestionMapper.selectByPageFilterByTags(userId, from, pageSize, tagTypeList);
         // 遍历每一个大题信息，添加标签数据
