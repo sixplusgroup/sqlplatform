@@ -69,6 +69,7 @@ const question = {
     },
     getQuestionListByTags: async ({commit}, queryParam) => {
       const res = await getQuestionListByTagsAPI(queryParam)
+      console.log(res)
       if (res) {
         commit('set_questionList', res.obj)
       }
