@@ -21,7 +21,13 @@ import 'codemirror/mode/php/php'
 import 'codemirror/mode/python/python'
 import 'codemirror/mode/shell/shell'
 import 'codemirror/mode/powershell/powershell'
-import {mapGetters, mapActions, mapMutations} from 'vuex'
+
+import 'codemirror/addon/edit/matchbrackets.js'
+import 'codemirror/addon/comment/comment.js'
+import 'codemirror/addon/search/searchcursor.js'
+import 'codemirror/addon/search/search.js'
+import 'codemirror/keymap/sublime'
+import {mapGetters} from 'vuex'
 
 const CodeMirror = require('codemirror/lib/codemirror')
 
@@ -96,7 +102,8 @@ export default {
         completeSingle: false ,// 当匹配只有一项的时候是否自动补全
         hintOptions: {//自定义提示选项
           tables: this.relatedTableInfo
-        }
+        },
+        keyMap: "sublime"
       }
     }
   },

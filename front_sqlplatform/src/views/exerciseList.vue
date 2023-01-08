@@ -18,7 +18,7 @@
                   style="margin-left: 8px"
                   v-if="filter" @click="resetFilter"
         > <a-icon type="reload" /> 重置</a-button>
-<!--        <transition>-->
+
         <div v-for="(item,index) in selector" v-if="filter"
              style="display: inline-block;float: left;"
         >
@@ -30,7 +30,7 @@
           >{{ item.value }}
           </a-button>
           <a-button type="link" shape="round"
-                    style="color: gray;border: 0;margin: 0 0 5px 8px"
+                    style="color: #333333;border: 0;margin: 0 0 5px 8px"
                     @click="selectFilter(index)"
                     id="unSelected"
                     v-else>{{ item.value }}
@@ -49,7 +49,7 @@
           <a-popover
             trigger="hover"
             :overlayStyle="{maxWidth:'25vw'}"
-            placement="right">
+            placement="left">
             <template slot="content">
               <a-tag v-for="(tag,index) in record.tags"
                      color="rgb(120, 135, 185)"
@@ -83,7 +83,14 @@
 
         </span>
 
-        <span slot="tags" style="display: none"></span>
+<!--        <span slot="tags" slot-scope="text, record">-->
+<!--          <a-tag v-for="(tag,index) in text"-->
+<!--                 color="rgb(120, 135, 185)"-->
+<!--                 :key="tag"-->
+<!--                 style="margin-right: 3px">-->
+<!--              {{ tag }}-->
+<!--              </a-tag>-->
+<!--        </span>-->
       </a-table>
       <a-pagination v-model:current="current"
                     @change="pageChange"
@@ -121,28 +128,6 @@ export default {
         {selected: false, value: '条件判断'},
       ],
       columns: [
-        // {
-        //   title: '',
-        //   dataIndex: 'tags',
-        //   key: 'tags',
-        //   align: 'center',
-        //   scopedSlots: {customRender: 'tags'},
-        //   width: 0,
-        //   filters: [
-        //     { text: '时间和日期', value: '时间和日期' },
-        //     { text: '字符串', value: '字符串' },
-        //     { text: '数值', value: '数值' },
-        //     { text: '集合', value: '集合' },
-        //     { text: '聚合函数', value: '聚合函数' },
-        //     { text: '模糊查询', value: '模糊查询' },
-        //     { text: '排序', value: '排序' },
-        //     { text: '分组', value: '分组' },
-        //     { text: '多表连接', value: '多表连接' },
-        //     { text: '子查询', value: '子查询' },
-        //     { text: '条件判断', value: '条件判断' },
-        //   ],
-        //   onFilter: (value, record) => record.tags.indexOf(value) !== -1,
-        // },
         {
           title: '题目名称',
           dataIndex: 'title',
@@ -151,6 +136,28 @@ export default {
           // width: 250,
           scopedSlots: {customRender: 'titles'}
         },
+        // {
+        //   title: '知识点',
+        //   dataIndex: 'tags',
+        //   key: 'tags',
+        //   align: 'center',
+        //   scopedSlots: {customRender: 'tags'},
+        //   // width: 0,
+        //   // filters: [
+        //   //   { text: '时间和日期', value: '时间和日期' },
+        //   //   { text: '字符串', value: '字符串' },
+        //   //   { text: '数值', value: '数值' },
+        //   //   { text: '集合', value: '集合' },
+        //   //   { text: '聚合函数', value: '聚合函数' },
+        //   //   { text: '模糊查询', value: '模糊查询' },
+        //   //   { text: '排序', value: '排序' },
+        //   //   { text: '分组', value: '分组' },
+        //   //   { text: '多表连接', value: '多表连接' },
+        //   //   { text: '子查询', value: '子查询' },
+        //   //   { text: '条件判断', value: '条件判断' },
+        //   // ],
+        //   // onFilter: (value, record) => record.tags.indexOf(value) !== -1,
+        // },
 
         {
           title: '已通过',
