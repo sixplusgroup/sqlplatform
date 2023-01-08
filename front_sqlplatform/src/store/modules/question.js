@@ -31,7 +31,11 @@ const question = {
       state.subQuestions = data;
     },
     set_questionList: (state, data) => {
-      state.totalMainQuestionNum = data[0].totalMainQuestionNum
+      if(data[0].totalMainQuestionNum)
+      state.totalMainQuestionNum = data[0].totalMainQuestionNum;
+      else{
+        state.totalMainQuestionNum = data[0].totalMainQuestionNumAfterFilter;
+      }
       data.shift()
       state.questionList = data;
     },

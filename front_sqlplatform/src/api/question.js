@@ -35,14 +35,12 @@ export function getQuestionListAPI(queryParam) {
 }
 export function getQuestionListByTagsAPI(queryParam) {
   return axios({
-    url: `/api/question/get_main_question_by_page_filter_by_tags`,
-    method: 'GET',
-    params: {
-      userId: queryParam.userId,
-      page: queryParam.page,
-      pageSize: queryParam.pageSize,
-      tags: queryParam.tags
-    }
+    url: `/api/question/get_main_question_by_page_filter_by_tags`
+      +'?userId='+queryParam.userId
+      +'&page='+queryParam.page
+      +'&pageSize='+queryParam.pageSize
+      +'&tags%5B%5D='+queryParam.tags,
+    method: 'GET'
   }).catch((r) => {
     console.log("catch: ", r)
   })
