@@ -6,6 +6,7 @@ import com.example.sqlexercise.data.PassRecordMapper;
 import com.example.sqlexercise.data.QuestionStateMapper;
 import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.lib.ResultOfTask;
+import com.example.sqlexercise.po.AnswerSet;
 import com.example.sqlexercise.po.Batch;
 import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.po.QuestionState;
@@ -14,6 +15,7 @@ import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
 import com.example.sqlexercise.vo.DraftVO;
+import com.example.sqlexercise.vo.GetScoreVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +90,11 @@ public class BatchServiceImpl implements BatchService {
         }
         // 执行
         log.info("batch " + batch.getId() + " is running.");
+
+        // 执行SQL前，用空格替换用户提交的SQL中的\n和\t
+        String batchText = batchVO.getBatchText();
+        batchVO.setBatchText(batchText.replaceAll("\n", " ").replaceAll("\t", " "));
+
         String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
         return res;
     }
@@ -121,29 +128,29 @@ public class BatchServiceImpl implements BatchService {
             }
             // 如果是run则只返回结果
             log.info("batch " + batch.getId() + " passed.");
-            // 如果静态分析得到的评分非满分，需要将其加入答案集
-//            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
-//            float score = scoreService.getScore(getScoreVO);
-//            if (score < 100f) {
-//                AnswerSet stuAnswer = new AnswerSet();
-//                stuAnswer.setMainId(main_id);
-//                stuAnswer.setSubId(sub_id);
-//                stuAnswer.setAnswer(sqlText);
-//                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
-//                if (ans == null) {
-//                    stuAnswer.setCreatedAt(new Date());
-//                    stuAnswer.setUpdatedAt(new Date());
-//                    answerSetMapper.create(stuAnswer);
-//                } else if (ans.getState() == 1) {
-//                    stuAnswer.setUpdatedAt(new Date());
-//                    answerSetMapper.updateStatus(stuAnswer);
-//                }
-//            }
             return Constants.Message.PASSED;
         } else {
             // 如果是提交，才会修改题目状态；运行则不会
             if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
                 updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
+            }
+            // 如果静态分析得到的评分非满分，需要将其加入答案集
+            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
+            float score = scoreService.getScore(getScoreVO);
+            if (score < 100f) {
+                AnswerSet stuAnswer = new AnswerSet();
+                stuAnswer.setMainId(main_id);
+                stuAnswer.setSubId(sub_id);
+                stuAnswer.setAnswer(sqlText);
+                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
+                if (ans == null) {
+                    stuAnswer.setCreatedAt(new Date());
+                    stuAnswer.setUpdatedAt(new Date());
+                    answerSetMapper.create(stuAnswer);
+                } else if (ans.getState() == 1) {
+                    stuAnswer.setUpdatedAt(new Date());
+                    answerSetMapper.updateStatus(stuAnswer);
+                }
             }
             log.info("batch " + batch.getId() + " didn't pass.");
             return Constants.Message.NOT_PASSED;
@@ -156,7 +163,7 @@ public class BatchServiceImpl implements BatchService {
             questionState = new QuestionState(userId, mainId, subId, false, toState);
             questionStateMapper.insert(questionState);
         } else {
-            // 未开始-0 < 提交未通过-1 < 已通过-2
+            // 未开始-0 => 提交未通过-1 => 已通过-2
             // questionState只会单向变化
             if (questionState.getState() < toState) {
                 questionStateMapper.updateState(userId, mainId, subId, toState);

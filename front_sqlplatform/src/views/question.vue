@@ -208,7 +208,7 @@ export default {
 
     runCode(item, index) {
       this.runTest({
-        batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
+        batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
@@ -217,7 +217,7 @@ export default {
     },
     async submitCode(item, index) {
       await this.commit({
-        batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
+        batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
