@@ -1,9 +1,9 @@
 <template>
   <div class="box" ref="box">
     <div class="left">
-      <a-button shape="round"
-                style="float: right;margin: .8em 2.5em .8em .8em;"
-                @click="back">返回
+      <a-button
+        style="float: right;margin: .8em 2.5em .8em .8em;"
+        @click="back">返回
       </a-button>
       <v-md-preview :text="mainQuestion"></v-md-preview>
 
@@ -30,38 +30,69 @@
             </template>
             <div
               style="padding: 1em"
-            ><a-tag v-if="item.difficulty == 1" color="green" class="tag">EASY</a-tag>
+            >
+              <a-tag v-if="item.difficulty == 1" color="green" class="tag">EASY</a-tag>
               <a-tag v-else-if="item.difficulty == 2" color="geekblue" class="tag">MEDIUM</a-tag>
               <a-tag v-else-if="item.difficulty == 3" color="volcano" class="tag">HARD</a-tag>
 
               {{ item.description }}
             </div>
-            <div style="background-color: rgb(247,247,247);padding: 5px;margin-top: 1em "></div>
+            <div style="background-color: rgb(247,247,247);padding: 5px 1em 5px 2em;">
+              <a-tag v-for="(tag,index) in item.tags"
+                     color="blue"
+                     :key="tag"
+                     style="margin: 3px">
+                {{ tag }}
+              </a-tag>
+
+              <div style="float: right;padding: 3px">
+                  <a-switch v-model:checked="darkTheme" checked-children="Darcula" un-checked-children="Default"/>
+              </div>
+
+            </div>
             <div class="commonEditor">
               <CommonEditor
                 :value="codeSnippets[index]"
                 language="sql"
+                :theme="darkTheme ? 'darcula' : 'default'"
                 @input="changeTextarea"
                 style="height: 50vh"
               ></CommonEditor>
             </div>
             <div class="footbar">
               <span v-if="!buttonLoading" style="float: left;margin-left: 2em">
-              <a-button shape="round" @click="star(item,index)" v-if="!item.isStared">
-                <a-icon type="star" />收藏</a-button>
-              <a-button shape="round" @click="unStar(item,index)" v-else>
-                <a-icon type="star" theme="filled" />取消收藏</a-button>
+              <a-button @click="star(item,index)" v-if="!item.isStared"
+                        style="color: #faad14;border-color: #faad14">
+                <a-icon type="star"/>收藏</a-button>
+              <a-button @click="unStar(item,index)" v-else style="color: #faad14;border-color: #faad14">
+                <a-icon type="star" theme="filled"/>取消收藏</a-button>
               </span>
-              <a-spin v-else></a-spin>
-              <a-button shape="round" @click="save(item,index)" style="float: left;margin-left: 1em"
-              ><a-icon type="save" /> 保存草稿</a-button>
+              <a-spin v-else style="float: left;margin-left: 2em"></a-spin>
+              <a-button @click="save(item,index)"
+                        style="float: left;margin-left: 1em"
+              >
+                <a-icon type="save"/>
+                保存草稿
+              </a-button>
 
 
-              <a-button shape="round" @click="runCode(item,index)" >
-                <a-icon type="play-circle" />运行</a-button>
+              <a-button @click="runCode(item,index)">
+                <a-icon type="play-circle"/>
+                运行
+              </a-button>
 
-              <a-button shape="round" @click="submitCode(item,index)">
-                <a-icon type="check-circle" />提交</a-button>
+              <a-popover placement="bottom" content="将自动保存草稿">
+                <!--                <template slot="content">-->
+                <!--                  <p>将自动保存草稿</p>-->
+                <!--                </template>-->
+                <a-button style="background-color: mediumseagreen;color: white;border: 0;margin:0 1em 0 1em"
+                          @click="submitCode(item,index)">
+                  <a-icon type="check-circle"/>
+                  提交
+                </a-button>
+              </a-popover>
+
+
             </div>
             <div class="records">
               <p v-if="item.record.length === 0">暂无提交记录</p>
@@ -100,7 +131,8 @@ export default {
       loading: true,
       codeSnippets: [],
       activeKey: ref(0),
-      buttonLoading: false
+      buttonLoading: false,
+      darkTheme: false
     }
   },
   async mounted() {
@@ -266,9 +298,16 @@ export default {
 </script>
 
 <style scoped>
-.tag{
+/deep/ .ant-btn {
+  /*color: rgb(81,104,148);*/
+  /*border-color: rgb(81,104,148);*/
+  background-color: transparent;
+}
+
+.tag {
   margin-bottom: 3px;
 }
+
 .box {
   width: 100%;
   height: 100%;
@@ -338,7 +377,7 @@ export default {
 }
 
 .records {
-  height: 20vh;
+  height: 16vh;
   overflow: auto;
   padding: 1em;
   background-color: rgb(247, 247, 247);

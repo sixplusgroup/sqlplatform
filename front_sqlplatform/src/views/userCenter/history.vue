@@ -25,7 +25,7 @@
         </span>
         <template #title style="float: left;margin-left: 1em">
           <h4>
-            最近提交记录
+            最近提交记录（近20条）
           </h4>
         </template>
 <!--        <span slot="tags" style="display: none"></span>-->
@@ -88,9 +88,7 @@ export default {
           key: 'description',
           align: 'center',
           width: '35%',
-          // textOverflow: 'ellipsis',
-          // whiteSpace: 'nowrap',
-          overflow: 'scroll'
+          ellipsis: true,
         },
         {
           title: '难度',

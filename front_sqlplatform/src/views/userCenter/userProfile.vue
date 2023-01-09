@@ -49,12 +49,12 @@
         <a-button shape="round" type="primary" @click="saveModify">
           保存
         </a-button>
-        <a-button shape="round" style="margin-left: 10px" @click="cancelModify">
+        <a-button shape="round" @click="cancelModify" style="margin-left: 10px;">
           取消
         </a-button>
       </div>
       <div class="bottom" v-else>
-        <a-button shape="round" @click="modifyInfo">
+        <a-button shape="round" type="primary" @click="modifyInfo">
           修改信息
         </a-button>
       </div>
@@ -137,6 +137,9 @@ export default {
   background-color: transparent;
   /*font-size: 18px;*/
 }
+/deep/ .ant-input{
+  border-radius: 0px;
+}
 </style>
 
 <style lang="less">
@@ -160,7 +163,7 @@ export default {
   //border: 1px solid #d9d9d9;
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
   //width: 78vw;
-  height: 75vh;
+  height: 78vh;
   .userinfotitle {
     color: #333333;
     font-size: 28px;

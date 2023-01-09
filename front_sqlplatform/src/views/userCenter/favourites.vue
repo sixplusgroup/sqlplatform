@@ -53,6 +53,7 @@ export default {
           key: 'description',
           align: 'center',
           width: '40%',
+
         },
         {
           title: '知识点',

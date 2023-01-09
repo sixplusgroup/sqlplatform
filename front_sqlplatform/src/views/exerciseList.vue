@@ -52,7 +52,7 @@
             placement="left">
             <template slot="content">
               <a-tag v-for="(tag,index) in record.tags"
-                     color="rgb(120, 135, 185)"
+                     color="blue"
                      :key="tag"
                      style="margin: 3px">
               {{ tag }}

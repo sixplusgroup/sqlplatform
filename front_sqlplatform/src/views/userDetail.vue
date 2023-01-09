@@ -37,7 +37,7 @@
       </a-menu>
       <a-button type="round" ghost
                 @click="showAboutUs(e)"
-                style="margin-top: 3em"
+                style=""
                 id="about"
       > About Us
       </a-button>
@@ -116,6 +116,11 @@ export default {
   }
 }
 </script>
+<style scoped>
+/deep/ .ant-menu.ant-menu-dark .ant-menu-item-selected{
+  background-color: rgb(130, 141, 175);
+}
+</style>
 <style scoped lang="less">
 .info-wrapper {
   display: flex;
@@ -174,6 +179,16 @@ export default {
     vertical-align: center;
     margin-left: 10px;
   }
+}
+
+#about{
+  margin-top: 3em;
+
+}
+
+#about:focus{
+  border-color: white;
+  color: white;
 }
 
 </style>

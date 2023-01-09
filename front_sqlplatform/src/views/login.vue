@@ -65,6 +65,9 @@
               >
                 <a-form-item>
                   <a-input-search class="login-input" placeholder="电子邮件地址"
+                                  readOnly
+                                  onfocus="this.removeAttribute('readonly');"
+                                  onblur="this.setAttribute('readonly',true);"
                                   @search="handleCodeSending" style="margin-bottom: 3px"
                                   v-decorator="['resetEmail',{ rules: [{ required: true,
                                    pattern: /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/,
@@ -78,9 +81,12 @@
                 <a-form-item class="register-formItem">
                   <a-input class="login-input"
                            placeholder="验证码"
+                           readOnly
+                           onfocus="this.removeAttribute('readonly');"
+                           onblur="this.setAttribute('readonly',true);"
                            v-decorator="[
               'resetCode',
-              {rules: [{ required: true, message: '请输入邮箱验证码' }]}]"
+              {rules: [{ required: true, message: '请输入邮箱验证码' }],validateTrigger: 'submit'}]"
                            style="margin-bottom: 3px">
                     <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
                   </a-input>
@@ -89,6 +95,9 @@
                   <a-input class="login-input"
                            type="password"
                            placeholder="密码"
+                           readOnly
+                           onfocus="this.removeAttribute('readonly');"
+                           onblur="this.setAttribute('readonly',true);"
                            v-decorator="[
                 'resetPassword',
                 {rules: [{ required: true, message: '请输入密码' }, { validator: this.handlePassword }],validateTrigger: 'submit'}]"
@@ -101,6 +110,9 @@
                   <a-input class="login-input"
                            type="password"
                            placeholder="确认密码"
+                           readOnly
+                           onfocus="this.removeAttribute('readonly');"
+                           onblur="this.setAttribute('readonly',true);"
                            v-decorator="[
                 'resetPasswordConfirm',
                 {rules: [{ required: true, message: '请输入密码' }, { validator: this.handleResetPasswordCheck }],validateTrigger: 'submit'}]"
@@ -120,6 +132,9 @@
               <a-input-search class="login-input"
                               size="large"
                               placeholder="电子邮件地址"
+                              readOnly
+                              onfocus="this.removeAttribute('readonly');"
+                              onblur="this.setAttribute('readonly',true);"
                               @search="handleCodeSending"
                               v-decorator="[
               'registerEmail',
@@ -127,7 +142,7 @@
                required: true,
                pattern: /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/,
                message: '请输入正确格式的邮箱' }],
-               validateTrigger: 'blur'}]"
+               validateTrigger: 'submit'}]"
                               style="margin-bottom: 3px"
               >
                 <a-icon slot="prefix" type="mail" :style="{ color: 'rgba(0,0,0,.25)' }"/>
@@ -150,10 +165,13 @@
             <a-form-item class="register-formItem">
               <a-input class="login-input"
                        size="large"
+                       readOnly
+                       onfocus="this.removeAttribute('readonly');"
+                       onblur="this.setAttribute('readonly',true);"
                        placeholder="用户名"
                        v-decorator="[
               'registerUsername',
-              {rules: [{ required: true, message: '请输入用户名' }], validateTrigger: 'blur'}]"
+              {rules: [{ required: true, message: '请输入用户名' }], validateTrigger: 'submit'}]"
                        style="margin-bottom: 3px">
                 <a-icon slot="prefix" type="user" :style="{ color: 'rgba(0,0,0,.25)' }"/>
               </a-input>
@@ -162,6 +180,10 @@
               <a-input class="login-input"
                        size="large"
                        type="password"
+                       readOnly
+                       onfocus="this.removeAttribute('readonly');"
+                       onblur="this.setAttribute('readonly',true);"
+
                        placeholder="密码"
                        v-decorator="[
                 'registerPassword',
@@ -174,6 +196,9 @@
               <a-input class="login-input"
                        size="large"
                        type="password"
+                       readOnly
+                       onfocus="this.removeAttribute('readonly');"
+                       onblur="this.setAttribute('readonly',true);"
                        placeholder="确认密码"
                        v-decorator="[
                 'registerPasswordconfirm',
@@ -393,15 +418,19 @@ export default {
 }
 </style>
 <style scoped>
-/deep/ input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-transition-delay: 99999s;
-  -webkit-transition: color 99999s ease-out, background-color 99999s ease-out;
-}
-/deep/.ant-input-group-addon{
+/deep/ .ant-input-search-button{
   background-color: transparent;
+}
+/deep/ .ant-input-group-addon{
+  background-color: transparent;
+
+}
+/deep/ .ant-input{
+  border-radius: 0px;
+  background-clip: content-box;
+  height: 0;
+  padding: 1.2em .5em;
+  /*box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.91) inset;*/
 }
 </style>
 

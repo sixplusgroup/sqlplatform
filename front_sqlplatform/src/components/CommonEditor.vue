@@ -8,6 +8,7 @@
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/base16-dark.css'
 import 'codemirror/theme/eclipse.css'
+import 'codemirror/theme/darcula.css'
 import 'codemirror/addon/hint/show-hint.css'
 import 'codemirror/addon/hint/show-hint.js'
 import 'codemirror/addon/hint/show-hint'
@@ -41,7 +42,11 @@ export default {
     language: {
       type: String,
       default: null
-    }
+    },
+    theme: {
+      type: String,
+      default: 'default'
+    },
   },
   data() {
     return {
@@ -51,13 +56,13 @@ export default {
       mode: 'javascript',
       theme: 'default',
       modes: [
-        { value: 'javascript', label: 'Javascript' },
-        { value: 'x-java', label: 'Java' },
-        { value: 'x-python', label: 'Python' },
-        { value: 'x-sql', label: 'SQL' },
-        { value: 'x-shell', label: 'Shell' },
-        { value: 'x-powershell', label: 'PowerShell' },
-        { value: 'x-php', label: 'PHP' }
+        {value: 'javascript', label: 'Javascript'},
+        {value: 'x-java', label: 'Java'},
+        {value: 'x-python', label: 'Python'},
+        {value: 'x-sql', label: 'SQL'},
+        {value: 'x-shell', label: 'Shell'},
+        {value: 'x-powershell', label: 'PowerShell'},
+        {value: 'x-php', label: 'PHP'}
       ]
     }
   },
@@ -74,6 +79,17 @@ export default {
               this.mode = modeObj.label
               this.coder.setOption('mode', `text/${modeObj.value}`)
             }
+          }
+        })
+      },
+      immediate: true
+    },
+    theme: {
+      handler(theme) {
+        this.getCoder().then(() => {
+          if (theme) {
+              this.theme = theme
+              this.coder.setOption('theme', theme)
           }
         })
       },
@@ -99,7 +115,7 @@ export default {
         lineWrapping: 'wrap', // 文字过长时，是换行(wrap)还是滚动(scroll),默认是滚动
         showCursorWhenSelecting: true, // 文本选中时显示光标
         smartIndent: true, // 智能缩进
-        completeSingle: false ,// 当匹配只有一项的时候是否自动补全
+        completeSingle: false,// 当匹配只有一项的时候是否自动补全
         hintOptions: {//自定义提示选项
           tables: this.relatedTableInfo
         },
@@ -189,6 +205,7 @@ export default {
   font-family: monospace;
   width: 100%;
   height: 100%;
+
   .CodeMirror {
     // color: #ccc;
     direction: ltr;
@@ -201,10 +218,12 @@ export default {
   .CodeMirror-hints {
     z-index: 9999 !important;
   }
+
   .custom-class .CodeMirror {
     width: 100%;
   }
 }
+
 .CodeMirror-hints {
   z-index: 1000;
 }

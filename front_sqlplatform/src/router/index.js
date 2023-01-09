@@ -12,7 +12,6 @@ import favourites from "../views/userCenter/favourites";
 import history from "../views/userCenter/history";
 
 import question from '../views/question.vue'
-import HelloWorld from '@/components/HelloWorld'
 
 import Qs from 'qs';
 

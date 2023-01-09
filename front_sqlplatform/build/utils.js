@@ -60,7 +60,10 @@ exports.cssLoaders = function (options) {
     postcss: generateLoaders(),
     less: generateLoaders('less', {
       modifyVars: {
-        'border-radius-base': '0px',
+        'border-radius-base': '4px',
+        'primary-color': 'rgb(81,104,148)',
+        'link-color':'rgb(65,70,94)'
+
       },
       javascriptEnabled: true
     }),
