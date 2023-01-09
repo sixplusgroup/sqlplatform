@@ -5,6 +5,9 @@ import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DockerClientBuilder;
+import lombok.Getter;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,16 +15,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j(topic = "com.example.sqlexercise.lib.DockerServer")
+@Getter
 public class DockerServer {
-    String id;
-    String host;
-    int port;
-    String protocol;
-    String certPath;
-    int container;
-    DockerClient client;
+    private String id;
+    private String host;
+    private int port;
+    private String protocol;
+    private String certPath;
+    private int container;
+    private DockerClient client;
 
-    public DockerServer(String id,String host,int port,String protocol,String certPath,int container){
+    public DockerServer(String id, String host, int port, String protocol, String certPath, int container) {
         this.id = id;
         this.host = host;
         this.port = port;
@@ -31,105 +36,117 @@ public class DockerServer {
         this.client = null;
     }
 
-    public String getId() {
-        return id;
+    /**
+     * 连接docker
+     */
+    public void connectDocker() {
+        this.client = DockerClientBuilder.getInstance(this.protocol + "://" + this.host + ":" + this.port).build();
+        log.info("Docker " + this.host + " 已连接！");
     }
 
-    public int getContainer() {
-        return container;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public String getCertPath() {
-        return certPath;
-    }
-
-    public String getProtocol() {
-        return protocol;
-    }
-
-    public void connectDocker(){
-        this.client = DockerClientBuilder.getInstance(this.protocol+"://"+this.host+":"+this.port).build();
-        //Info info = dockerClient.infoCmd().exec();
-        //String infoStr = JSONObject.toJSONString(info);
-        System.out.println("Docker "+this.host+" 已连接！");
-        //System.out.println(infoStr);
-    }
-
-    public List<Image> getDockerImageByReference(String reference) throws NullPointerException{
-        if(this.client==null){
+    /**
+     * 遍历本地image list，根据reference查找指定image
+     * @param reference image name. e.g. mysql
+     */
+    public Image getDockerImageByReference(String reference) throws NullPointerException {
+        if (this.client == null) {
             throw new NullPointerException("还未连接Docker");
         }
+        // 获取本地image list
         List<Image> images = this.client.listImagesCmd().exec();
-        List<Image> result = new ArrayList<>();
-        for(Image image : images){
-            for(String tag : image.getRepoTags()){
-                if(tag.equals(reference)){
-                    result.add(image);
-                    break;
+        for (Image image : images) {
+            for (String tag : image.getRepoTags()) {
+                if (tag.equals(reference)) {
+                    return image;
                 }
             }
         }
-        return result;
+        return null;
     }
 
-    public void pullImageByRepository(String repository, String tag){
+    /**
+     * 拉取指定image
+     * @param repository e.g. mysql/redis
+     * @param tag e.g. 5.7/7.0
+     */
+    public void pullImageByRepository(String repository, String tag) {
         try {
-            System.out.println("Please wait! Docker is starting to pull image "+repository+":"+tag);
+            log.info("Please wait! Docker is starting to pull image " + repository + ":" + tag);
             this.client.pullImageCmd(repository).withTag(tag).start().awaitCompletion();
-        }catch (InterruptedException e){
+            log.info("Image " + repository + ":" + tag + " is pulled successfully.");
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("Image "+repository+":"+tag+" is pulled successfully!");
     }
 
-    public Container getDockerContainerByName(String name){
+    public Container getDockerContainerByName(String name) {
         List<Container> containers = this.client.listContainersCmd().withShowAll(true).exec();
-        for(Container container : containers){
-            if(container.getNames()[0].equals("/"+name)) {
+        for (Container container : containers) {
+            if (container.getNames()[0].equals("/" + name)) {
                 return container;
             }
         }
         return null;
     }
 
-    public void removeDockerContainerById(String Id){
-        this.client.removeContainerCmd(Id).exec();
+    /**
+     * 根据 docker 容器 id 删除容器
+     * @param id container id
+     */
+    public void removeDockerContainerById(String id) {
+        this.client.removeContainerCmd(id).exec();
     }
 
-    public void createDockerContainerForMysql57(String name, String password, int port){
+    /**
+     * 创建 MySQL docker container
+     * @param name 容器名
+     * @param password 容器密码
+     * @param port 容器端口
+     */
+    public void createDockerContainerForMysql57(String name, String password, int port) {
         HostConfig hostConfig = new HostConfig();
         PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(3306));
         hostConfig.withPortBindings(portBinding);
         List<String> cmd = new ArrayList<>();
         cmd.add("--lower_case_table_names=1");
         cmd.add("--max_connections=1024");
-        CreateContainerResponse response = this.client.createContainerCmd("mysql:5.7").withName(name)
+        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.MYSQL_IMAGE).withName(name)
                 .withHostConfig(hostConfig)
-                .withEnv("MYSQL_ROOT_PASSWORD="+password).withCmd(cmd).exec();
-        System.out.println("Container "+response.getId()+" is created successfully!");
+                .withEnv("MYSQL_ROOT_PASSWORD=" + password).withCmd(cmd).exec();
+        log.info(name + " container " + response.getId() + " is created successfully!");
     }
 
-    public void startDockerContainer(String containerName){
+    /**
+     * 创建 Redis docker container
+     * @param name 容器名
+     * @param password 容器密码
+     * @param port 容器端口
+     */
+    public void createDockerContainerForRedis(String name, String password, int port) {
+        HostConfig hostConfig = new HostConfig();
+        PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(6379));
+        hostConfig.withPortBindings(portBinding);
+        List<String> cmd = new ArrayList<>();
+//        cmd.add("--requirepass=" + password);
+        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.REDIS_IMAGE).withName(name)
+                .withHostConfig(hostConfig)
+                .withCmd(cmd).exec();
+        log.info(name + " container " + response.getId() + " is created successfully!");
+    }
+
+    public void startDockerContainer(String containerName) {
         //根据源码，该方法没有response，所以无法精准地知道容器内的镜像什么时候启动完成
         this.client.startContainerCmd(containerName).exec();
-        //等待90s以便容器内的镜像启动
+        //等待20s以便容器内的镜像启动
         try {
-            TimeUnit.SECONDS.sleep(90);
+            TimeUnit.SECONDS.sleep(20);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("Container "+containerName+" is started!");
+        log.info("Container " + containerName + " is started!");
     }
 
-    public void stopDockerContainerById(String Id){
+    public void stopDockerContainerById(String Id) {
         this.client.stopContainerCmd(Id).exec();
     }
 }

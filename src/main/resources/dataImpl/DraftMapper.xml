@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.sqlexercise.data.DraftMapper">
+
+    <resultMap id="Draft" type="com.example.sqlexercise.po.Draft">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="main_id" property="mainId"/>
+        <result column="sub_id" property="subId"/>
+        <result column="draft" property="draft"/>
+        <result column="save_time" property="saveTime"/>
+    </resultMap>
+
+    <select id="select" resultMap="Draft">
+        select draft, save_time
+        from draft
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sqlexercise.po.Draft" useGeneratedKeys="true" keyProperty="id">
+        insert into draft
+        values (#{id}, #{userId}, #{mainId}, #{subId}, #{draft}, #{saveTime})
+    </insert>
+
+    <update id="update" parameterType="com.example.sqlexercise.po.Draft">
+        update draft
+        set draft=#{draft},
+            save_time=#{saveTime}
+        where user_id = #{userId}
+          and main_id = #{mainId}
+          and sub_id = #{subId}
+    </update>
+
+</mapper>

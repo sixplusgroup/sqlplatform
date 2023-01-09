@@ -48,7 +48,7 @@ service.interceptors.request.use(
     }
     if (localStorage.getItem("token")) {
       const token = localStorage.getItem("token");
-      console.log("TokenFromLocalStore ", token)
+      // console.log("TokenFromLocalStore ", token)
       requestConfig.headers.token = token;
     }
     return requestConfig
@@ -58,10 +58,13 @@ service.interceptors.response.use((response) => {
   // console.log(response)
   switch (response.status) {
     case 200:
-      if (response.data.res === 'success') {
+      // if (response.data.res === 'success') {
         return response.data
-      }
-      message.error(response.data.msg)
+      // }
+      // if (response.data.res === 'failure') {
+      //   return response.data
+      // }
+      // message.error(response.data.msg)
       break
     case 404:
       return false

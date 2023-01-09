@@ -5,8 +5,7 @@ spring:
         url: jdbc:mysql://localhost:3306/sqlexercise?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8
 #        url: jdbc:mysql://localhost:3306/sqlexam?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8
         username: root
-        password: 123456
-#        password: aptx4869
+        password: wybwyb1223
         driver-class-name: com.mysql.cj.jdbc.Driver
     redis:
         host: localhost
@@ -15,4 +14,7 @@ spring:
         connect-timeout: 30
 mybatis:
     mapper-locations: classpath:dataImpl/*Mapper.xml
-
+    configuration:
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+logging:
+    config: classpath:logback-spring.xml

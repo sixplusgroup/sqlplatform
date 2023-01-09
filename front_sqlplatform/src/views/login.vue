@@ -1,7 +1,7 @@
 <template>
   <div class="main">
     <div class="login-left">
-      <h1 style="font-weight: bolder;font-size: 50px" >SQL Platform</h1>
+      <h1 style="font-weight: bolder;font-size: 50px">SQL Platform</h1>
       <a-form
         id="formLogin"
         class="user-layout-login"
@@ -21,7 +21,7 @@
                        placeholder="电子邮件地址"
                        v-decorator="[
                 'email',
-                {rules: [{ required: true, message: '请输入邮箱' }], validateTrigger: 'blur'}
+                {rules: [{ required: true, message: '请输入邮箱' }], validateTrigger: 'submit'}
               ]"
                        style="margin-bottom: .5em;margin-top: 2em;"
               >
@@ -36,7 +36,7 @@
                        placeholder="密码"
                        v-decorator="[
                 'password',
-                {rules: [{ required: true, message: '请输入密码' }], validateTrigger: 'blur'}
+                {rules: [{ required: true, message: '请输入密码' },],validateTrigger: 'submit'}
               ]"
                        style="margin-bottom: .5em"
               >
@@ -50,30 +50,105 @@
                 class="login-button"
                 :loading="loginLoading"
                 @click="handlelogin()"
+                style="margin-bottom: 1em"
               >确定
               </a-button>
+              <a @click="forgotPassword">忘记密码</a>
+              <a-modal
+                title="忘记密码"
+                :visible="forgotPasswordVisible"
+                @ok="handleForgotPasswordOk"
+                :ok-button-props="{ props: {shape: 'round'}}"
+                :cancel-button-props="{ props: {shape: 'round'}}"
+                @cancel="handleForgotPasswordCancel"
+                style="padding:2em"
+              >
+                <a-form-item>
+                  <a-input-search class="login-input" placeholder="电子邮件地址"
+                                  readOnly
+                                  onfocus="this.removeAttribute('readonly');"
+                                  onblur="this.setAttribute('readonly',true);"
+                                  @search="handleCodeSending" style="margin-bottom: 3px"
+                                  v-decorator="['resetEmail',{ rules: [{ required: true,
+                                   pattern: /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/,
+                                   message: '请输入正确格式的邮箱' }],validateTrigger: 'submit'}]">
+                    <a-icon slot="prefix" type="mail" :style="{ color: 'rgba(0,0,0,.25)' }"/>
+                    <template #enterButton>
+                      <a-button :disabled="codeIsSend">{{ codeName }}</a-button>
+                    </template>
+                  </a-input-search>
+                </a-form-item>
+                <a-form-item class="register-formItem">
+                  <a-input class="login-input"
+                           placeholder="验证码"
+                           readOnly
+                           onfocus="this.removeAttribute('readonly');"
+                           onblur="this.setAttribute('readonly',true);"
+                           v-decorator="[
+              'resetCode',
+              {rules: [{ required: true, message: '请输入邮箱验证码' }],validateTrigger: 'submit'}]"
+                           style="margin-bottom: 3px">
+                    <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
+                  </a-input>
+                </a-form-item>
+                <a-form-item class="register-formItem">
+                  <a-input class="login-input"
+                           type="password"
+                           placeholder="密码"
+                           readOnly
+                           onfocus="this.removeAttribute('readonly');"
+                           onblur="this.setAttribute('readonly',true);"
+                           v-decorator="[
+                'resetPassword',
+                {rules: [{ required: true, message: '请输入密码' }, { validator: this.handlePassword }],validateTrigger: 'submit'}]"
+                           style="margin-bottom: 3px">
+                    <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
+                  </a-input>
+                </a-form-item>
+
+                <a-form-item class="register-formItem">
+                  <a-input class="login-input"
+                           type="password"
+                           placeholder="确认密码"
+                           readOnly
+                           onfocus="this.removeAttribute('readonly');"
+                           onblur="this.setAttribute('readonly',true);"
+                           v-decorator="[
+                'resetPasswordConfirm',
+                {rules: [{ required: true, message: '请输入密码' }, { validator: this.handleResetPasswordCheck }],validateTrigger: 'submit'}]"
+                           style="margin-bottom: 3px">
+                    <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
+                  </a-input>
+                </a-form-item>
+
+
+              </a-modal>
             </a-form-item>
+
           </a-tab-pane>
 
           <a-tab-pane key="tab2" tab="注册">
             <a-form-item class="register-formItem">
               <a-input-search class="login-input"
-                       size="large"
-                       placeholder="电子邮件地址"
-                       @search="handleCodeSending"
-                       v-decorator="[
+                              size="large"
+                              placeholder="电子邮件地址"
+                              readOnly
+                              onfocus="this.removeAttribute('readonly');"
+                              onblur="this.setAttribute('readonly',true);"
+                              @search="handleCodeSending"
+                              v-decorator="[
               'registerEmail',
               {rules: [{
                required: true,
                pattern: /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/,
                message: '请输入正确格式的邮箱' }],
-               validateTrigger: 'blur'}]"
-                       style="margin-bottom: 3px"
+               validateTrigger: 'submit'}]"
+                              style="margin-bottom: 3px"
               >
                 <a-icon slot="prefix" type="mail" :style="{ color: 'rgba(0,0,0,.25)' }"/>
-                <template #enterButton>
-                  <a-button :disabled="codeIsSend" >{{ codeName }}</a-button>
-                </template>
+<!--                <template #enterButton>-->
+                  <a-button :disabled="codeIsSend" slot="enterButton" >{{ codeName }}</a-button>
+<!--                </template>-->
               </a-input-search>
             </a-form-item>
             <a-form-item class="register-formItem">
@@ -82,7 +157,7 @@
                        placeholder="验证码"
                        v-decorator="[
               'registerCode',
-              {rules: [{ required: true, message: '请输入邮箱验证码' }], validateTrigger: 'blur'}]"
+              {rules: [{ required: true, message: '请输入邮箱验证码' }], validateTrigger: 'submit'}]"
                        style="margin-bottom: 3px">
                 <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
               </a-input>
@@ -90,10 +165,13 @@
             <a-form-item class="register-formItem">
               <a-input class="login-input"
                        size="large"
+                       readOnly
+                       onfocus="this.removeAttribute('readonly');"
+                       onblur="this.setAttribute('readonly',true);"
                        placeholder="用户名"
                        v-decorator="[
               'registerUsername',
-              {rules: [{ required: true, message: '请输入用户名' }], validateTrigger: 'blur'}]"
+              {rules: [{ required: true, message: '请输入用户名' }], validateTrigger: 'submit'}]"
                        style="margin-bottom: 3px">
                 <a-icon slot="prefix" type="user" :style="{ color: 'rgba(0,0,0,.25)' }"/>
               </a-input>
@@ -102,10 +180,14 @@
               <a-input class="login-input"
                        size="large"
                        type="password"
+                       readOnly
+                       onfocus="this.removeAttribute('readonly');"
+                       onblur="this.setAttribute('readonly',true);"
+
                        placeholder="密码"
                        v-decorator="[
                 'registerPassword',
-                {rules: [{ required: true, message: '请输入密码' }, { validator: this.handlePassword }], validateTrigger: 'blur'}]"
+                {rules: [{ required: true, message: '请输入密码' }, { validator: this.handlePassword }], validateTrigger: 'submit'}]"
                        style="margin-bottom: 3px">
                 <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
               </a-input>
@@ -114,15 +196,18 @@
               <a-input class="login-input"
                        size="large"
                        type="password"
+                       readOnly
+                       onfocus="this.removeAttribute('readonly');"
+                       onblur="this.setAttribute('readonly',true);"
                        placeholder="确认密码"
                        v-decorator="[
                 'registerPasswordconfirm',
-                {rules: [{ required: true, message: '请输入密码' }, { validator: this.handlePasswordCheck }], validateTrigger: 'blur'}]"
+                {rules: [{ required: true, message: '请输入密码' }, { validator: this.handlePasswordCheck }],validateTrigger: 'submit'}]"
                        style="margin-bottom: 3px">
                 <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
               </a-input>
             </a-form-item>
-            <a-form-item class="register-formItem">
+            <a-form-item class="register-formItem" style="margin-top: 3em">
               <a-button
                 size="large"
                 type="primary"
@@ -144,8 +229,8 @@
 </template>
 
 <script>
-import {mapGetters, mapActions,mapMutations} from 'vuex'
-import { message } from 'ant-design-vue'
+import {mapGetters, mapActions} from 'vuex'
+import {message} from 'ant-design-vue'
 
 
 export default {
@@ -157,12 +242,12 @@ export default {
       loginLoading: false,
       registerLoading: false,
       form: this.$form.createForm(this),
-
+      forgotPasswordVisible: false,
       //验证码发送按钮倒计时
       codeIsSend: false,
       restTime: 60,
       codeName: "发送验证码",
-      timer:''
+      timer: ''
     }
   },
   computed: {
@@ -185,11 +270,38 @@ export default {
     ...mapActions([
       'login',
       'register',
-      'sendCode'
+      'sendCode',
+      'resetPassword'
     ]),
-    ...mapMutations([
-    ]),
+    forgotPassword() {
+      this.forgotPasswordVisible = true;
+    },
+    handleForgotPasswordOk(e) {
+      const validateFieldsKey = ['resetEmail', 'resetCode', 'resetPassword', 'resetPasswordConfirm'];
+      this.form.validateFields(validateFieldsKey, {force: true}, async (err, values) => {
+        if (!err) {
+          const data = {
+            email: this.form.getFieldValue('resetEmail'),
+            code: this.form.getFieldValue('resetCode'),
+            password: this.form.getFieldValue('resetPassword'),
+            passwordConfirmation: this.form.getFieldValue('resetPasswordConfirm'),
+          }
+          await this.resetPassword(data).then(() => {
+            this.form.setFieldsValue({
+              'resetEmail': '',
+              'resetCode': '',
+              'resetPassword': '',
+              'resetPasswordConfirm': ''
+            })
+          })
+          this.forgotPasswordVisible = false;
+        }
+      })
 
+    },
+    handleForgotPasswordCancel() {
+      this.forgotPasswordVisible = false;
+    },
     handlePassword(rule, value, callback) {
       if (value.length < 6) {
         // callback(new Error('密码长度至少6位'))
@@ -198,7 +310,16 @@ export default {
     },
     handlePasswordCheck(rule, value, callback) {
       const password = this.form.getFieldValue('registerPassword')
-      // console.log(password);
+      if (value === undefined) {
+        callback(new Error('请输入密码'))
+      }
+      if (value && password && value.trim() !== password.trim()) {
+        callback(new Error('两次密码不一致'))
+      }
+      callback()
+    },
+    handleResetPasswordCheck(rule, value, callback) {
+      const password = this.form.getFieldValue('resetPassword')
       if (value === undefined) {
         callback(new Error('请输入密码'))
       }
@@ -211,7 +332,7 @@ export default {
       this.customActiveKey = key
     },
     handlelogin() {
-      const validateFieldsKey = this.customActiveKey === 'tab1' ? ['email', 'password'] : ['registerEmail','registerUsername', 'registerPassword', 'registerPasswordconfirm']
+      const validateFieldsKey = this.customActiveKey === 'tab1' ? ['email', 'password'] : ['registerEmail', 'registerUsername', 'registerPassword', 'registerPasswordconfirm']
       this.form.validateFields(validateFieldsKey, {force: true}, async (err, values) => {
         if (!err) {
           this.loginLoading = true;
@@ -227,10 +348,10 @@ export default {
         }
       })
     },
-    handleCodeSending(email){
+    handleCodeSending(email) {
       if (this.codeIsSend) return
       let reg = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/
-      if(!reg.test(email)){
+      if (!reg.test(email)) {
         message.error("邮箱格式不正确！")
         return
       }
@@ -246,11 +367,11 @@ export default {
           this.restTime = 60
           this.codeIsSend = false
         }
-      },1000)
+      }, 1000)
     },
     handleRegister() {
       const {form: {validateFields}} = this
-      const validateFieldsKey = this.customActiveKey === 'tab1' ? ['username', 'password'] : ['registerEmail','registerUsername', 'registerPassword', 'registerPasswordconfirm']
+      const validateFieldsKey = this.customActiveKey === 'tab1' ? ['username', 'password'] : ['registerEmail', 'registerUsername', 'registerPassword', 'registerPasswordconfirm']
       validateFields(validateFieldsKey, {force: true}, async (err, values) => {
         if (!err) {
           this.registerLoading = true
@@ -259,7 +380,7 @@ export default {
             name: this.form.getFieldValue('registerUsername'),
             code: this.form.getFieldValue('registerCode'),
             password: this.form.getFieldValue('registerPassword'),
-            passwordComfirmation: this.form.getFieldValue('registerPasswordconfirm'),
+            passwordConfirmation: this.form.getFieldValue('registerPasswordconfirm'),
           };
           await this.register(data).then(() => {
             // this.customActiveKey = 'tab1';
@@ -281,90 +402,36 @@ export default {
 </script>
 
 <style>
-#email {
+#email,#password,
+#registerEmail,#registerUsername,#registerPassword,#registerPasswordconfirm,#registerCode,
+#resetCode,#resetEmail,#resetPassword,#resetPasswordConfirm {
   border-top-color: transparent;
   border-left-color: transparent;
   border-right-color: transparent;
   background-color: transparent;
 }
-
-#email:focus {
+#email:focus,#password:focus,#registerEmail:focus,#registerUsername:focus,
+#registerPassword:focus,#registerPasswordconfirm:focus,#registerCode:focus,
+#resetPassword:focus,#resetPasswordConfirm:focus,#resetCode:focus,#resetEmail:focus {
   box-shadow: 0 0 0;
   background-color: transparent;
 }
-
-#password {
-  border-top-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
+</style>
+<style scoped>
+/deep/ .ant-input-search-button{
   background-color: transparent;
 }
-
-#password:focus {
-  box-shadow: 0 0 0;
-  background-color: transparent;
-}
-#registerEmail {
-  border-top-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
+/deep/ .ant-input-group-addon{
   background-color: transparent;
 
 }
-
-#registerEmail:focus {
-  box-shadow: 0 0 0;
-  background-color: transparent;
+/deep/ .ant-input{
+  border-radius: 0px;
+  background-clip: content-box;
+  height: 0;
+  padding: 1.2em .5em;
+  /*box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.91) inset;*/
 }
-
-#registerUsername {
-  border-top-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  background-color: transparent;
-}
-
-#registerUsername:focus {
-  box-shadow: 0 0 0;
-  background-color: transparent;
-}
-
-#registerPassword {
-  border-top-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  background-color: transparent;
-}
-
-#registerPassword:focus {
-  box-shadow: 0 0 0;
-  background-color: transparent;
-}
-
-#registerPasswordconfirm {
-  border-top-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  background-color: transparent;
-}
-
-#registerPasswordconfirm:focus {
-  box-shadow: 0 0 0;
-  background-color: transparent;
-}
-
-#registerCode {
-  border-top-color: transparent;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  background-color: transparent;
-}
-
-#registerCode:focus {
-  box-shadow: 0 0 0;
-  background-color: transparent;
-}
-
 </style>
 
 <style lang="less" scoped>
@@ -373,10 +440,9 @@ export default {
   min-width: 260px;
   width: 100vw;
   height: 100vh;
-  /*background: #000000 url('https://files.porsche.cn/filestore/image/multimedia/none/banner-ww-pds/normal/976296d6-15b6-11ea-80c6-005056bbdc38;s4/porsche-normal.jpg') no-repeat center;*/
   text-align: center;
   /*padding-top: 5em;*/
-  background-image: url('../assets/login_bg.jpg');
+  background-image: url('../assets/bg.jpeg');
   background-repeat: no-repeat;
   overflow: hidden;
   position: fixed;
@@ -388,15 +454,19 @@ export default {
   margin-top: 3em;
   margin-bottom: 3em;
 }
+
 .register-formItem {
-  //margin-bottom: -2px;
+  margin-top: 2em;
   //margin-bottom: -1em;
 }
-.login-left{
-  background: rgba(255, 255, 255, 0.91);
-  padding: 40px 50px;
 
-  width: 600px;
+.login-left {
+  background: rgba(255, 255, 255, 0.91);
+
+  padding: 40px 50px;
+  margin-left: 5em;
+
+  width: 560px;
   height: 100vh;
   box-shadow: 0 5px 5px rgba(0, 0, 0, .4);
 
@@ -406,24 +476,29 @@ export default {
   label {
     font-size: 14px;
   }
+
   .getCaptcha {
     display: block;
     width: 100%;
     /*height: 40px;*/
     height: 100%;
   }
+
   .forge-password {
     font-size: 14px;
   }
+
   button.login-button {
     padding: 0 15px;
     font-size: 16px;
     width: 100%;
   }
+
   .user-login-other {
     text-align: left;
     margin-top: 24px;
     line-height: 22px;
+
     .item-icon {
       font-size: 24px;
       color: rgba(0, 0, 0, 0.2);
@@ -431,10 +506,12 @@ export default {
       vertical-align: middle;
       cursor: pointer;
       transition: color 0.3s;
+
       &:hover {
         color: #1890ff;
       }
     }
+
     .register {
       float: right;
     }

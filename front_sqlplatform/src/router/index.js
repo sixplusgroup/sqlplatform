@@ -1,10 +1,17 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from '../views/login.vue'
+
+// import Layout from '../views/layout.vue'
 import App from "../App";
 
 import exerciseList from '../views/exerciseList.vue'
-import HelloWorld from '@/components/HelloWorld'
+
+import userProfile from "../views/userCenter/userProfile";
+import favourites from "../views/userCenter/favourites";
+import history from "../views/userCenter/history";
+
+import question from '../views/question.vue'
 
 import Qs from 'qs';
 
@@ -24,16 +31,36 @@ const routes = [
     {
       path: '/',
       name: 'NJUSE',
-      redirect: '/exerciseList',
-      component: App,
+      redirect: '/homePage/exerciseList',
+      component: () => import('../views/layout'),
       children :[
         {
-          path: '/exerciseList',
+          path: '/homePage/exerciseList',
           name: 'exerciseList',
           component: exerciseList
         },
+        {
+          path: '/homePage/info',
+          name: 'info',
+          component: userProfile
+        },
+        {
+          path: '/homePage/star',
+          name: 'star',
+          component: favourites
+        },
+        {
+          path: '/homePage/record',
+          name: 'record',
+          component: history
+        },
       ]
-    }
+    },
+    {
+      path: '/question/:mainId',
+      name: 'question',
+      component: question,
+    },
   ]
 
 

@@ -30,4 +30,73 @@ export function loginAPI(data){
     console.log("catch: " , r)
   })
 }
+export function getUserInfoAPI(data){
+  return axios({
+    url:`/api/get_user_info`,
+    method: 'GET',
+    params:{
+      userId: data
+    }
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+export function getUserStarsAPI(data){
+  return axios({
+    url:`/api/user/stars`,
+    method: 'GET',
+    params:{
+      userId: data
+    }
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+export function getUserStatisticAPI(data){
+  return axios({
+    url:`/api/user/statistic`,
+    method: 'GET',
+    params:{
+      userId: data
+    }
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+
+export function modifyInfoAPI(data){
+  return axios({
+    url:`/api/modify_info`,
+    method: 'POST',
+    data
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+export function getRecentSubmitAPI(data){
+  return axios({
+    url:`/api/user/recent_submits`,
+    method: 'GET',
+    params:{userId: data}
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+export function resetPasswordAPI(data){
+  return axios({
+    url:`/api/reset_password`,
+    method: 'POST',
+    data
+  }).catch((r) => {
+    console.log("catch: " , r)
+  })
+}
+
+
+
 

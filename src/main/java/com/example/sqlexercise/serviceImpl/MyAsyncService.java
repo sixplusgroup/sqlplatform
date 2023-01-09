@@ -50,9 +50,8 @@ public class MyAsyncService {
     //    }
     //}
 
-
     @Async("asyncTaskExecutor")
-    public void asyncInit(DockerServer dockerServer, DockerContainer container, SqlDatabase sqlDatabase) throws Exception{
+    public void asyncInitMysqlContainer(DockerServer dockerServer, DockerContainer container, SqlDatabase sqlDatabase) throws Exception{
         dockerServer.startDockerContainer(container.getName());
         //连接数据库
         sqlDatabase.connect("SHOW DATABASES;", 5);

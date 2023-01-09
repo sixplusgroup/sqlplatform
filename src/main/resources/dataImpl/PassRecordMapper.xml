@@ -2,17 +2,31 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.sqlexercise.data.PassRecordMapper">
     <resultMap id="PassRecord" type="com.example.sqlexercise.po.PassRecord">
-        <id column="id" property="id"></id>
-        <result column="batch_id" property="batchId"></result>
-        <result column="user_id" property="userId"></result>
-        <result column="point" property="point"></result>
-        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"></result>
-        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"></result>
-        <result column="main_id" property="mainId"></result>
-        <result column="sub_id" property="subId"></result>
+        <id column="id" property="id"/>
+        <result column="batch_id" property="batchId"/>
+        <result column="user_id" property="userId"/>
+        <result column="point" property="point"/>
+        <result column="created_at" jdbcType="TIMESTAMP" javaType="DATE" property="createdAt"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" javaType="DATE" property="updatedAt"/>
+        <result column="main_id" property="mainId"/>
+        <result column="sub_id" property="subId"/>
     </resultMap>
 
-    <insert id="create" parameterType="com.example.sqlexercise.po.PassRecord" useGeneratedKeys="true" keyProperty="id">
-        insert into pass_record values (#{id},#{userId},#{mainId},#{subId},#{batchId},#{point},#{createdAt},#{updatedAt})
+    <insert id="insert" parameterType="com.example.sqlexercise.po.PassRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into pass_record
+        values (#{id}, #{userId}, #{mainId}, #{subId}, #{batchId}, #{point}, #{createdAt}, #{updatedAt})
     </insert>
+
+    <select id="selectByUserId" resultMap="PassRecord">
+        select *
+        from pass_record
+        where user_id = #{userId}
+    </select>
+
+    <select id="selectPassTimesByUserId" resultType="java.lang.Integer">
+        select count(*)
+        from pass_record
+        where user_id = #{userId}
+    </select>
+
 </mapper>
