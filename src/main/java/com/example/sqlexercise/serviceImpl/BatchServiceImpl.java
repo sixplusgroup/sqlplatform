@@ -6,12 +6,14 @@ import com.example.sqlexercise.data.PassRecordMapper;
 import com.example.sqlexercise.data.QuestionStateMapper;
 import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.lib.ResultOfTask;
+import com.example.sqlexercise.po.AnswerSet;
 import com.example.sqlexercise.po.Batch;
 import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.service.BatchService;
 import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
+import com.example.sqlexercise.vo.GetScoreVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,23 +109,23 @@ public class BatchServiceImpl implements BatchService {
             // 如果是run则只返回结果
             log.info("batch " + batch.getId() + " passed. " + new Throwable().getStackTrace()[0]);
             // 如果静态分析得到的评分非满分，需要将其加入答案集
-//            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
-//            float score = scoreService.getScore(getScoreVO);
-//            if (score < 100f) {
-//                AnswerSet stuAnswer = new AnswerSet();
-//                stuAnswer.setMainId(main_id);
-//                stuAnswer.setSubId(sub_id);
-//                stuAnswer.setAnswer(sqlText);
-//                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
-//                if (ans == null) {
-//                    stuAnswer.setCreatedAt(new Date());
-//                    stuAnswer.setUpdatedAt(new Date());
-//                    answerSetMapper.create(stuAnswer);
-//                } else if (ans.getState() == 1) {
-//                    stuAnswer.setUpdatedAt(new Date());
-//                    answerSetMapper.updateStatus(stuAnswer);
-//                }
-//            }
+            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
+            float score = scoreService.getScore(getScoreVO);
+            if (score < 100f) {
+                AnswerSet stuAnswer = new AnswerSet();
+                stuAnswer.setMainId(main_id);
+                stuAnswer.setSubId(sub_id);
+                stuAnswer.setAnswer(sqlText);
+                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
+                if (ans == null) {
+                    stuAnswer.setCreatedAt(new Date());
+                    stuAnswer.setUpdatedAt(new Date());
+                    answerSetMapper.create(stuAnswer);
+                } else if (ans.getState() == 1) {
+                    stuAnswer.setUpdatedAt(new Date());
+                    answerSetMapper.updateStatus(stuAnswer);
+                }
+            }
             return "Passed";
         } else {
             updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
