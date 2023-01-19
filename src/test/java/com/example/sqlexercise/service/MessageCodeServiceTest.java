@@ -1,21 +1,28 @@
 package com.example.sqlexercise.service;
 
+import com.example.sqlexercise.vo.ResponseVO;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 @SpringBootTest
-public class MessageCodeServiceTest {
+class MessageCodeServiceTest {
 
     @Autowired
-    MessageCodeService messageCodeService;
+    private MessageCodeService messageCodeService;
 
     @Test
-    public void Test(){
-        String code = messageCodeService.generateMessageCode("181250043@smail.nju.edu.cn");
-        messageCodeService.sendMessageCode("181250043@smail.nju.edu.cn", code);
+    void generateMessageCode() {
+        String res = messageCodeService.generateMessageCode();
+        System.out.println(res);
+        Assertions.assertNotNull(res);
+    }
+
+    @Test
+    void sendMessageCode() {
+        String code = "a1b2c3";
+        ResponseVO responseVO = messageCodeService.sendMessageCode(ConstantsOfTest.USER_EMAIL, code);
+        Assertions.assertTrue(responseVO.isSuccess());
     }
 }

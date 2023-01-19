@@ -9,13 +9,13 @@ const getters = {
   recentSubmit: state => state.user.recentSubmit,
 
   mainQuestion: state => state.question.mainQuestion,
+  relatedTableInfo: state => state.question.relatedTableInfo,
   subQuestions: state => state.question.subQuestions,
   questionList: state => state.question.questionList,
   draft: state => state.question.draft,
+  totalMainQuestionNum: state => state.question.totalMainQuestionNum,
 
-  // passed: state => state.batch.passed,
-
-
+  hint: state => state.batch.hint,
 
 };
 

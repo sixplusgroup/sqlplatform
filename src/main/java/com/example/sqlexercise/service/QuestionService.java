@@ -5,6 +5,7 @@ import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.vo.DraftVO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface QuestionService {
 
@@ -12,21 +13,36 @@ public interface QuestionService {
 
     String getSchemaConstructorByMainId(int mainId);
 
-    List<SubQuestion> getSubQuestionByMainId(int mainId);
+    /**
+     * 获取某一大题下所有小题信息
+     */
+    List<Map<String, Object>> getSubQuestionByMainId(int mainId);
 
     SubQuestion getSubQuestionBySubId(int subId);
 
-    MainQuestion getMainQuestionByMainId(int mainId);
+    /**
+     * 获取某一大题信息
+     */
+    Map<String, Object> getMainQuestionByMainId(int mainId);
 
     /**
      * 分页查询mainQuestion
      *
-     * @param userId
-     * @param pageSize 每页数据量
-     * @param page     页数
-     * @return MainQuestionVO集合
+     * @param userId    userId
+     * @param pageSize  每页数据量
+     * @param page      页数
      */
-    Object getMainQuestionsByPage(String userId, int pageSize, int page);
+    List<Map<String, Object>> getMainQuestionsByPage(String userId, int pageSize, int page);
+
+    /**
+     * 根据标签筛选mainQuestion，并分页返回
+     *
+     * @param userId    userId
+     * @param page      页数
+     * @param pageSize  每页数据量
+     * @param tags      筛选条件，标签列表
+     */
+    List<Map<String, Object>> getMainQuestionsByPageFilterByTags(String userId, Integer pageSize, Integer page, List<String> tags);
 
     /**
      * 保存某题的草稿

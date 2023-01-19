@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @Mapper
@@ -30,6 +31,6 @@ public interface BatchMapper {
     /**
      * 查某用户最近 n 次提交记录
      */
-    List<Object> selectRecentSubmits(@Param("userId") String userId,
-                                     @Param("n") int n);
+    List<Map<String, Object>> selectRecentSubmits(@Param("userId") String userId,
+                                                  @Param("n") int n);
 }

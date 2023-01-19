@@ -9,11 +9,17 @@ import java.util.List;
 
 public interface UserService {
 
+    /**
+     * 注册
+     */
     ResponseVO signUp(UserVO userVO);
 
+    /**
+     * 登录
+     */
     ResponseVO signIn(SignVO signVO);
 
-    List<PassRecord> getRecords(Integer userId);
+    List<PassRecord> getRecords(String userId);
 
     /**
      * 获取用户信息
@@ -39,4 +45,10 @@ public interface UserService {
      * 获取用户最近 n 条提交记录
      */
     Object getRecentSubmits(String userId, int n);
+
+    /**
+     * 根据邮箱验证码重置密码
+     * @param userVO 只包含email, code, password, passwordConfirmation四个参数
+     */
+    ResponseVO resetPassword(UserVO userVO);
 }

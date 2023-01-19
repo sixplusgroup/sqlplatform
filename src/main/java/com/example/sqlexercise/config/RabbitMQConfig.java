@@ -7,6 +7,9 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author shenyichen
  * @date 2023/1/18
@@ -27,7 +30,11 @@ public class RabbitMQConfig {
         // autoDelete:是否自动删除，当没有生产者或者消费者使用此队列，该队列会自动删除。
         //   return new Queue("TestDirectQueue",true,true,false);
         // 一般设置一下队列的持久化就好,其余两个就是默认false
-        return new Queue(DirectQueue,true);
+        // 消息过期 特殊的args
+//        return new Queue(DirectQueue,true);
+        Map<String,Object> args  = new HashMap<>(1);
+        args.put("x-message-ttl",20000); // 过期时间 单位ms
+        return new Queue(DirectQueue,true, false, false, args);
     }
 
     /**

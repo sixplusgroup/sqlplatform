@@ -2,7 +2,7 @@
   <div class="box" ref="box">
     <div class="left">
       <a-button shape="round"
-                style="float: right;margin: .8em"
+                style="float: right;margin: .8em 2.5em .8em .8em;"
                 @click="back">返回
       </a-button>
       <v-md-preview :text="mainQuestion"></v-md-preview>
@@ -13,9 +13,9 @@
     <div class="mid">
       <div class="subQuestion">
 
-        <a-tabs v-model:activeKey="activeKey" style="text-align: left" @change="changePage(activeKey)">
+        <a-tabs v-model="activeKey" style="text-align: left" @change="changePage(activeKey)">
           <a-tab-pane v-if="!loading"
-                      :key="index" v-for="(item,index) in subQuestions" >
+                      :key="index" v-for="(item,index) in subQuestions">
             <template #tab>
               {{ '问题' + (index + 1) }} &nbsp
               <span class="passState" v-if="item.state">
@@ -30,7 +30,11 @@
             </template>
             <div
               style="padding: 1em"
-            >{{ item.description }}
+            ><a-tag v-if="item.difficulty == 1" color="green" class="tag">EASY</a-tag>
+              <a-tag v-else-if="item.difficulty == 2" color="geekblue" class="tag">MEDIUM</a-tag>
+              <a-tag v-else-if="item.difficulty == 3" color="volcano" class="tag">HARD</a-tag>
+
+              {{ item.description }}
             </div>
             <div style="background-color: rgb(247,247,247);padding: 5px;margin-top: 1em "></div>
             <div class="commonEditor">
@@ -42,20 +46,22 @@
               ></CommonEditor>
             </div>
             <div class="footbar">
-              <a-button shape="round" @click="runCode(item,index)"> 运行</a-button>
-
-              <span v-if="!buttonLoading">
-              <a-button shape="round" @click="star(item,index)" v-if="!item.isStared"> 收藏本题</a-button>
-              <a-button shape="round" @click="unStar(item,index)" v-else> 取消收藏</a-button>
+              <span v-if="!buttonLoading" style="float: left;margin-left: 2em">
+              <a-button shape="round" @click="star(item,index)" v-if="!item.isStared">
+                <a-icon type="star" />收藏</a-button>
+              <a-button shape="round" @click="unStar(item,index)" v-else>
+                <a-icon type="star" theme="filled" />取消收藏</a-button>
               </span>
-              <a-button shape="round" v-else>
-                <a-spin></a-spin>
-                加载中...
-              </a-button>
+              <a-spin v-else></a-spin>
+              <a-button shape="round" @click="save(item,index)" style="float: left;margin-left: 1em"
+              ><a-icon type="save" /> 保存草稿</a-button>
 
 
-              <a-button shape="round" @click="save(item,index)"> 保存草稿</a-button>
-              <a-button shape="round" @click="submitCode(item,index)">提交</a-button>
+              <a-button shape="round" @click="runCode(item,index)" >
+                <a-icon type="play-circle" />运行</a-button>
+
+              <a-button shape="round" @click="submitCode(item,index)">
+                <a-icon type="check-circle" />提交</a-button>
             </div>
             <div class="records">
               <p v-if="item.record.length === 0">暂无提交记录</p>
@@ -83,6 +89,7 @@ import CommonEditor from '@/components/CommonEditor.vue'
 
 
 import {ref} from 'vue';
+import {message} from "ant-design-vue";
 
 export default {
   name: "question",
@@ -99,10 +106,11 @@ export default {
   async mounted() {
     await this.getUserInfoByToken();
     await this.getQuestion(this.$route.params.mainId)
+
     // 获取本题所有小题的缓存数据
     for (let i in this.subQuestions) {
       if (this.$route.params.subId === this.subQuestions[i].id) {
-        this.activeKey = i;
+        this.activeKey = Number(i);
       }
       let data = {
         userId: this.userId,
@@ -119,11 +127,12 @@ export default {
     this.codeSnippets = this.draft;
 
     this.dragControllerDiv();
+    console.log(this.subQuestions)
     this.loading = false;
   },
   computed: {
     ...mapGetters([
-      'mainQuestion', 'subQuestions', 'userId', 'subQuestions', 'draft'
+      'mainQuestion', 'subQuestions', 'userId', 'subQuestions', 'draft', 'hint'
     ])
   },
   methods: {
@@ -199,7 +208,7 @@ export default {
 
     runCode(item, index) {
       this.runTest({
-        batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
+        batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
@@ -208,11 +217,12 @@ export default {
     },
     async submitCode(item, index) {
       await this.commit({
-        batchText: this.codeSnippets[index].replace(/\n/g, ' ').replace(/\t/g, ' '),
+        batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
-        driver: 'mysql'
+        driver: 'mysql',
+        idx: index
       })
       this.loading = true
       await this.getSubmitRecord({
@@ -256,6 +266,9 @@ export default {
 </script>
 
 <style scoped>
+.tag{
+  margin-bottom: 3px;
+}
 .box {
   width: 100%;
   height: 100%;
@@ -269,7 +282,7 @@ export default {
   /*background: #c74c4c;*/
   float: left;
   text-align: left;
-  overflow: scroll;
+  overflow: auto;
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
 
 }
@@ -304,7 +317,7 @@ export default {
   height: 100vh;
   /*background: #226fa1;*/
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
-  overflow: scroll;
+  overflow: auto;
 }
 
 .subQuestion {
@@ -326,12 +339,13 @@ export default {
 
 .records {
   height: 20vh;
-  overflow: scroll;
+  overflow: auto;
   padding: 1em;
   background-color: rgb(247, 247, 247);
   margin-top: 1em;;
 }
-.passState{
+
+.passState {
   border-radius: 5px;
 }
 

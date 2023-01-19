@@ -15,10 +15,28 @@ public interface MainQuestionMapper {
 
     MainQuestion selectById(@Param("mainId") int mainId);
 
+    /**
+     * 查大题总数
+     */
+    Integer countTotal();
+
+    /**
+     * 查询标签筛选后的大题总数
+     */
+    Integer countTotalAfterFilter(@Param("tags") List<Integer> tags);
+
+    /**
+     * 分页查大题数据
+     */
     List<Map<String, Object>> selectByPage(@Param("userId") String userId,
                                            @Param("from") int from,
                                            @Param("size") int size);
 
-    Integer countTotal();
-
+    /**
+     * 分页查包含某些标签的大题数据
+     */
+    List<Map<String, Object>> selectByPageFilterByTags(@Param("userId") String userId,
+                                                       @Param("from") int from,
+                                                       @Param("size") int size,
+                                                       @Param("tags") List<Integer> tags);
 }

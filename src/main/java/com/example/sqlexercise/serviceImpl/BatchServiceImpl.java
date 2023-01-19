@@ -14,11 +14,14 @@ import com.example.sqlexercise.po.Batch;
 import com.example.sqlexercise.po.PassRecord;
 import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.service.BatchService;
+import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
+import com.example.sqlexercise.vo.DraftVO;
 import com.example.sqlexercise.vo.GetScoreVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -42,20 +45,22 @@ public class BatchServiceImpl implements BatchService {
     private PassRecordMapper passRecordMapper;
     private BatchMapper batchMapper;
     private QuestionStateMapper questionStateMapper;
+    private QuestionService questionService;
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
     public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
                             BatchMapper batchMapper, QuestionStateMapper questionStateMapper,
-                            RabbitTemplate rabbitTemplate) {
+                            QuestionService questionService, RabbitTemplate rabbitTemplate) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
         this.scoreService = scoreService;
         this.answerSetMapper = answerSetMapper;
         this.questionStateMapper = questionStateMapper;
-        this.useMessageQueue = false;
+        this.questionService = questionService;
+        this.useMessageQueue = true;
         this.rabbitTemplate = rabbitTemplate;
     }
 
@@ -66,6 +71,41 @@ public class BatchServiceImpl implements BatchService {
         } else {
             return processBatchSync(batchVO, processSqlMode);
         }
+    }
+
+    @Override
+    public String testMQ() throws InterruptedException {
+        CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
+        Map<String, Object> message = new HashMap<>(2);
+        message.put("id", "hello");
+        String jsonString = JSON.toJSONString(message);
+        String result = (String) rabbitTemplate.convertSendAndReceive(RabbitMQConfig.DirectExchange,
+                RabbitMQConfig.DirectRouting, jsonString, correlationId);
+//        Thread.sleep(6000);
+//        while(result == null) {
+//            try {
+//                System.out.println("waiting for result...");
+//                Thread.sleep(1000);
+//            } catch (Exception e) {
+//                log.error("error when running batch " + message.get("id") + " using rabbitmq. ");
+//                return "Didn't pass";
+//            }
+//        }
+        return result;
+    }
+
+    @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
+    @RabbitHandler
+    public String testConsumer(Message message) throws InterruptedException {
+        Thread.sleep(4000);
+        String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
+        JSONObject messageObject = JSON.parseObject(byteMessage);
+        String id = messageObject.getString("id");
+        if (StringUtils.isEmpty(id)) {
+            log.error("error when consume message " + id + " using rabbitmq. ");
+            return "Didn't pass";
+        }
+        return id;
     }
 
     /**
@@ -80,30 +120,30 @@ public class BatchServiceImpl implements BatchService {
         String jsonString = JSON.toJSONString(message);
         String result = (String) rabbitTemplate.convertSendAndReceive(RabbitMQConfig.DirectExchange,
                 RabbitMQConfig.DirectRouting, jsonString, correlationId);
-        while(result == null) {
-            try {
-                Thread.sleep(10000);
-            } catch (Exception e) {
-                log.error("error when running batch " + message.get("id") + " using rabbitmq. ");
-                return "Didn't pass";
-            }
-        }
+//        while(result == null) {
+//            try {
+//                Thread.sleep(10000);
+//            } catch (Exception e) {
+//                log.error("error when running batch " + message.get("id") + " using rabbitmq. ");
+//                return "Didn't pass";
+//            }
+//        }
         return result;
     }
 
-    @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
-    public String batchMessageConsumer(Message message) {
-        String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
-        JSONObject messageObject = JSON.parseObject(byteMessage);
-        BatchVO batchVO = (BatchVO) messageObject.get("batchVO");
-        String processSqlMode = messageObject.getString("processSqlMode");
-        String id = messageObject.getString("id");
-        if (StringUtils.isEmpty(processSqlMode) || StringUtils.isEmpty(id)) {
-            log.error("error when consume message " + id + " using rabbitmq. ");
-            return "Didn't pass";
-        }
-        return processBatchSync(batchVO, processSqlMode, id);
-    }
+//    @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
+//    public String batchMessageConsumer(Message message) {
+//        String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
+//        JSONObject messageObject = JSON.parseObject(byteMessage);
+//        BatchVO batchVO = (BatchVO) messageObject.get("batchVO");
+//        String processSqlMode = messageObject.getString("processSqlMode");
+//        String id = messageObject.getString("id");
+//        if (StringUtils.isEmpty(processSqlMode) || StringUtils.isEmpty(id)) {
+//            log.error("error when consume message " + id + " using rabbitmq. ");
+//            return "Didn't pass";
+//        }
+//        return processBatchSync(batchVO, processSqlMode, id);
+//    }
 
     private String processBatchSync(BatchVO batchVO, String processSqlMode, String id) {
         String driver = batchVO.getDriver();
@@ -117,12 +157,28 @@ public class BatchServiceImpl implements BatchService {
         } else {
             batch.setId(id);
         }
-        // 只有submit时，才将该条batch入库
+        // 只有submit时，才将该条batch入库，并保存草稿
         if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+            // batch入库
             batchMapper.insert(batch);
+
+            // 保存草稿
+            DraftVO draftVO = new DraftVO(
+                    batchVO.getUserId(),
+                    batchVO.getMainId(),
+                    batchVO.getSubId(),
+                    batchVO.getBatchText(),
+                    now
+            );
+            questionService.saveDraft(draftVO);
         }
         // 执行
-        log.info("batch " + batch.getId() + " is running. ");
+        log.info("batch " + batch.getId() + " is running.");
+
+        // 执行SQL前，用空格替换用户提交的SQL中的\n和\t
+        String batchText = batchVO.getBatchText();
+        batchVO.setBatchText(batchText.replaceAll("\n", " ").replaceAll("\t", " "));
+
         String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
         return res;
     }
@@ -159,30 +215,33 @@ public class BatchServiceImpl implements BatchService {
                 updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.PASSED);
             }
             // 如果是run则只返回结果
-            log.info("batch " + batch.getId() + " passed. " + new Throwable().getStackTrace()[0]);
+            log.info("batch " + batch.getId() + " passed.");
             // 如果静态分析得到的评分非满分，需要将其加入答案集
-            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
-            float score = scoreService.getScore(getScoreVO);
-            if (score < 100f) {
-                AnswerSet stuAnswer = new AnswerSet();
-                stuAnswer.setMainId(main_id);
-                stuAnswer.setSubId(sub_id);
-                stuAnswer.setAnswer(sqlText);
-                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
-                if (ans == null) {
-                    stuAnswer.setCreatedAt(new Date());
-                    stuAnswer.setUpdatedAt(new Date());
-                    answerSetMapper.create(stuAnswer);
-                } else if (ans.getState() == 1) {
-                    stuAnswer.setUpdatedAt(new Date());
-                    answerSetMapper.updateStatus(stuAnswer);
-                }
-            }
-            return "Passed";
+//            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
+//            float score = scoreService.getScore(getScoreVO);
+//            if (score < 100f) {
+//                AnswerSet stuAnswer = new AnswerSet();
+//                stuAnswer.setMainId(main_id);
+//                stuAnswer.setSubId(sub_id);
+//                stuAnswer.setAnswer(sqlText);
+//                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
+//                if (ans == null) {
+//                    stuAnswer.setCreatedAt(new Date());
+//                    stuAnswer.setUpdatedAt(new Date());
+//                    answerSetMapper.create(stuAnswer);
+//                } else if (ans.getState() == 1) {
+//                    stuAnswer.setUpdatedAt(new Date());
+//                    answerSetMapper.updateStatus(stuAnswer);
+//                }
+//            }
+            return Constants.Message.PASSED;
         } else {
-            updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
-            log.info("batch " + batch.getId() + " didn't pass. " + new Throwable().getStackTrace()[0]);
-            return "Didn't pass";
+            // 如果是提交，才会修改题目状态；运行则不会
+            if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+                updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
+            }
+            log.info("batch " + batch.getId() + " didn't pass.");
+            return Constants.Message.NOT_PASSED;
         }
     }
 
@@ -192,7 +251,7 @@ public class BatchServiceImpl implements BatchService {
             questionState = new QuestionState(userId, mainId, subId, false, toState);
             questionStateMapper.insert(questionState);
         } else {
-            // 未开始-0 < 提交未通过-1 < 已通过-2
+            // 未开始-0 => 提交未通过-1 => 已通过-2
             // questionState只会单向变化
             if (questionState.getState() < toState) {
                 questionStateMapper.updateState(userId, mainId, subId, toState);

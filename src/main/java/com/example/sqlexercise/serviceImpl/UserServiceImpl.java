@@ -9,6 +9,7 @@ import com.example.sqlexercise.service.UserService;
 import com.example.sqlexercise.vo.ResponseVO;
 import com.example.sqlexercise.vo.SignVO;
 import com.example.sqlexercise.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j(topic = "com.example.sqlexercise.serviceImpl.UserServiceImpl")
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -24,16 +26,18 @@ public class UserServiceImpl implements UserService {
     private QuestionStateMapper questionStateMapper;
     private BatchMapper batchMapper;
     private SubQuestionMapper subQuestionMapper;
+    private QuestionTagsMapper questionTagsMapper;
 
     private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
-    public UserServiceImpl(UserMapper userMapper, PassRecordMapper passRecordMapper, QuestionStateMapper questionStateMapper, BatchMapper batchMapper, SubQuestionMapper subQuestionMapper, StringRedisTemplate stringRedisTemplate) {
+    public UserServiceImpl(UserMapper userMapper, PassRecordMapper passRecordMapper, QuestionStateMapper questionStateMapper, BatchMapper batchMapper, SubQuestionMapper subQuestionMapper, QuestionTagsMapper questionTagsMapper, StringRedisTemplate stringRedisTemplate) {
         this.userMapper = userMapper;
         this.passRecordMapper = passRecordMapper;
         this.questionStateMapper = questionStateMapper;
         this.batchMapper = batchMapper;
         this.subQuestionMapper = subQuestionMapper;
+        this.questionTagsMapper = questionTagsMapper;
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
@@ -41,18 +45,22 @@ public class UserServiceImpl implements UserService {
     public ResponseVO signUp(UserVO userVO) {
         //验证码校验
         String email = userVO.getEmail();
-        String rightCode = stringRedisTemplate.opsForValue().get(Constants.RedisKey.SIGN_UP_CODE_KEY_PREFIX + email);
+        String rightCode = stringRedisTemplate.opsForValue().get(Constants.RedisKey.CODE_KEY_PREFIX + email);
         if (rightCode == null) {
-            return ResponseVO.failure("验证码已过期，请重新发送");
+            log.info("验证码已过期");
+            return ResponseVO.failure(Constants.Message.CODE_EXPIRED);
         }
         if (!rightCode.equals(userVO.getCode())) {
-            return ResponseVO.failure("验证码错误！");
+            log.info("验证码错误");
+            return ResponseVO.failure(Constants.Message.CODE_WRONG);
         }
         if (!userVO.getPassword().equals(userVO.getPasswordConfirmation())) {
-            return ResponseVO.failure("两次输入的密码不一致！");
+            log.info("两次输入的密码不一致");
+            return ResponseVO.failure(Constants.Message.PASSWORD_CONFIRMATION_WRONG);
         }
         if (userMapper.selectByEmail(email) != null) {
-            return ResponseVO.failure("用户已存在！");
+            log.info("该邮箱已注册");
+            return ResponseVO.failure(Constants.Message.EMAIL_EXISTED);
         }
         User user = new User();
         BeanUtils.copyProperties(userVO, user);
@@ -63,25 +71,28 @@ public class UserServiceImpl implements UserService {
         user.setRole("user");
         userMapper.insert(user);
 
-        return ResponseVO.success("注册成功");
+        return ResponseVO.success(Constants.Message.SIGNUP_SUCCEED);
     }
 
     @Override
     public ResponseVO signIn(SignVO signVO) {
         User user = userMapper.selectByEmail(signVO.getEmail());
         if (user == null) {
-            return ResponseVO.failure("该邮箱未注册");
+            log.info("该邮箱 " + signVO.getEmail() + " 未注册");
+            return ResponseVO.failure(Constants.Message.EMAIL_NOT_EXISTED);
         }
         boolean isMatch = PasswordHash.comparePassword(signVO.getPassword(), user.getPasswordHash());
         if (isMatch) {
+            log.info(user.getEmail() + " 登录成功");
             return ResponseVO.success(user);
         } else {
-            return ResponseVO.failure("邮箱或密码错误");
+            log.info("邮箱或密码错误");
+            return ResponseVO.failure(Constants.Message.EMAIL_OR_PASSWORD_WRONG);
         }
     }
 
     @Override
-    public List<PassRecord> getRecords(Integer userId) {
+    public List<PassRecord> getRecords(String userId) {
         return passRecordMapper.selectByUserId(userId);
     }
 
@@ -111,9 +122,9 @@ public class UserServiceImpl implements UserService {
         // 执行数据库更新操作
         int res = userMapper.update(user);
         if (res == 1) {
-            return ResponseVO.success("修改成功");
+            return ResponseVO.success(Constants.Message.MODIFY_USER_INFO_SUCCEED);
         } else {
-            return ResponseVO.failure("修改失败");
+            return ResponseVO.failure(Constants.Message.MODIFY_USER_INFO_FAILED);
         }
     }
 
@@ -123,6 +134,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public Object getStars(String userId) {
         List<Map<String, Object>> res = questionStateMapper.selectStars(userId);
+        // 遍历列表中的每一个小题，添加标签数据
+        for (Map<String, Object> subQuestionInfo : res) {
+            // 获取当前小题的subId
+            Integer subId = (Integer) subQuestionInfo.get("subId");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagBySubId(subId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            subQuestionInfo.put("tags", tagNames);
+        }
         return res;
     }
 
@@ -160,7 +182,37 @@ public class UserServiceImpl implements UserService {
         // 计算用户提交通过率
         String passRate = String.format("%.2f", (double) passTimes / (double) submitTimes * 100) + '%';
         res.put("passRate", passRate);
-        
+
+        // 查每个标签分别有多少道小题
+        Map<Integer, Long> totalSubQuestionNumOfEachTag = new HashMap<>();
+        for (Map<String, Object> item : questionTagsMapper.selectTotalSubQuestionNumOfEachTag()) {
+            totalSubQuestionNumOfEachTag.put((Integer) item.get("tag"), (Long) item.get("totalSubQuestionNum"));
+        }
+
+        // 查当前用户在每个标签对应的小题中通过了多少道
+        Map<Integer, Long> passedSubQuestionNumOfEachTag = new HashMap<>();
+        for (Map<String, Object> item : questionTagsMapper.selectPassedSubQuestionNumOfEachTag(userId)) {
+            passedSubQuestionNumOfEachTag.put((Integer) item.get("tag"), (Long) item.get("passedNum"));
+        }
+
+        // 整理为标签雷达图所需数据结构，并添加进结果集中
+        // 例，[
+        //         {"标签1": {"该标签小题总数": xx, "该用户在该标签小题中通过数": xx}},
+        //         {"标签2": {"该标签小题总数": xx, "该用户在该标签小题中通过数": xx}},
+        //         ...
+        //     ]
+        List<Map<String, Map<String, Object>>> tagRadar = new ArrayList<>();
+        for (int tagType = 0; tagType < Constants.QuestionTag.TOTAL_TAG_NUM; tagType++) {
+            String tagName = Constants.QuestionTag.tagTypeToName(tagType);
+            Map<String, Object> curTagStatistic = new HashMap<>();
+            curTagStatistic.put("totalNum", totalSubQuestionNumOfEachTag.getOrDefault(tagType, 0L));
+            curTagStatistic.put("passedNum", passedSubQuestionNumOfEachTag.getOrDefault(tagType, 0L));
+            Map<String, Map<String, Object>> curTag = new HashMap<>();
+            curTag.put(tagName, curTagStatistic);
+            tagRadar.add(curTag);
+        }
+        res.put("tagRadar", tagRadar);
+
         return res;
     }
 
@@ -169,8 +221,52 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Object getRecentSubmits(String userId, int n) {
-        List<Object> res = batchMapper.selectRecentSubmits(userId, n);
+        List<Map<String, Object>> res = batchMapper.selectRecentSubmits(userId, n);
+        // 由于提交记录也是以小题为单位，故此处查询标签信息并添加进结果集的逻辑与getStars()方法中相同
+        // 遍历列表中的每一条记录，添加标签数据
+        for (Map<String, Object> recordInfo : res) {
+            // 获取当前记录的subId
+            Integer subId = (Integer) recordInfo.get("subId");
+            // 查数据库，获取该小题的标签，结果集合中为标签编号
+            List<Integer> tagTypes = questionTagsMapper.selectTagBySubId(subId);
+            // 将标签编号转换为标签名
+            List<String> tagNames = Constants.QuestionTag.tagTypeListToNameList(tagTypes);
+            // 将标签信息添加进当前小题map中
+            recordInfo.put("tags", tagNames);
+        }
         return res;
     }
 
+    /**
+     * 根据邮箱验证码重置密码
+     * @param userVO 只包含email, code, password, passwordConfirmation四个参数
+     */
+    @Override
+    public ResponseVO resetPassword(UserVO userVO) {
+        //验证码校验
+        String email = userVO.getEmail();
+        String rightCode = stringRedisTemplate.opsForValue().get(Constants.RedisKey.CODE_KEY_PREFIX + email);
+        if (rightCode == null) {
+            log.info("验证码已过期");
+            return ResponseVO.failure(Constants.Message.CODE_EXPIRED);
+        }
+        if (!rightCode.equals(userVO.getCode())) {
+            log.info("验证码错误");
+            return ResponseVO.failure(Constants.Message.CODE_WRONG);
+        }
+        if (!userVO.getPassword().equals(userVO.getPasswordConfirmation())) {
+            log.info("两次输入的密码不一致");
+            return ResponseVO.failure(Constants.Message.PASSWORD_CONFIRMATION_WRONG);
+        }
+        if (userMapper.selectByEmail(email) == null) {
+            log.info("该邮箱未注册");
+            return ResponseVO.failure(Constants.Message.EMAIL_NOT_EXISTED);
+        }
+        ResponseVO responseVO = modifyInfo(userVO);
+        if (responseVO.isSuccess()) {
+            return ResponseVO.success(Constants.Message.RESET_PASSWORD_SUCCEED);
+        } else {
+            return ResponseVO.success(Constants.Message.RESET_PASSWORD_FAILED);
+        }
+    }
 }

@@ -1,54 +1,65 @@
 <template>
-    <div  class="mycontainer">
-  <a-form :form="form" class="userinfofrom">
-    <div class="infotitleswiper">
-      <div>
-        <div class="userinfotitle">个人资料</div>
-        <div class="userinfodisc">使用本练习系统的其他同学可能会看到部分信息</div>
-      </div>
+  <div class="mycontainer">
+    <a-form :form="form" class="userinfofrom">
+      <div class="infotitleswiper">
+        <div>
+          <div class="userinfotitle">个人资料</div>
+          <div class="userinfodisc">使用本练习系统的其他同学可能会看到部分信息</div>
+        </div>
         <img style="margin-top: 20px;margin-left: 5em"
              src="https://www.gstatic.com/identity/boq/accountsettingsmobile/privacycheckup_scene_316x112_3343d1d69c2d68a4bd3d28babd1f9e80.png">
-    </div>
+      </div>
 
-    <a-form-item>
-      <div class="itemlabel">邮箱</div>
-      <span class="infodisplayitem">{{ userInfo.email }}</span>
-    </a-form-item>
-    <a-form-item>
-      <div class="itemlabel">用户名</div>
-      <a-input
-        placeholder="请填写用户名"
-        v-decorator="['name', { rules: [{ required: true, message: '请输入用户名' }] }]"
-        v-if="modify"
-        class="info-input"
-      />
-      <span v-else class="infodisplayitem">{{ userInfo.name }}</span>
-    </a-form-item>
-    <a-form-item
-      v-if="modify">
-      <div class="itemlabel"> 密码</div>
-      <a-input
-        placeholder="请输入新密码"
-        v-decorator="['password', { rules: [{ required: true, message: '请输入新密码' }] }]"
-        class="info-input"
-      />
-    </a-form-item>
+      <a-form-item>
+        <div class="itemlabel">邮箱</div>
+        <span class="infodisplayitem">{{ userInfo.email }}</span>
+      </a-form-item>
+      <a-form-item>
+        <div class="itemlabel">用户名</div>
+        <a-input
+          placeholder="请填写用户名"
+          v-decorator="['name', { rules: [{ required: true, message: '请输入用户名' }],validateTrigger: 'submit' }]"
+          v-if="modify"
+          class="info-input"
+        />
+        <span v-else class="infodisplayitem">{{ userInfo.name }}</span>
+      </a-form-item>
+      <a-form-item
+        v-if="modify">
+        <div class="itemlabel"> 密码</div>
+        <a-input
+          type="password"
+          placeholder="请输入新密码"
+          v-decorator="['password', { rules: [{ required: true, message: '请输入新密码' }],validateTrigger: 'submit' }]"
+          class="info-input"
+        />
+      </a-form-item>
+      <a-form-item
+        v-if="modify">
+        <div class="itemlabel"> 确认密码</div>
+        <a-input
+          type="password"
+          placeholder="请再次输入新密码"
+          v-decorator="['passwordConfirm', { rules: [{ required: true, message: '请输入新密码' },{ validator: this.handlePasswordCheck }],validateTrigger: 'submit' }]"
+          class="info-input"
+        />
+      </a-form-item>
 
-    <div class="bottom" v-if="modify">
-      <a-button shape="round" type="primary" @click="saveModify">
-        保存
-      </a-button>
-      <a-button shape="round" style="margin-left: 10px" @click="cancelModify">
-        取消
-      </a-button>
-    </div>
-    <div class="bottom" v-else>
-      <a-button shape="round" @click="modifyInfo">
-        修改信息
-      </a-button>
-    </div>
-  </a-form>
-    </div>
+      <div class="bottom" v-if="modify">
+        <a-button shape="round" type="primary" @click="saveModify">
+          保存
+        </a-button>
+        <a-button shape="round" style="margin-left: 10px" @click="cancelModify">
+          取消
+        </a-button>
+      </div>
+      <div class="bottom" v-else>
+        <a-button shape="round" @click="modifyInfo">
+          修改信息
+        </a-button>
+      </div>
+    </a-form>
+  </div>
 </template>
 
 <script>
@@ -73,6 +84,16 @@ export default {
   },
   methods: {
     ...mapActions(['modifyUserInfo']),
+    handlePasswordCheck(rule, value, callback) {
+      const password = this.form.getFieldValue('password')
+      if (value === undefined) {
+        callback(new Error('请输入密码'))
+      }
+      if (value && password && value.trim() !== password.trim()) {
+        callback(new Error('两次密码不一致'))
+      }
+      callback()
+    },
     modifyInfo() {
       setTimeout(() => {
         this.form.setFieldsValue({
@@ -93,7 +114,6 @@ export default {
             email: this.userInfo.email,
             password: this.form.getFieldValue('password')
           }
-          console.log(data)
           this.modifyUserInfo(data).then(() => {
             this.modify = false
           })
@@ -104,8 +124,23 @@ export default {
 }
 </script>
 
+<style scoped>
+#coordinated_name,#coordinated_password,#coordinated_passwordConfirm {
+  border-top-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  background-color: transparent;
+  /*font-size: 18px;*/
+}
+#coordinated_name:focus,#coordinated_password:focus,#coordinated_passwordConfirm:focus{
+  box-shadow: 0 0 0;
+  background-color: transparent;
+  /*font-size: 18px;*/
+}
+</style>
+
 <style lang="less">
-.mycontainer{
+.mycontainer {
   text-align: center;
   width: 80vw;
   padding-top: 5em;
@@ -126,7 +161,6 @@ export default {
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
   //width: 78vw;
   height: 75vh;
-  //border-radius: 8px;
   .userinfotitle {
     color: #333333;
     font-size: 28px;
@@ -153,8 +187,6 @@ export default {
     border-bottom: 1px solid #d9d9d9;
     display: flex;
     flex-direction: row;
-    //margin-left: 30px;
-    //width: 668px;
   }
 }
 
@@ -181,8 +213,8 @@ export default {
   display: flex;
   flex-direction: row;
 }
-.bottom{
-  margin: 1em 0 2em 5em;
-  float: left;
+
+.bottom {
+  margin-top: 2em;
 }
 </style>

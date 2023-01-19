@@ -21,7 +21,13 @@ import 'codemirror/mode/php/php'
 import 'codemirror/mode/python/python'
 import 'codemirror/mode/shell/shell'
 import 'codemirror/mode/powershell/powershell'
-import {mapGetters, mapActions, mapMutations} from 'vuex'
+
+import 'codemirror/addon/edit/matchbrackets.js'
+import 'codemirror/addon/comment/comment.js'
+import 'codemirror/addon/search/searchcursor.js'
+import 'codemirror/addon/search/search.js'
+import 'codemirror/keymap/sublime'
+import {mapGetters} from 'vuex'
 
 const CodeMirror = require('codemirror/lib/codemirror')
 
@@ -74,7 +80,12 @@ export default {
       immediate: true
     }
   },
+
   computed: {
+    ...mapGetters([
+      'relatedTableInfo'
+
+    ]),
     coderOptions() {
       return {
         line: true,
@@ -88,7 +99,11 @@ export default {
         lineWrapping: 'wrap', // 文字过长时，是换行(wrap)还是滚动(scroll),默认是滚动
         showCursorWhenSelecting: true, // 文本选中时显示光标
         smartIndent: true, // 智能缩进
-        completeSingle: false // 当匹配只有一项的时候是否自动补全
+        completeSingle: false ,// 当匹配只有一项的时候是否自动补全
+        hintOptions: {//自定义提示选项
+          tables: this.relatedTableInfo
+        },
+        keyMap: "sublime"
       }
     }
   },
@@ -170,6 +185,8 @@ export default {
 </script>
 <style lang="less">
 .common-editor {
+  font-size: 15px;
+  font-family: monospace;
   width: 100%;
   height: 100%;
   .CodeMirror {

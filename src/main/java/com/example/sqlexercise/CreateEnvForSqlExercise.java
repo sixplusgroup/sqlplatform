@@ -33,8 +33,7 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        System.out.println(args);
-        log.info("ApplicationRunner接口！" + new Throwable().getStackTrace()[0]);
+        log.info("ApplicationRunner接口" );
         /*
         SqlDatabaseConfig config = new SqlDatabaseConfig();
         config.tags = new HashMap<>();
@@ -51,15 +50,16 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             if (!Files.exists(dbPath)) {    // 不存在则创建该文件夹
                 Files.createDirectory(dbPath);
             } else {
-                log.info("examDataFiles exists");
+                log.info("examDataFiles exists.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         // 配置远端服务器的Docker，初始化sql的运行环境
         createEnv(true);
-        //Container mysql-1-0 uses password 77d3bc2d-d446-5b79-b64e-95cfa00dfd5c
-        //Container mysql-1-1 uses password 33b60f2b-1dbb-5fe0-81a0-98252b6414bb
+        // Container mysql-1-0 uses password 77d3bc2d-d446-5b79-b64e-95cfa00dfd5c
+        // Container mysql-1-1 uses password 33b60f2b-1dbb-5fe0-81a0-98252b6414bb
+        // Container redis-1-0 uses password d5a32b3e-c535-58ba-aa30-57a677fbee74
     }
 
     /**
@@ -73,26 +73,28 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             SqlServer server = new SqlServer(dockerServer.getHost());
             dockerServer.connectDocker();
             // 检查 MySQL 镜像
-            Image image = dockerServer.getDockerImageByReference("mysql:5.7");
+            Image image = dockerServer.getDockerImageByReference(Constants.DockerRelated.MYSQL_IMAGE);
             if (image == null) {
-                dockerServer.pullImageByRepository("mysql", "5.7");
+                dockerServer.pullImageByRepository(Constants.DockerRelated.MYSQL_IMAGE_NAME, Constants.DockerRelated.MYSQL_IMAGE_TAG);
             }
-            log.info("After checking, image mysql:5.7 exists");
+            log.info("After checking, image " + Constants.DockerRelated.MYSQL_IMAGE + " exists.");
             // 检查 Redis 镜像
-            image = dockerServer.getDockerImageByReference("redis:latest");
-            if (image == null) {
-                dockerServer.pullImageByRepository("redis", "latest");
-            }
-            log.info("After checking, image redis:latest exists");
+//            image = dockerServer.getDockerImageByReference(Constants.DockerRelated.REDIS_IMAGE);
+//            if (image == null) {
+//                dockerServer.pullImageByRepository(Constants.DockerRelated.REDIS_IMAGE_NAME, Constants.DockerRelated.REDIS_IMAGE_TAG);
+//            }
+//            log.info("After checking, image " + Constants.DockerRelated.REDIS_IMAGE + " exists.");
             // 若生成容器信息
             UUID namespace = Generators.nameBasedGenerator(UUID.fromString(NAMESPACE_URL)).generate(SALT);
             List<DockerContainer> dockerMysqlContainers =
-                    createContainerInfos(dockerServer, namespace, "mysql", 3310, 1);
-            List<DockerContainer> dockerRedisContainers =
-                    createContainerInfos(dockerServer, namespace, "redis", 6379, 1);
+                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.MYSQL_IMAGE_NAME,
+                            Constants.DockerRelated.MYSQL_CONTAINER_DEFAULT_PORT, 1);
+//            List<DockerContainer> dockerRedisContainers =
+//                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.REDIS_IMAGE_NAME,
+//                            Constants.DockerRelated.REDIS_CONTAINER_DEFAULT_PORT, 1);
             // 检查dockerServer中现有容器实例情况
             checkExistingContainerInstance(dockerMysqlContainers, dockerServer, recreate);
-            checkExistingContainerInstance(dockerRedisContainers, dockerServer, recreate);
+//            checkExistingContainerInstance(dockerRedisContainers, dockerServer, recreate);
             // 根据容器信息创建容器实例
             createMysqlContainerInstance(dockerMysqlContainers, dockerServer, server);
 //            createRedisContainerInstance(dockerRedisContainers, dockerServer, server);
@@ -120,7 +122,7 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             // 同名容器存在，且无需删除，即无需重新创建
             if (container1 != null && !recreate) {
                 if (container1.getState().toLowerCase().equals("running")) {
-                    log.info("Container " + container.getName() + " already exists and it's running");
+                    log.info("Container " + container.getName() + " already exists and it's running.");
                     continue;
                 }
             }
@@ -130,10 +132,10 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                     dockerServer.stopDockerContainerById(container1.getId());
                 }
                 dockerServer.removeDockerContainerById(container1.getId());
-                log.info("Container " + container.getName() + " has been removed");
+                log.info("Container " + container.getName() + " has been removed.");
             } else {
                 //同名容器不存在
-                log.info("Container " + container.getName() + " does not exist");
+                log.info("Container " + container.getName() + " does not exist.");
             }
         }
     }
@@ -151,7 +153,7 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             //以下部分已改成Spring异步执行，不阻塞主线程
             SqlDatabase sqlDatabase =
                     this.pool.getSqlDatabase("", "mysql", dockerServer.getId(), container.getIndex());
-            myAsyncService.asyncInit(dockerServer, container, sqlDatabase);
+            myAsyncService.asyncInitMysqlContainer(dockerServer, container, sqlDatabase);
         }
     }
 
@@ -165,6 +167,8 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                 e.printStackTrace();
             }
             dockerServer.createDockerContainerForRedis(container.getName(), container.getPassword(), container.getPort());
+            // 启动 Redis container
+            dockerServer.startDockerContainer(container.getName());
         }
     }
 

@@ -7,8 +7,8 @@ import {message} from 'ant-design-vue'
 import {
   loginAPI,
   sendCodeAPI,
-  registerAPI,getRecentSubmitAPI,
-  getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI
+  registerAPI, getRecentSubmitAPI,
+  getUserInfoAPI, getUserStarsAPI, getUserStatisticAPI, modifyInfoAPI, resetPasswordAPI
 } from '../../api/user'
 
 const user = {
@@ -32,8 +32,8 @@ const user = {
       state.userId = data
     },
     set_userInfo: (state, data) => {
-      state.userInfo = data.userInfo;
-      state.userId = data.userId;
+      state.userInfo = data.obj;
+      state.userId = data.id;
     },
     set_user_stars: (state, data) => {
       state.userStars = data;
@@ -51,37 +51,39 @@ const user = {
       let data = localStorage.getItem("userId")
       const res = await getUserInfoAPI(data)
       if (res) {
-        commit('set_userInfo', {userInfo: res.obj, userId: data})
+        commit('set_userInfo', {obj: res.obj, id: data})
       }
     },
     login: async ({dispatch, commit}, userData) => {
       const res = await loginAPI(userData)
-      if (res) {
+      if (res.res === 'success') {
         message.success("登录成功")
         setToken(res.obj.id)
         // setSecretToken(res.token)
         localStorage.setItem("token", res.obj.id)
         localStorage.setItem("userId", res.obj.id);
-        commit('set_userId', res.obj.id)
-        commit('set_userInfo', res.obj)
+        // commit('set_userId', res.obj.id)
+        commit('set_userInfo', res)
         router.push('/')
       } else {
         message.error('用户名或密码错误！')
       }
     },
-    register: async (data) => {
+    register: async ({},data) => {
       const res = await registerAPI(data)
-      if (res) {
+      if (res.res === 'success') {
         message.success('注册成功')
+      }else{
+        message.error(res.msg)
       }
     },
-    sendCode: async (email) => {
-      const res = await sendCodeAPI(email)
+    sendCode: async ({},data) => {
+      const res = await sendCodeAPI(data)
       if (res) {
         message.success('验证码发送成功，请查收')
       }
     },
-    logout: async({ commit }) => {
+    logout: async ({commit}) => {
       removeToken()
       removeSecretToken()
       commit('reset_state')
@@ -89,30 +91,38 @@ const user = {
       router.push('/login')
       // const res = await logoutAPI();
     },
-    getUserStars: async({ commit }, userId) => {
+    getUserStars: async ({commit}, userId) => {
       const res = await getUserStarsAPI(userId);
       if (res) {
-        commit('set_user_stars',res.obj)
+        commit('set_user_stars', res.obj)
       }
     },
-    getUserStatistic: async({ commit }, userId) => {
+    getUserStatistic: async ({commit}, userId) => {
       const res = await getUserStatisticAPI(userId);
 
       if (res) {
-        commit('set_user_statistic',res.obj)
+        commit('set_user_statistic', res.obj)
       }
     },
-    modifyUserInfo: async({ dispatch }, data) => {
+    modifyUserInfo: async ({dispatch}, data) => {
       const res = await modifyInfoAPI(data);
       if (res) {
         message.success("修改成功！")
         dispatch('getUserInfoByToken')
       }
     },
-    getRecentSubmit: async({ commit }, data) => {
+    getRecentSubmit: async ({commit}, data) => {
       const res = await getRecentSubmitAPI(data);
       if (res) {
-        commit('set_recent_submit',res.obj)
+        commit('set_recent_submit', res.obj)
+      }
+    },
+    resetPassword: async ({commit}, data) => {
+      const res = await resetPasswordAPI(data);
+      if (res.res === 'success') {
+        message.success(res.msg)
+      }else{
+        message.error(res.msg)
       }
     },
   }
