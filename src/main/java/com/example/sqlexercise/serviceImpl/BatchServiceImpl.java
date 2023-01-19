@@ -1,5 +1,8 @@
 package com.example.sqlexercise.serviceImpl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.example.sqlexercise.config.RabbitMQConfig;
 import com.example.sqlexercise.data.AnswerSetMapper;
 import com.example.sqlexercise.data.BatchMapper;
 import com.example.sqlexercise.data.PassRecordMapper;
@@ -15,10 +18,16 @@ import com.example.sqlexercise.service.ScoreService;
 import com.example.sqlexercise.vo.BatchVO;
 import com.example.sqlexercise.vo.GetScoreVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j(topic = "com.example.sqlexercise.serviceImpl.BatchServiceImpl")
@@ -33,11 +42,13 @@ public class BatchServiceImpl implements BatchService {
     private PassRecordMapper passRecordMapper;
     private BatchMapper batchMapper;
     private QuestionStateMapper questionStateMapper;
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
-                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper) {
+                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper,
+                            RabbitTemplate rabbitTemplate) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
@@ -45,6 +56,7 @@ public class BatchServiceImpl implements BatchService {
         this.answerSetMapper = answerSetMapper;
         this.questionStateMapper = questionStateMapper;
         this.useMessageQueue = false;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -56,19 +68,55 @@ public class BatchServiceImpl implements BatchService {
         }
     }
 
+    /**
+     * 使用 RabbitMQ 作为消息队列
+     */
     private String processBatchAsync(BatchVO batchVO, String processSqlMode) {
-        //TODO Spring + MQ 消息中间件选型待定
-        return null;
+        CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
+        Map<String, Object> message = new HashMap<>(2);
+        message.put("batchVO", batchVO);
+        message.put("processSqlMode", processSqlMode);
+        message.put("id", UUID.randomUUID().toString());
+        String jsonString = JSON.toJSONString(message);
+        String result = (String) rabbitTemplate.convertSendAndReceive(RabbitMQConfig.DirectExchange,
+                RabbitMQConfig.DirectRouting, jsonString, correlationId);
+        while(result == null) {
+            try {
+                Thread.sleep(10000);
+            } catch (Exception e) {
+                log.error("error when running batch " + message.get("id") + " using rabbitmq. ");
+                return "Didn't pass";
+            }
+        }
+        return result;
     }
 
-    private String processBatchSync(BatchVO batchVO, String processSqlMode) {
+    @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
+    public String batchMessageConsumer(Message message) {
+        String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
+        JSONObject messageObject = JSON.parseObject(byteMessage);
+        BatchVO batchVO = (BatchVO) messageObject.get("batchVO");
+        String processSqlMode = messageObject.getString("processSqlMode");
+        String id = messageObject.getString("id");
+        if (StringUtils.isEmpty(processSqlMode) || StringUtils.isEmpty(id)) {
+            log.error("error when consume message " + id + " using rabbitmq. ");
+            return "Didn't pass";
+        }
+        return processBatchSync(batchVO, processSqlMode, id);
+    }
+
+    private String processBatchSync(BatchVO batchVO, String processSqlMode, String id) {
         String driver = batchVO.getDriver();
         Batch batch = new Batch();
         BeanUtils.copyProperties(batchVO, batch);
         Date now = new Date();
         batch.setCreatedAt(now);
         batch.setUpdatedAt(now);
-        batch.setId(UUID.randomUUID().toString());
+        if (id == null) {
+            batch.setId(UUID.randomUUID().toString());
+        } else {
+            batch.setId(id);
+        }
         // 只有submit时，才将该条batch入库
         if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
             batchMapper.insert(batch);
@@ -77,6 +125,10 @@ public class BatchServiceImpl implements BatchService {
         log.info("batch " + batch.getId() + " is running. ");
         String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
         return res;
+    }
+
+    private String processBatchSync(BatchVO batchVO, String processSqlMode) {
+        return processBatchSync(batchVO, processSqlMode, null);
     }
 
     @Override

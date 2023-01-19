@@ -40,6 +40,22 @@ class BatchServiceTest {
     }
 
     @Test
+    void processBatchAsync() throws InterruptedException {
+        Thread.sleep(25 * 1000);
+        List<SubQuestion> subQuestions = subQuestionMapper.selectAll();
+        for (SubQuestion subQuestion : subQuestions) {
+            BatchVO batchVO = new BatchVO();
+            batchVO.setBatchText(subQuestion.getAnswer());
+            batchVO.setMainId(subQuestion.getMainId());
+            batchVO.setSubId(subQuestion.getId());
+            batchVO.setDriver("mysql");
+            batchVO.setUserId("38748ac0-1f40-4ada-b5b7-ee4df2e20128");
+            String s = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+            Assertions.assertEquals("Passed", s);
+        }
+    }
+
+    @Test
     public void test1(){
         BatchVO batchVO = new BatchVO();
         batchVO.setBatchText("select w.eno \n" +
