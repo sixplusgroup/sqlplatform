@@ -10,5 +10,5 @@ public interface BatchService {
 
     Batch getBatch(String batchId);
 
-    public String testMQ() throws InterruptedException;
+//    public String testMQ() throws InterruptedException;
 }

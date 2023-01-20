@@ -44,7 +44,7 @@ class BatchServiceTest {
 
     @Test
     void processBatchAsync() throws Exception {
-        System.out.println(batchService.testMQ());
+//        System.out.println(batchService.testMQ());
 //        BatchVO batchVO = new BatchVO();
 //        batchVO.setBatchText("select w.eno \n" +
 //                "from works w\n" +
