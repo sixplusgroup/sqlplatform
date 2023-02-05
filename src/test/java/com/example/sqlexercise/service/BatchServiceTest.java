@@ -4,7 +4,6 @@ import com.example.sqlexercise.data.SubQuestionMapper;
 import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.po.SubQuestion;
 import com.example.sqlexercise.vo.BatchVO;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -41,6 +40,21 @@ class BatchServiceTest {
             String s = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
             Assertions.assertEquals(Constants.Message.PASSED, s);
         }
+    }
+
+    @Test
+    void processBatchAsync() throws Exception {
+//        System.out.println(batchService.testMQ());
+//        BatchVO batchVO = new BatchVO();
+//        batchVO.setBatchText("select w.eno \n" +
+//                "from works w\n" +
+//                "group by w.eno\n" +
+//                "having sum(hours) > 1000;");
+//        batchVO.setDriver("mysql");
+//        batchVO.setMainId(1);
+//        batchVO.setUserId(ConstantsOfTest.USER_ID);
+//        batchVO.setSubId(10);
+//        batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
     }
 
     @Test
