@@ -7,7 +7,7 @@
 <script>
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/base16-dark.css'
-import 'codemirror/theme/eclipse.css'
+import 'codemirror/theme/idea.css'
 import 'codemirror/theme/darcula.css'
 import 'codemirror/addon/hint/show-hint.css'
 import 'codemirror/addon/hint/show-hint.js'
@@ -45,7 +45,7 @@ export default {
     },
     theme: {
       type: String,
-      default: 'default'
+      default: 'idea'
     },
   },
   data() {
