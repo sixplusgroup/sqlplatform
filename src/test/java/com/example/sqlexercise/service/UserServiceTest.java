@@ -40,12 +40,13 @@ class UserServiceTest {
         userVO.setPasswordConfirmation(passwordConfirmation);
         ResponseVO responseVO = userService.signUp(userVO);
         Assertions.assertTrue(responseVO.isSuccess());
-        stringRedisTemplate.opsForValue().getAndDelete(Constants.RedisKey.CODE_KEY_PREFIX + email);
+        stringRedisTemplate.opsForValue().get(Constants.RedisKey.CODE_KEY_PREFIX + email);
+        stringRedisTemplate.delete(Constants.RedisKey.CODE_KEY_PREFIX + email);
     }
 
     @Test
     void signIn() {
-        String password = "123123";
+        String password = "123456";
         SignVO signVO = new SignVO();
         signVO.setEmail(ConstantsOfTest.USER_EMAIL);
         signVO.setPassword(password);
@@ -110,6 +111,7 @@ class UserServiceTest {
         userVO.setPasswordConfirmation(passwordConfirmation);
         ResponseVO responseVO = userService.resetPassword(userVO);
         Assertions.assertTrue(responseVO.isSuccess());
-        stringRedisTemplate.opsForValue().getAndDelete(Constants.RedisKey.CODE_KEY_PREFIX + email);
+        stringRedisTemplate.opsForValue().get(Constants.RedisKey.CODE_KEY_PREFIX + email);
+        stringRedisTemplate.delete(Constants.RedisKey.CODE_KEY_PREFIX + email);
     }
 }

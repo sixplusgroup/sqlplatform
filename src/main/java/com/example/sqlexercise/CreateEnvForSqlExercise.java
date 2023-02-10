@@ -45,15 +45,21 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
         sqlDatabase.testConnect();
         */
         //检查大题数据文件夹，里面包含schema的建表语句
-        try {
-            Path dbPath = Paths.get("src/main/resources/examDataFiles");
-            if (!Files.exists(dbPath)) {    // 不存在则创建该文件夹
-                Files.createDirectory(dbPath);
-            } else {
-                log.info("examDataFiles exists.");
+        if (!System.getProperty("os.name").startsWith("Linux")) {
+            // 若不是Linux系统，则说明是在本地开发环境中，即Windows或MacOS，所以在resources文件夹下读取
+            try {
+                Path dbPath = Paths.get("src/main/resources/examDataFiles");
+                if (!Files.exists(dbPath)) {    // 不存在则创建该文件夹
+                    Files.createDirectory(dbPath);
+                } else {
+                    log.info("examDataFiles exists.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else {
+            // 若是Linux系统，则说明以jar包形式部署到了生产环境中
+            // do nothing, 因为会确保部署时所需文件被一并上传
         }
         // 配置远端服务器的Docker，初始化sql的运行环境
         createEnv(true);
@@ -128,7 +134,8 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             }
             // 同名容器存在，且需要删除，即需要重新创建
             if (container1 != null) {
-                if (container1.getState().toLowerCase().equals("running")) {
+                if ((container1.getState() == null && container1.getStatus().toLowerCase().startsWith("up")) ||
+                        (container1.getState() != null && container1.getState().toLowerCase().equals("running"))) {
                     dockerServer.stopDockerContainerById(container1.getId());
                 }
                 dockerServer.removeDockerContainerById(container1.getId());
@@ -157,19 +164,19 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
         }
     }
 
-    private void createRedisContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
-                                              SqlServer server) {
-        for (DockerContainer container : containerList) {
-            // 检查可用端口
-            try {
-                server.detectServerPort(true, container.getPort(), container.getPort());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            dockerServer.createDockerContainerForRedis(container.getName(), container.getPassword(), container.getPort());
-            // 启动 Redis container
-            dockerServer.startDockerContainer(container.getName());
-        }
-    }
+//    private void createRedisContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
+//                                              SqlServer server) {
+//        for (DockerContainer container : containerList) {
+//            // 检查可用端口
+//            try {
+//                server.detectServerPort(true, container.getPort(), container.getPort());
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            dockerServer.createDockerContainerForRedis(container.getName(), container.getPassword(), container.getPort());
+//            // 启动 Redis container
+//            dockerServer.startDockerContainer(container.getName());
+//        }
+//    }
 
 }
