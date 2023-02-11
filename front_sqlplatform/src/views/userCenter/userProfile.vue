@@ -142,55 +142,50 @@ export default {
 }
 </style>
 
-<style lang="less">
+<style scoped>
 .mycontainer {
   text-align: center;
   width: 80vw;
   padding-top: 5em;
 }
 
-.userdescript {
+/*.userdescript {*/
+/*  color: #333333;*/
+/*  font-size: 15px;*/
+/*  text-align: center;*/
+/*  margin-bottom: 20px;*/
+/*}*/
+
+.userinfotitle {
   color: #333333;
-  font-size: 15px;
-  text-align: center;
-  margin-bottom: 20px;
+  font-size: 28px;
+  margin-top: 20px;
+  text-align: left;
+/*//margin-left: 25px;*/
+}
+.userinfodisc {
+  color: #999;
+  font-size: 16px;
+/*//margin-left: 25px;*/
+  margin-bottom: 30px;
+  margin-top: 10px;
 }
 
 .userinfofrom {
   display: inline-block;
   padding: 3em;
   margin: 1em;
-  //border: 1px solid #d9d9d9;
+  /*//border: 1px solid #d9d9d9;*/
   box-shadow: 1px 1px 5px 2px rgba(0, 0, 0, 0.11);
-  //width: 78vw;
+  /*//width: 78vw;*/
   height: 78vh;
-  .userinfotitle {
-    color: #333333;
-    font-size: 28px;
-    margin-top: 20px;
-    text-align: left;
-    //margin-left: 25px;
-  }
-
-  .userinfodisc {
-    color: #999;
-    font-size: 16px;
-    //margin-left: 25px;
-    margin-bottom: 30px;
-    margin-top: 10px;
-  }
-
-  .ant-form-item {
-    margin-bottom: 10px;
-  }
-
-  .ant-form-item-children {
-    padding-bottom: 13px;
-    padding-top: 13px;
-    border-bottom: 1px solid #d9d9d9;
-    display: flex;
-    flex-direction: row;
-  }
+}
+/deep/ .ant-form-item-children {
+  padding-bottom: 13px;
+  padding-top: 13px;
+  border-bottom: 1px solid #d9d9d9;
+  display: flex;
+  flex-direction: row;
 }
 
 .myicon {
@@ -205,7 +200,7 @@ export default {
 
 .infodisplayitem {
   color: #333333;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .info-input {
