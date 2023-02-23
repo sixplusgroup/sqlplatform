@@ -117,6 +117,19 @@ public class DockerServer {
     }
 
     /**
+     * 创建OceanBase docker container
+     */
+    public void createDockerContainerForOceanbase(String name, String password, int port) {
+        HostConfig hostConfig = new HostConfig();
+        PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(2881));
+        hostConfig.withPortBindings(portBinding);
+        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.MYSQL_IMAGE).withName(name)
+                .withHostConfig(hostConfig)
+                .withEnv("MINI_MODE=1").exec();
+        log.info(name + " container " + response.getId() + " is created successfully!");
+    }
+
+    /**
      * 创建 Redis docker container
      * @param name 容器名
      * @param password 容器密码
@@ -139,7 +152,7 @@ public class DockerServer {
         this.client.startContainerCmd(containerName).exec();
         //等待20s以便容器内的镜像启动
         try {
-            TimeUnit.SECONDS.sleep(20);
+            TimeUnit.SECONDS.sleep(90);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

@@ -13,8 +13,6 @@ import java.util.Date;
 @Service
 public class MyAsyncService {
 
-    //SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
     @Async("asyncTaskExecutor")
     public void myAsyncMethod(){
         System.out.println(Thread.currentThread().getName()+"---> enter async method!");
@@ -63,4 +61,15 @@ public class MyAsyncService {
                 "FLUSH PRIVILEGES;", 1);
     }
 
+    @Async("asyncTaskExecutor")
+    public void asyncInitOceanbaseContainer(DockerServer dockerServer, DockerContainer container, SqlDatabase sqlDatabase) throws Exception{
+        dockerServer.startDockerContainer(container.getName());
+        sqlDatabase.connect("",5);
+        if(!sqlDatabase.isConnected()){
+            throw new Exception("Connection Error");
+        }
+        sqlDatabase.createUser("CREATE USER 'sqlexercise'@'%' IDENTIFIED BY '"+container.getPassword()+"';\n" +
+                "GRANT SELECT ON *.* TO 'sqlexercise'@'%';\n" +
+                "FLUSH PRIVILEGES;", 1);
+    }
 }

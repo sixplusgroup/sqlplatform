@@ -78,6 +78,11 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                 dockerServer.pullImageByRepository(Constants.DockerRelated.MYSQL_IMAGE_NAME, Constants.DockerRelated.MYSQL_IMAGE_TAG);
             }
             log.info("After checking, image " + Constants.DockerRelated.MYSQL_IMAGE + " exists.");
+            image = dockerServer.getDockerImageByReference(Constants.DockerRelated.OCEANBASE_IMAGE);
+            if (image == null) {
+                dockerServer.pullImageByRepository(Constants.DockerRelated.OCEANBASE_IMAGE_NAME, Constants.DockerRelated.OCEANBASE_IMAGE_TAG);
+            }
+            log.info("After checking, image " + Constants.DockerRelated.OCEANBASE_IMAGE + " exists.");
             // 检查 Redis 镜像
 //            image = dockerServer.getDockerImageByReference(Constants.DockerRelated.REDIS_IMAGE);
 //            if (image == null) {
@@ -89,14 +94,19 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             List<DockerContainer> dockerMysqlContainers =
                     createContainerInfos(dockerServer, namespace, Constants.DockerRelated.MYSQL_IMAGE_NAME,
                             Constants.DockerRelated.MYSQL_CONTAINER_DEFAULT_PORT, 1);
+            List<DockerContainer> dockerOceanbaseContainers =
+                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.OCEANBASE_IMAGE_NAME,
+                            Constants.DockerRelated.OCEANBASE_CONTAINER_DEFAULT_PORT, 1);
 //            List<DockerContainer> dockerRedisContainers =
 //                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.REDIS_IMAGE_NAME,
 //                            Constants.DockerRelated.REDIS_CONTAINER_DEFAULT_PORT, 1);
             // 检查dockerServer中现有容器实例情况
             checkExistingContainerInstance(dockerMysqlContainers, dockerServer, recreate);
+            checkExistingContainerInstance(dockerOceanbaseContainers, dockerServer, recreate);
 //            checkExistingContainerInstance(dockerRedisContainers, dockerServer, recreate);
             // 根据容器信息创建容器实例
             createMysqlContainerInstance(dockerMysqlContainers, dockerServer, server);
+            createOceanbaseContainerInstance(dockerOceanbaseContainers, dockerServer, server);
 //            createRedisContainerInstance(dockerRedisContainers, dockerServer, server);
         }
     }
@@ -154,6 +164,23 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             SqlDatabase sqlDatabase =
                     this.pool.getSqlDatabase("", "mysql", dockerServer.getId(), container.getIndex());
             myAsyncService.asyncInitMysqlContainer(dockerServer, container, sqlDatabase);
+        }
+    }
+
+    private void createOceanbaseContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
+                                                  SqlServer server) throws Exception {
+        for (DockerContainer container : containerList) {
+            // 检查可用端口
+            try {
+                server.detectServerPort(true, container.getPort(), container.getPort());
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+            dockerServer.createDockerContainerForOceanbase(container.getName(), container.getPassword(), container.getPort());
+            //使用Spring异步执行，不阻塞主线程
+            SqlDatabase sqlDatabase =
+                    this.pool.getSqlDatabase("", "oceanbase", dockerServer.getId(), container.getIndex());
+            myAsyncService.asyncInitOceanbaseContainer(dockerServer, container, sqlDatabase);
         }
     }
 

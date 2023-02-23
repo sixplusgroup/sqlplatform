@@ -2,6 +2,7 @@ package com.example.sqlexercise.lib;
 
 import com.example.sqlexercise.driver.Client;
 import com.example.sqlexercise.driver.MysqlClient;
+import com.example.sqlexercise.driver.OceanbaseClient;
 import com.mysql.cj.jdbc.Driver;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +18,7 @@ public class SqlDatabase {
 
     private String id;
     private String name;
-    private String driver; //"mysql"
+    private String driver; //"mysql", "oceanbase"
     private SqlDatabaseConfig config;
     private Client client;
     private SqlDatabase root;
@@ -113,6 +114,8 @@ public class SqlDatabase {
                     log.info("Try to connect....");
                     if (this.driver.equals("mysql")) {
                         this.client = new MysqlClient();
+                    }else if(this.driver.equals("oceanbase")){
+                        this.client = new OceanbaseClient();
                     }
                     this.client.init(this.config);
                     startTimer();
