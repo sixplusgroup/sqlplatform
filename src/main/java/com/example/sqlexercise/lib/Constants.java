@@ -64,6 +64,7 @@ public class Constants {
         public static final String OCEANBASE_IMAGE_TAG = "4.0.0.0";
         public static final String OCEANBASE_IMAGE = OCEANBASE_IMAGE_NAME + ":" + OCEANBASE_IMAGE_TAG;
         public static final int OCEANBASE_CONTAINER_DEFAULT_PORT = 2881;
+        public static final String OCEANBASE = "oceanbase";
     }
 
     /**

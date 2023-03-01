@@ -95,7 +95,7 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                     createContainerInfos(dockerServer, namespace, Constants.DockerRelated.MYSQL_IMAGE_NAME,
                             Constants.DockerRelated.MYSQL_CONTAINER_DEFAULT_PORT, 1);
             List<DockerContainer> dockerOceanbaseContainers =
-                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.OCEANBASE_IMAGE_NAME,
+                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.OCEANBASE,
                             Constants.DockerRelated.OCEANBASE_CONTAINER_DEFAULT_PORT, 1);
 //            List<DockerContainer> dockerRedisContainers =
 //                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.REDIS_IMAGE_NAME,

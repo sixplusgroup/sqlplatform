@@ -123,7 +123,7 @@ public class DockerServer {
         HostConfig hostConfig = new HostConfig();
         PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(2881));
         hostConfig.withPortBindings(portBinding);
-        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.MYSQL_IMAGE).withName(name)
+        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.OCEANBASE_IMAGE).withName(name)
                 .withHostConfig(hostConfig)
                 .withEnv("MINI_MODE=1").exec();
         log.info(name + " container " + response.getId() + " is created successfully!");
