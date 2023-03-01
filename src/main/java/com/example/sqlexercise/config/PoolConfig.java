@@ -13,6 +13,7 @@ public class PoolConfig {
     @Bean
     SqlDatabasePool sqlDatabasePool(){
         ArrayList<String> drivers = new ArrayList<>(Collections.singleton("mysql"));
+        drivers.add("oceanbase");
         return new SqlDatabasePool(new DockerConfig(), drivers);
     }
 }
