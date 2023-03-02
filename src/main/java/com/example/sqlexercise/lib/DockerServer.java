@@ -150,12 +150,6 @@ public class DockerServer {
     public void startDockerContainer(String containerName) {
         //根据源码，该方法没有response，所以无法精准地知道容器内的镜像什么时候启动完成
         this.client.startContainerCmd(containerName).exec();
-        //等待20s以便容器内的镜像启动
-        try {
-            TimeUnit.SECONDS.sleep(90);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         log.info("Container " + containerName + " is started!");
     }
 
