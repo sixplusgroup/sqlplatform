@@ -127,6 +127,9 @@ public class DockerServer {
                 .withHostConfig(hostConfig)
                 .withExposedPorts(ExposedPort.tcp(2881))
                 .withEnv("MINI_MODE=1","OB_ROOT_PASSWORD=" + password).exec();
+        //Date: 2023.3.4
+        //Author: hewenbing
+        //经过测试，目前OB_ROOT_PASSWORD的环境配置并未生效，可能是镜像原因，obce-mini或许可以
         log.info(name + " container " + response.getId() + " is created successfully!");
     }
 
@@ -151,7 +154,7 @@ public class DockerServer {
     public void startDockerContainer(String containerName) {
         //根据源码，该方法没有response，所以无法精准地知道容器内的镜像什么时候启动完成
         this.client.startContainerCmd(containerName).exec();
-        log.info("Container " + containerName + " is started!");
+        log.info("Container " + containerName + " is starting!");
     }
 
     public void stopDockerContainerById(String Id) {

@@ -80,10 +80,10 @@ public class SqlDatabasePool {
                                 config.port = 2881 + i;
                             }
                             config.username = schemaName.isEmpty() ? "root" : "sqlexercise";
-                            if (driver.equals("mysql")) {
-                                config.password = Generators.nameBasedGenerator(namespace).generate(driver + "-" + server + "-" + i).toString();
-                            }else if (driver.equals("oceanbase")){
+                            if (schemaName.isEmpty() && driver.equals("oceanbase")) {
                                 config.password = "";
+                            }else {
+                                config.password = Generators.nameBasedGenerator(namespace).generate(driver + "-" + server + "-" + i).toString();
                             }
                             config.maxRows = this.maxRows;
 
