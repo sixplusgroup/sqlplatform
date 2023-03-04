@@ -248,11 +248,11 @@ public class SqlDatabase {
 
     public void testObConnect(){
         try{
-            String url = "jdbc:oceanbase://localhost:2881/pool=false";
-            String user = "root";
+            String url = "jdbc:oceanbase://localhost:2881";
+            String user = "root@sys#obcluster";
             String password = "";
             Class.forName("com.oceanbase.jdbc.Driver");
-            Connection connection = DriverManager.getConnection(url, user, password);
+            Connection connection = DriverManager.getConnection(url,user,password);
             log.info("与OB集群的连接已经创建");
             connection.close();
             log.info("与OB集群的连接已关闭");

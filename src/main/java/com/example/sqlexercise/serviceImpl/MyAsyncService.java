@@ -77,7 +77,7 @@ public class MyAsyncService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sqlDatabase.testObConnect();
+        sqlDatabase.connect("SHOW DATABASES;", 5);
         if(!sqlDatabase.isConnected()){
             throw new Exception("Connection Error");
         }
