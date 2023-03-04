@@ -74,7 +74,11 @@ public class SqlDatabasePool {
                             config.tags.put("server", server);
                             config.tags.put("index", i);
                             config.host = e.getHost();
-                            config.port = 3310 + i;
+                            if (driver.equals("mysql")) {
+                                config.port = 3310 + i;
+                            }else if (driver.equals("oceanbase")){
+                                config.port = 2881 + i;
+                            }
                             config.username = schemaName.isEmpty() ? "root" : "sqlexercise";
                             config.password = Generators.nameBasedGenerator(namespace).generate(driver + "-" + server + "-" + i).toString();
                             config.maxRows = this.maxRows;

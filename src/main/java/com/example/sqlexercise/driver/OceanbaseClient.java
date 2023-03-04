@@ -3,7 +3,6 @@ package com.example.sqlexercise.driver;
 import com.example.sqlexercise.lib.ResultOfTask;
 import com.example.sqlexercise.lib.SqlDatabaseConfig;
 import com.oceanbase.jdbc.OceanBasePoolDataSource;
-import com.oceanbase.jdbc.OceanBasePooledConnection;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.sql.PooledConnection;
@@ -23,7 +22,9 @@ public class OceanbaseClient implements Client{
             this.poolDataSource.setPort(config.port);
             this.poolDataSource.setUser(config.username);
             this.poolDataSource.setPassword(config.password);
-            this.poolDataSource.setLoginTimeout(5 * 60);
+            this.poolDataSource.setMaxPoolSize(1024);
+            this.poolDataSource.setMinPoolSize(256);
+            this.poolDataSource.setLoginTimeout(30);
             this.poolDataSource.setMaxIdleTime(5 * 60);
         }catch (SQLException e){
             e.printStackTrace();

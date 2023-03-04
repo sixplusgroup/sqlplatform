@@ -125,7 +125,8 @@ public class DockerServer {
         hostConfig.withPortBindings(portBinding);
         CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.OCEANBASE_IMAGE).withName(name)
                 .withHostConfig(hostConfig)
-                .withEnv("MINI_MODE=1").exec();
+                .withEnv("MINI_MODE=1")
+                .withEnv("OB_ROOT_PASSWORD=" + password).exec();
         log.info(name + " container " + response.getId() + " is created successfully!");
     }
 

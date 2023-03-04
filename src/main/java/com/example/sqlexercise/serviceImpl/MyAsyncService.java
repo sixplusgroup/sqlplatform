@@ -73,11 +73,11 @@ public class MyAsyncService {
         dockerServer.startDockerContainer(container.getName());
         //等待5*60s以便容器内oceanbase启动完成初始化
         try {
-            TimeUnit.SECONDS.sleep(5*60);
+            TimeUnit.SECONDS.sleep(4*60);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        sqlDatabase.connect("",5);
+        sqlDatabase.testObConnect();
         if(!sqlDatabase.isConnected()){
             throw new Exception("Connection Error");
         }

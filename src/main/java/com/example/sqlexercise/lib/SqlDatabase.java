@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
@@ -243,6 +244,21 @@ public class SqlDatabase {
 
     public void posttask() {
         //TODO sql任务执行完毕后的处理，支持非查询语句时需要用
+    }
+
+    public void testObConnect(){
+        try{
+            String url = "jdbc:oceanbase://localhost:2881/pool=false";
+            String user = "root";
+            String password = "";
+            Class.forName("com.oceanbase.jdbc.Driver");
+            Connection connection = DriverManager.getConnection(url, user, password);
+            log.info("与OB集群的连接已经创建");
+            connection.close();
+            log.info("与OB集群的连接已关闭");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public void testConnect() {
