@@ -19,8 +19,8 @@ public class DockerConfig {
         this.dockerServers = new ArrayList<>();
         // TODO 在远程服务器上配置Docker，并使用certPath进行加密连接
         // 现在是使用的本机的Docker
-        DockerServer dockerServer =
-                new DockerServer("1", "localhost", 2375, "tcp", "", 1);
+//        DockerServer dockerServer = new DockerServer("1", "127.0.0.1", 2375, "tcp", "", 1);
+        DockerServer dockerServer = new DockerServer("1", "172.29.4.46", 2375, "tcp", "", 1);
         this.dockerServers.add(dockerServer);
     }
 

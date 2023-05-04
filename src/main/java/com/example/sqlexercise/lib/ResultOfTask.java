@@ -15,4 +15,13 @@ public class ResultOfTask implements Serializable {
         incomplete = false;
     }
 
+    @Override
+    public String toString() {
+        return "ResultOfTask{" +
+                "sheet=" + sheet.toString() +
+                ", incomplete=" + incomplete +
+                ", ordered=" + ordered +
+                ", error='" + error + '\'' +
+                '}';
+    }
 }
