@@ -9,11 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class MyAsyncService {
-
-    //SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Async("asyncTaskExecutor")
     public void myAsyncMethod(){
@@ -53,6 +52,12 @@ public class MyAsyncService {
     @Async("asyncTaskExecutor")
     public void asyncInitMysqlContainer(DockerServer dockerServer, DockerContainer container, SqlDatabase sqlDatabase) throws Exception{
         dockerServer.startDockerContainer(container.getName());
+        //等待90s以便容器内mysql启动完成初始化
+        try {
+            TimeUnit.SECONDS.sleep(90);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         //连接数据库
         sqlDatabase.connect("SHOW DATABASES;", 5);
         if(!sqlDatabase.isConnected()) {
@@ -63,4 +68,20 @@ public class MyAsyncService {
                 "FLUSH PRIVILEGES;", 1);
     }
 
+    @Async("asyncTaskExecutor")
+    public void asyncInitOceanbaseContainer(DockerServer dockerServer, DockerContainer container, SqlDatabase sqlDatabase) throws Exception{
+        dockerServer.startDockerContainer(container.getName());
+        //等待5*60s以便容器内oceanbase启动完成初始化
+        try {
+            TimeUnit.SECONDS.sleep(4*60);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        sqlDatabase.connect("SHOW DATABASES;", 5);
+        if(!sqlDatabase.isConnected()){
+            throw new Exception("Connection Error");
+        }
+        sqlDatabase.createUser("CREATE USER 'sqlexercise'@'%' IDENTIFIED BY '"+container.getPassword()+"';\n" +
+                "GRANT SELECT ON *.* TO 'sqlexercise'@'%';\n", 1);
+    }
 }
