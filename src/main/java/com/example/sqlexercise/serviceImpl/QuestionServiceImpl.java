@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,15 +57,34 @@ public class QuestionServiceImpl implements QuestionService {
             log.info("Info of main question " + mainId + " is not found!");
         }
         try {
-            Path dbPath = Paths.get("src/main/resources/" + mainQuestion.getDbPath());
-            if (!Files.exists(dbPath)) {
-                log.info("File of main question" + mainId + "is not found!");
+            if (!System.getProperty("os.name").toLowerCase().startsWith("linux")) {
+                Path dbPath = Paths.get("src/main/resources/" + mainQuestion.getDbPath());
+                if (!Files.exists(dbPath)) {
+                    log.info("File of main question" + mainId + "is not found!");
+                }
+                return Files.readString(dbPath);
+            } else {
+                InputStream inputStream = this.getClass().getResourceAsStream("/BOOT-INF/classes/" + mainQuestion.getDbPath());
+                String content = readStream(inputStream);
+                inputStream.close();
+                return content;
             }
-            return Files.readString(dbPath);
         } catch (Exception e) {
             e.printStackTrace();
             return "IOException occurred!";
         }
+    }
+
+    private static String readStream(InputStream inStream) throws Exception {
+        ByteArrayOutputStream outSteam = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len = -1;
+        while ((len = inStream.read(buffer)) != -1) {
+            outSteam.write(buffer, 0, len);
+        }
+        outSteam.close();
+        inStream.close();
+        return outSteam.toString();
     }
 
     /**

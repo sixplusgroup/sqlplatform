@@ -45,8 +45,9 @@
                 {{ tag }}
               </a-tag>
 
-              <div style="float: right;padding: 3px">
-                  <a-switch v-model:checked="darkTheme" checked-children="Darcula" un-checked-children="Default"/>
+              <div style="float: right;padding: 3px;align-items: center;display: flex">
+                <span>深色模式&nbsp</span>
+                  <a-switch v-model:checked="darkTheme"/>
               </div>
 
             </div>
@@ -76,9 +77,11 @@
               </a-button>
 
 
-              <a-button @click="runCode(item,index)">
+              <a-button
+                :disabled="runCd"
+                @click="runCode(item,index)">
                 <a-icon type="play-circle"/>
-                运行
+                {{runContent}}
               </a-button>
 
               <a-popover placement="bottom" content="将自动保存草稿">
@@ -86,9 +89,10 @@
                 <!--                  <p>将自动保存草稿</p>-->
                 <!--                </template>-->
                 <a-button style="background-color: mediumseagreen;color: white;border: 0;margin:0 1em 0 1em"
+                          :disabled="submitCd"
                           @click="submitCode(item,index)">
                   <a-icon type="check-circle"/>
-                  提交
+                  {{submitContent}}
                 </a-button>
               </a-popover>
 
@@ -132,7 +136,15 @@ export default {
       codeSnippets: [],
       activeKey: ref(0),
       buttonLoading: false,
-      darkTheme: false
+      darkTheme: false,
+      runCd: false,
+      submitCd: false,
+      runContent: '运行',
+      submitContent: '提交',
+      restRunCd : 3,
+      restSubmitCd : 3,
+      runTimer: '',
+      submitTimer: '',
     }
   },
   async mounted() {
@@ -239,15 +251,29 @@ export default {
     },
 
     runCode(item, index) {
+      if (this.runCd) return;
       this.runTest({
         batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
         driver: 'mysql'
-      })
+      });
+      this.runCd = true;
+      this.runContent = this.restRunCd + 's后可重新运行';
+      this.runTimer = setInterval(() => {
+        this.restRunCd--
+        this.runContent = this.restRunCd + 's后可重新运行';
+        if (this.restRunCd < 0) {
+          clearInterval(this.runTimer)
+          this.runContent = '运行'
+          this.restRunCd = 3
+          this.runCd = false
+        }
+      }, 1000)
     },
     async submitCode(item, index) {
+      if (this.submitCd) return;
       await this.commit({
         batchText: this.codeSnippets[index],
         userId: this.userId,
@@ -256,6 +282,18 @@ export default {
         driver: 'mysql',
         idx: index
       })
+      this.submitCd = true;
+      this.submitContent = this.restSubmitCd + 's后可重新提交';
+      this.submitTimer = setInterval(() => {
+        this.restSubmitCd--
+        this.submitContent = this.restSubmitCd + 's后可重新提交';
+        if (this.restSubmitCd < 0) {
+          clearInterval(this.submitTimer)
+          this.submitContent = '提交'
+          this.restSubmitCd = 3
+          this.submitCd = false
+        }
+      }, 1000)
       this.loading = true
       await this.getSubmitRecord({
         userId: this.userId,

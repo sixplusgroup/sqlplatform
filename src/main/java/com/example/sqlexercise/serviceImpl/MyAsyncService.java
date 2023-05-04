@@ -55,7 +55,7 @@ public class MyAsyncService {
         dockerServer.startDockerContainer(container.getName());
         //连接数据库
         sqlDatabase.connect("SHOW DATABASES;", 5);
-        if(!sqlDatabase.isConnected()){
+        if(!sqlDatabase.isConnected()) {
             throw new Exception("Connection Error");
         }
         sqlDatabase.createUser("CREATE USER 'sqlexercise'@'%' IDENTIFIED BY '"+container.getPassword()+"';\n" +

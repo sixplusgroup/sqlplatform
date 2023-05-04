@@ -1,5 +1,8 @@
 package com.example.sqlexercise.serviceImpl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.example.sqlexercise.config.RabbitMQConfig;
 import com.example.sqlexercise.data.AnswerSetMapper;
 import com.example.sqlexercise.data.BatchMapper;
 import com.example.sqlexercise.data.PassRecordMapper;
@@ -17,10 +20,17 @@ import com.example.sqlexercise.vo.BatchVO;
 import com.example.sqlexercise.vo.DraftVO;
 import com.example.sqlexercise.vo.GetScoreVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitHandler;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j(topic = "com.example.sqlexercise.serviceImpl.BatchServiceImpl")
@@ -36,11 +46,13 @@ public class BatchServiceImpl implements BatchService {
     private BatchMapper batchMapper;
     private QuestionStateMapper questionStateMapper;
     private QuestionService questionService;
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
-                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper, QuestionService questionService) {
+                            BatchMapper batchMapper, QuestionStateMapper questionStateMapper,
+                            QuestionService questionService, RabbitTemplate rabbitTemplate) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
@@ -48,7 +60,9 @@ public class BatchServiceImpl implements BatchService {
         this.answerSetMapper = answerSetMapper;
         this.questionStateMapper = questionStateMapper;
         this.questionService = questionService;
-        this.useMessageQueue = false;
+        this.useMessageQueue = true;
+        this.rabbitTemplate = rabbitTemplate;
+        this.rabbitTemplate.setReplyTimeout(10000); // 超时时间10s
     }
 
     @Override
@@ -60,19 +74,91 @@ public class BatchServiceImpl implements BatchService {
         }
     }
 
+//    @Override
+//    public String testMQ() throws InterruptedException {
+//        CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
+//        Map<String, Object> message = new HashMap<>(2);
+//        message.put("id", "hello");
+//        String jsonString = JSON.toJSONString(message);
+//        String result = (String) rabbitTemplate.convertSendAndReceive(RabbitMQConfig.DirectExchange,
+//                RabbitMQConfig.DirectRouting, jsonString, correlationId);
+////        Thread.sleep(6000);
+////        while(result == null) {
+////            try {
+////                System.out.println("waiting for result...");
+////                Thread.sleep(1000);
+////            } catch (Exception e) {
+////                log.error("error when running batch " + message.get("id") + " using rabbitmq. ");
+////                return "Didn't pass";
+////            }
+////        }
+//        return result;
+//    }
+//
+//    @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
+//    @RabbitHandler
+//    public String testConsumer(Message message) throws InterruptedException {
+//        Thread.sleep(6000);
+//        String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
+//        JSONObject messageObject = JSON.parseObject(byteMessage);
+//        String id = messageObject.getString("id");
+//        if (StringUtils.isEmpty(id)) {
+//            log.error("error when consume message " + id + " using rabbitmq. ");
+//            return "Didn't pass";
+//        }
+//        return id;
+//    }
+
+    /**
+     * 使用 RabbitMQ 作为消息队列
+     */
     private String processBatchAsync(BatchVO batchVO, String processSqlMode) {
-        //TODO Spring + MQ 消息中间件选型待定
-        return null;
+        CorrelationData correlationId = new CorrelationData(UUID.randomUUID().toString());
+        Map<String, Object> message = new HashMap<>(2);
+        message.put("batchVO", batchVO);
+        message.put("processSqlMode", processSqlMode);
+        message.put("id", UUID.randomUUID().toString());
+        String jsonString = JSON.toJSONString(message);
+        String result = "Didn't pass";
+        result = (String) rabbitTemplate.convertSendAndReceive(RabbitMQConfig.DirectExchange,
+                RabbitMQConfig.DirectRouting, jsonString, correlationId);
+//        while(result == null) {
+//            try {
+//                Thread.sleep(10000);
+//            } catch (Exception e) {
+//                log.error("error when running batch " + message.get("id") + " using rabbitmq. ");
+//                return "Didn't pass";
+//            }
+//        }
+        return result;
     }
 
-    private String processBatchSync(BatchVO batchVO, String processSqlMode) {
+    @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
+    public String batchMessageConsumer(Message message) {
+        String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
+        JSONObject messageObject = JSON.parseObject(byteMessage);
+        BatchVO batchVO = JSON.parseObject(messageObject.getString("batchVO"), BatchVO.class);
+        String processSqlMode = messageObject.getString("processSqlMode");
+        String id = messageObject.getString("id");
+        if (StringUtils.isEmpty(processSqlMode) || StringUtils.isEmpty(id)) {
+            log.error("error when consume message " + id + " using rabbitmq. ");
+            return "Didn't pass";
+        }
+        return processBatchSync(batchVO, processSqlMode, id);
+    }
+
+    private String processBatchSync(BatchVO batchVO, String processSqlMode, String id) {
         String driver = batchVO.getDriver();
         Batch batch = new Batch();
         BeanUtils.copyProperties(batchVO, batch);
         Date now = new Date();
         batch.setCreatedAt(now);
         batch.setUpdatedAt(now);
-        batch.setId(UUID.randomUUID().toString());
+        if (id == null) {
+            batch.setId(UUID.randomUUID().toString());
+        } else {
+            batch.setId(id);
+        }
         // 只有submit时，才将该条batch入库，并保存草稿
         if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
             // batch入库
@@ -97,6 +183,10 @@ public class BatchServiceImpl implements BatchService {
 
         String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
         return res;
+    }
+
+    private String processBatchSync(BatchVO batchVO, String processSqlMode) {
+        return processBatchSync(batchVO, processSqlMode, null);
     }
 
     @Override
@@ -128,12 +218,6 @@ public class BatchServiceImpl implements BatchService {
             }
             // 如果是run则只返回结果
             log.info("batch " + batch.getId() + " passed.");
-            return Constants.Message.PASSED;
-        } else {
-            // 如果是提交，才会修改题目状态；运行则不会
-            if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
-                updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
-            }
             // 如果静态分析得到的评分非满分，需要将其加入答案集
             GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
             float score = scoreService.getScore(getScoreVO);
@@ -151,6 +235,12 @@ public class BatchServiceImpl implements BatchService {
                     stuAnswer.setUpdatedAt(new Date());
                     answerSetMapper.updateStatus(stuAnswer);
                 }
+            }
+            return Constants.Message.PASSED;
+        } else {
+            // 如果是提交，才会修改题目状态；运行则不会
+            if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+                updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
             }
             log.info("batch " + batch.getId() + " didn't pass.");
             return Constants.Message.NOT_PASSED;
