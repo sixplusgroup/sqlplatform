@@ -34,7 +34,8 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     public float getScore(GetScoreVO getScoreVO) {
         try {
-            String url="http://localhost:8000/api/score/getScore";
+//            String url="http://localhost:8000/api/score/getScore";
+            String url="http://172.29.4.28:8000/api/score/getScore";
             //设置请求头信息
             HttpHeaders headers = new HttpHeaders();
             MediaType type = MediaType.parseMediaType("application/json; charset=UTF-8");
