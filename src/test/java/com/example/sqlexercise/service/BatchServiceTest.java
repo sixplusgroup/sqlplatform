@@ -92,4 +92,19 @@ class BatchServiceTest {
         batchVO.setSubId(14);
         batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
     }
+
+    @Test
+    @Transactional
+    public void processBatch_3(){
+        BatchVO batchVO = new BatchVO();
+        batchVO.setBatchText("select w.eno \n" +
+                "from works w\n" +
+                "group by w.eno\n" +
+                "having sum(hours) > 1000;");
+        batchVO.setDriver("oceanbase");
+        batchVO.setMainId(1);
+        batchVO.setUserId(ConstantsOfTest.USER_ID);
+        batchVO.setSubId(10);
+        batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+    }
 }

@@ -55,6 +55,16 @@ public class Constants {
         public static final String REDIS_IMAGE_TAG = "7.0";
         public static final String REDIS_IMAGE = REDIS_IMAGE_NAME + ":" + REDIS_IMAGE_TAG;
         public static final int REDIS_CONTAINER_DEFAULT_PORT = 6379;
+        /**
+         * OceanBase docker image
+         * oceanbase-ce 的默认端口
+         * warning: 在docker中启动OceanBase-ce需要至少8G以上的内存
+         */
+        public static final String OCEANBASE_IMAGE_NAME = "oceanbase/oceanbase-ce";
+        public static final String OCEANBASE_IMAGE_TAG = "4.0.0.0";
+        public static final String OCEANBASE_IMAGE = OCEANBASE_IMAGE_NAME + ":" + OCEANBASE_IMAGE_TAG;
+        public static final int OCEANBASE_CONTAINER_DEFAULT_PORT = 2881;
+        public static final String OCEANBASE = "oceanbase";
     }
 
     /**
