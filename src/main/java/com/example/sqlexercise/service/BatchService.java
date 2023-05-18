@@ -6,7 +6,7 @@ import com.example.sqlexercise.vo.ResponseVO;
 
 public interface BatchService {
 
-    String processBatch(BatchVO batchVO, String processSqlMode);
+    Object processBatch(BatchVO batchVO, String processSqlMode);
 
     Batch getBatch(String batchId);
 

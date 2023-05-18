@@ -133,24 +133,6 @@ public class DockerServer {
         log.info(name + " container " + response.getId() + " is created successfully!");
     }
 
-    /**
-     * 创建 Redis docker container
-     * @param name 容器名
-     * @param password 容器密码
-     * @param port 容器端口
-     */
-    public void createDockerContainerForRedis(String name, String password, int port) {
-        HostConfig hostConfig = new HostConfig();
-        PortBinding portBinding = new PortBinding(Ports.Binding.bindPort(port), ExposedPort.tcp(6379));
-        hostConfig.withPortBindings(portBinding);
-        List<String> cmd = new ArrayList<>();
-//        cmd.add("--requirepass=" + password);
-        CreateContainerResponse response = this.client.createContainerCmd(Constants.DockerRelated.REDIS_IMAGE).withName(name)
-                .withHostConfig(hostConfig)
-                .withCmd(cmd).exec();
-        log.info(name + " container " + response.getId() + " is created successfully!");
-    }
-
     public void startDockerContainer(String containerName) {
         //根据源码，该方法没有response，所以无法精准地知道容器内的镜像什么时候启动完成
         this.client.startContainerCmd(containerName).exec();

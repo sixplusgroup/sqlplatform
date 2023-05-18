@@ -1,28 +1,43 @@
 server:
-    port: 8080
+  port: 8080
 spring:
-    application:
-        name: sqlexercise
-    datasource:
-        url: jdbc:mysql://localhost:3306/sqlexercise?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
-#        url: jdbc:mysql://172.29.4.28:3306/sqlexercise?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
-        username: root
-        password: 123456
-#        password: aptx4869
-        driver-class-name: com.mysql.cj.jdbc.Driver
-    redis:
-        host: localhost
-        port: 6379
-        database: 0
-        connect-timeout: 30
-    rabbitmq:
-        host: 127.0.0.1
-        port: 5672
-        username: guest
-        password: guest
+  application:
+    name: sqlexercise
+  datasource:
+    url: jdbc:mysql://localhost:3306/sqlexercise?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+    #        url: jdbc:mysql://172.29.4.28:3306/sqlexercise?useUnicode=true&useJDBCCompliantTimezoneShift=true&serverTimezone=GMT%2B8&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+    username: root
+    password: 123456
+    #        password: aptx4869
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    connect-timeout: 30
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 mybatis:
-    mapper-locations: classpath:dataImpl/*Mapper.xml
-    configuration:
-        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:dataImpl/*Mapper.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 logging:
-    config: classpath:logback-spring.xml
+  config: classpath:logback-spring.xml
+
+# 以下为本项目自定义配置项
+sqlexercise:
+  database:
+    mysql:
+      need: false
+    oceanbase:
+      need: true
+      # 题目中使用的app_user表的个数
+      table-duplicate-num: 3
+  # 运行docker的主机和端口
+  docker:
+    host: localhost
+#    host: 172.29.4.46
+    port: 2375

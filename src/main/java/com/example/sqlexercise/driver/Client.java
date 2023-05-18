@@ -19,5 +19,9 @@ public interface Client {
 
     boolean createUser(String sqlText);
 
+    void createDatabase(String sqlText);
+
     void createTable(String sqlText);
+
+    boolean operateIndex(String sqlText);
 }

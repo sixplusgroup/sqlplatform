@@ -37,7 +37,7 @@ class BatchServiceTest {
             batchVO.setSubId(subQuestion.getId());
             batchVO.setDriver("mysql");
             batchVO.setUserId(ConstantsOfTest.USER_ID);
-            String s = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+            String s = (String) batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
             Assertions.assertEquals(Constants.Message.PASSED, s);
         }
     }

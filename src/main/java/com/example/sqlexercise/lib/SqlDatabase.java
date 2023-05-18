@@ -112,16 +112,16 @@ public class SqlDatabase {
         for (int i = 1; i <= maxRetryTimes; i++) {
             try {
                 if (i == 1) {
-                    log.info("Try to connect....");
+                    log.info("Try to connect " + this.driver + "....");
                     if (this.driver.equals("mysql")) {
                         this.client = new MysqlClient();
-                    }else if(this.driver.equals("oceanbase")){
+                    } else if (this.driver.equals("oceanbase")) {
                         this.client = new OceanbaseClient();
                     }
                     this.client.init(this.config);
                     startTimer();
                 } else {
-                    log.info("Retry to connect in " + 2 * i + " seconds...");
+                    log.info("Retry to connect " + this.driver + " in " + 2 * i + " seconds...");
                     try {
                         TimeUnit.SECONDS.sleep(2 * i);
                     } catch (InterruptedException e) {
@@ -131,11 +131,11 @@ public class SqlDatabase {
                 if (testText != null) {
                     runQuery(testText);
                 }
-                log.info("Database connected");
+                log.info("Database " + this.driver + " connected");
                 return;
             } catch (Exception e) {
                 e.printStackTrace();
-                log.info("Fail to connect");
+                log.info("Fail to connect " + this.driver);
             }
         }
         this.client = null;
@@ -158,7 +158,10 @@ public class SqlDatabase {
         return result;
     }
 
-    public void pretask(String schemaConstructor) {
+    /**
+     * 进行sql任务执行前的处理工作，主要是初始化题目用到的表
+     */
+    public void preTask(String schemaConstructor) {
         if (schemaConstructor == null) {
             return;
         }
@@ -167,17 +170,24 @@ public class SqlDatabase {
         }
         String sqlText = this.client.getSchemaSql(this.config.tags.get("schemaName").toString());
         ResultOfTask result = this.root.runQuery(sqlText);
-            if (result.error != null || result.sheet.size() == 0) {
+        if (result.error != null || result.sheet.size() == 0) {
             // 还未初始化表，先进行初始化
             sqlText = this.client.initSchemaSql(this.config.tags.get("schemaName").toString()) + schemaConstructor;
             this.root.createTable(sqlText);
         }
     }
 
+    /**
+     * sql任务执行完毕后的处理
+     */
+    public void postTask() {
+
+    }
+
     public ResultOfTask task(String sqlText, int maxRetryTimes) {
         for (int i = 1; i <= maxRetryTimes; i++) {
             if (i == 1) {
-                log.info("Try to execute SQL task");
+                log.info("Try to execute SQL task. SQL: " + sqlText);
             } else {
                 log.info("Retry to execute SQL task in " + 2 * i + " seconds");
                 try {
@@ -197,9 +207,9 @@ public class SqlDatabase {
     public void createUser(String sqlText, int maxRetryTimes) {
         for (int i = 1; i <= maxRetryTimes; i++) {
             if (i == 1) {
-                log.info("Try to execute Mysql createUser task");
+                log.info("Try to execute " + this.driver + " createUser task");
             } else {
-                log.info("Retry to execute Mysql createUser task in " + 2 * i + " seconds");
+                log.info("Retry to execute " + this.driver + " createUser task in " + 2 * i + " seconds");
                 try {
                     TimeUnit.SECONDS.sleep(2 * i);
                 } catch (InterruptedException e) {
@@ -208,12 +218,29 @@ public class SqlDatabase {
             }
             boolean result = this.runCreate(sqlText);
             if (result) {
-                log.info("create new user successfully!");
+                log.info("Execute " + this.driver + " createUser task successfully!");
             }
             if (result || i >= maxRetryTimes) {
                 return;
             }
         }
+    }
+
+    public boolean operateIndex(String sqlText) {
+        log.info("Try to execute " + this.driver + " task. SQL: " + sqlText);
+        stopTimer();
+        if (!isConnected()) {
+            connect(null, 1);
+        }
+        boolean result = this.client.operateIndex(sqlText);
+        if (result) {
+            log.info("Success. SQL: " + sqlText);
+        } else {
+            log.info("Fail. SQL: " + sqlText);
+        }
+        lock();
+        startTimer();
+        return result;
     }
 
     private boolean runCreate(String sqlText) {
@@ -232,31 +259,41 @@ public class SqlDatabase {
         return result;
     }
 
-    private void createTable(String sqlText) {
+    public void createDatabase(String sqlText) {
+        log.info("Try to execute " + this.driver + " createDatabase task.");
+        stopTimer();
+        if (!isConnected()) {
+            connect(null, 1);
+        }
+        this.client.createDatabase(sqlText);
+        log.info("Execute " + this.driver + " createDatabase task successfully.");
+        lock();
+        startTimer();
+    }
+
+    public void createTable(String sqlText) {
+        log.info("Try to execute " + this.driver + " createTable task.");
         stopTimer();
         if (!isConnected()) {
             connect(null, 1);
         }
         this.client.createTable(sqlText);
+        log.info("Execute " + this.driver + " createTable task successfully.");
         lock();
         startTimer();
     }
 
-    public void posttask() {
-        //TODO sql任务执行完毕后的处理，支持非查询语句时需要用
-    }
-
-    public void testObConnect(){
-        try{
+    public void testObConnect() {
+        try {
             String url = "jdbc:oceanbase://localhost:2881";
             String user = "root@sys#obcluster";
             String password = "";
             Class.forName("com.oceanbase.jdbc.Driver");
-            Connection connection = DriverManager.getConnection(url,user,password);
+            Connection connection = DriverManager.getConnection(url, user, password);
             log.info("与OB集群的连接已经创建");
             connection.close();
             log.info("与OB集群的连接已关闭");
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
