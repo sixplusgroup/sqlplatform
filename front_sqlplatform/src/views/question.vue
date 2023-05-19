@@ -18,6 +18,7 @@
                       :key="index" v-for="(item,index) in subQuestions">
             <template #tab>
               {{ '问题' + (index + 1) }} &nbsp
+              <span v-if="item.mainId !== 126">
               <span class="passState" v-if="item.state">
                 <a-tooltip placement="bottom" title="已通过">
                   <a-icon type="check-circle" style="color: #52c41a"></a-icon>
@@ -27,6 +28,7 @@
                 <a-tooltip placement="bottom" title="未通过">
                   <a-icon type="clock-circle" style="color: #faad14"></a-icon></a-tooltip>
               </span>
+                </span>
             </template>
             <div
               style="padding: 1em"
@@ -37,17 +39,21 @@
 
               {{ item.description }}
             </div>
-            <div style="background-color: rgb(247,247,247);padding: 5px 1em 5px 2em;">
+            <div style="background-color: rgb(247,247,247);padding: 5px 1em 5px 2em;min-height: 35px">
               <a-tag v-for="(tag,index) in item.tags"
                      color="blue"
                      :key="tag"
                      style="margin: 3px">
                 {{ tag }}
               </a-tag>
+              <!--              <a-tag v-else color="blue"-->
+              <!--                     style="margin: 3px">-->
+              <!--                暂无分类-->
+              <!--              </a-tag>-->
 
               <div style="float: right;padding: 3px;align-items: center;display: flex">
                 <span>深色模式&nbsp</span>
-                  <a-switch v-model:checked="darkTheme"/>
+                <a-switch v-model:checked="darkTheme"/>
               </div>
 
             </div>
@@ -81,7 +87,7 @@
                 :disabled="runCd"
                 @click="runCode(item,index)">
                 <a-icon type="play-circle"/>
-                {{runContent}}
+                {{ runContent }}
               </a-button>
 
               <a-popover placement="bottom" content="将自动保存草稿">
@@ -92,15 +98,22 @@
                           :disabled="submitCd"
                           @click="submitCode(item,index)">
                   <a-icon type="check-circle"/>
-                  {{submitContent}}
+                  {{ submitContent }}
                 </a-button>
               </a-popover>
 
 
             </div>
             <div class="records">
-              <p v-if="item.record.length === 0">暂无提交记录</p>
-              <a-timeline>
+              <p v-if="item.mainId === 126" style="margin-top: 0.5em">
+                无索引时查询耗时： {{ oceanBaseRes.queryTimeWithoutIndex }}<br/>
+
+                创建索引耗时： {{ oceanBaseRes.createIndexTime }}<br/>
+
+                创建索引后查询耗时： {{ oceanBaseRes.queryTimeAfterIndexCreation }}<br/>
+              </p>
+              <p v-if="item.record.length === 0 && item.mainId !== 126">暂无提交记录</p>
+              <a-timeline v-if="item.mainId !== 126">
                 <a-timeline-item
                   v-for="(obj,idx) in item.record"
                   :key="idx"
@@ -141,8 +154,8 @@ export default {
       submitCd: false,
       runContent: '运行',
       submitContent: '提交',
-      restRunCd : 3,
-      restSubmitCd : 3,
+      restRunCd: 3,
+      restSubmitCd: 3,
       runTimer: '',
       submitTimer: '',
     }
@@ -176,7 +189,7 @@ export default {
   },
   computed: {
     ...mapGetters([
-      'mainQuestion', 'subQuestions', 'userId', 'subQuestions', 'draft', 'hint'
+      'mainQuestion', 'subQuestions', 'userId', 'subQuestions', 'draft', 'hint', 'oceanBaseRes'
     ])
   },
   methods: {
@@ -252,12 +265,15 @@ export default {
 
     runCode(item, index) {
       if (this.runCd) return;
+      // console.log(item)
+      let engine = "mysql";
+      if (item.mainId === 126) engine = "oceanbase";
       this.runTest({
         batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
-        driver: 'mysql'
+        driver: engine
       });
       this.runCd = true;
       this.runContent = this.restRunCd + 's后可重新运行';
@@ -274,12 +290,14 @@ export default {
     },
     async submitCode(item, index) {
       if (this.submitCd) return;
+      let engine = "mysql";
+      if (item.mainId === 126) engine = "oceanbase";
       await this.commit({
         batchText: this.codeSnippets[index],
         userId: this.userId,
         mainId: item.mainId,
         subId: item.id,
-        driver: 'mysql',
+        driver: engine,
         idx: index
       })
       this.submitCd = true;
