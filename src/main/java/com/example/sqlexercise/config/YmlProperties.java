@@ -19,4 +19,16 @@ public class YmlProperties {
     @Value("${sqlexercise.docker.port}")
     private int dockerPort;
 
+    @Value("${sqlexercise.database.mysql.need}")
+    private boolean needMysql;
+
+    @Value("${sqlexercise.database.oceanbase.need}")
+    private boolean needOceanbase;
+
+    @Value("${sqlexercise.database.mysql.recreate}")
+    private boolean recreateMysql;
+
+    @Value("${sqlexercise.database.oceanbase.recreate}")
+    private boolean recreateOceanbase;
+
 }

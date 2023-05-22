@@ -14,8 +14,6 @@ public class DockerConfig {
 
     private ArrayList<DockerServer> dockerServers;
 
-    private YmlProperties ymlProperties;
-
     @Autowired
     public DockerConfig(YmlProperties ymlProperties){
         this.dockerServers = new ArrayList<>();

@@ -22,18 +22,21 @@ spring:
     password: guest
 mybatis:
   mapper-locations: classpath:dataImpl/*Mapper.xml
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 logging:
   config: classpath:logback-spring.xml
 
 # 以下为本项目自定义配置项
 sqlexercise:
+  # 数据库容器相关配置
   database:
     mysql:
-      need: false
+      need: true  # 表示是否运行时需要启动，下同
+      recreate: true  # 表示每次启动时是否需要重新创建，下同
     oceanbase:
-      need: true
+      need: false
+      recreate: false
       # 题目中使用的app_user表的个数
       table-duplicate-num: 3
   # 运行docker的主机和端口

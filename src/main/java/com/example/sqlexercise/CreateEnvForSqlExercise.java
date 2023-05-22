@@ -1,5 +1,6 @@
 package com.example.sqlexercise;
 
+import com.example.sqlexercise.config.YmlProperties;
 import com.example.sqlexercise.lib.*;
 import com.example.sqlexercise.serviceImpl.MyAsyncService;
 import com.fasterxml.uuid.Generators;
@@ -7,7 +8,6 @@ import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.PropertySource;
@@ -28,15 +28,13 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
     private final String NAMESPACE_URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
     private final String SALT = "sqlexercise";
 
-    @Value("${sqlexercise.database.mysql.need}")
-    private boolean needMysql;
-    @Value("${sqlexercise.database.oceanbase.need}")
-    private boolean needOceanbase;
+    private YmlProperties ymlProperties;
 
     @Autowired
-    public CreateEnvForSqlExercise(SqlDatabasePool pool, MyAsyncService myAsyncService) {
+    public CreateEnvForSqlExercise(SqlDatabasePool pool, MyAsyncService myAsyncService, YmlProperties ymlProperties) {
         this.pool = pool;
         this.myAsyncService = myAsyncService;
+        this.ymlProperties = ymlProperties;
     }
 
     @Override
@@ -107,12 +105,14 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
 
             // 准备docker中的数据库容器实例
             // 对于MySQL容器，每次启动都重新创建
-            if (needMysql) {
-                prepareDatabaseContainerInstance(dockerMysqlContainers, dockerServer, true, server, Constants.DockerRelated.DATABASE_CONTAINER_TYPE.MySQL);
+            if (ymlProperties.isNeedMysql()) {
+                prepareDatabaseContainerInstance(dockerMysqlContainers, dockerServer, ymlProperties.isRecreateMysql(), server,
+                        Constants.DockerRelated.DATABASE_CONTAINER_TYPE.MySQL);
             }
             // 对于OceanBase容器，因为其数据量较大，不宜重新创建
-            if (needOceanbase) {
-                prepareDatabaseContainerInstance(dockerOceanbaseContainers, dockerServer, false, server, Constants.DockerRelated.DATABASE_CONTAINER_TYPE.OceanBase);
+            if (ymlProperties.isNeedOceanbase()) {
+                prepareDatabaseContainerInstance(dockerOceanbaseContainers, dockerServer, ymlProperties.isRecreateOceanbase(), server,
+                        Constants.DockerRelated.DATABASE_CONTAINER_TYPE.OceanBase);
             }
         }
     }
