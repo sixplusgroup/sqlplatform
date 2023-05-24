@@ -154,8 +154,8 @@ export default {
       submitCd: false,
       runContent: '运行',
       submitContent: '提交',
-      restRunCd: 3,
-      restSubmitCd: 3,
+      restRunCd: 5,
+      restSubmitCd: 5,
       runTimer: '',
       submitTimer: '',
     }
@@ -283,7 +283,7 @@ export default {
         if (this.restRunCd < 0) {
           clearInterval(this.runTimer)
           this.runContent = '运行'
-          this.restRunCd = 3
+          this.restRunCd = 5
           this.runCd = false
         }
       }, 1000)
@@ -308,7 +308,7 @@ export default {
         if (this.restSubmitCd < 0) {
           clearInterval(this.submitTimer)
           this.submitContent = '提交'
-          this.restSubmitCd = 3
+          this.restSubmitCd = 5
           this.submitCd = false
         }
       }, 1000)

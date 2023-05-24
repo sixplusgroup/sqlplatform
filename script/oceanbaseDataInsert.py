@@ -45,7 +45,7 @@ def generate_insert_sql(user_list, table_name):
 
 def run_sql(sql):
     # 建立数据库连接
-    db = pymysql.connect(host='localhost', user='root', passwd='', db='index_test', port=2881)
+    db = pymysql.connect(host='172.29.4.60', user='root', passwd='', db='index_test', port=2881)
     # 获取游标对象
     cursor = db.cursor()
     # 执行SQL语句
@@ -60,27 +60,31 @@ def run_sql(sql):
 
 # 直接运行main即可
 if __name__ == '__main__':
-    # 目标表名，即要往哪个表插数据
-    table_name = "app_user_2"
-    # 一次运行要插入的总数据量
-    total = 200000
-    # 每次insert的数据量。例如，total = 200，count_of_a_round = 10，则表示总共要插入200条，每次插入10条，分20次完成
-    count_of_a_round = 10000
-    # 计算需要几次
-    rounds = int(total / count_of_a_round)
-    print("共需 " + str(rounds) + " 次\n")
-    for i in range(rounds):
-        print("========== 第 " + str(i + 1) + " 次============")
-        user_list = []
-        begin = datetime.datetime.now()
+    # 表的总个数
+    total_table_num = 15
+    # 遍历，向每张表中分别插入数据
+    for i in range(total_table_num):
+        # 目标表名，即要往哪个表插数据
+        table_name = "app_user_" + str(i)
+        # 一次运行要插入的总数据量
+        total = 200000
+        # 每次insert的数据量。例如，total = 200，count_of_a_round = 10，则表示总共要插入200条，每次插入10条，分20次完成
+        count_of_a_round = 20000
+        # 计算需要几次
+        rounds = int(total / count_of_a_round)
+        print("开始向表 " + table_name + " 中插入数据，共需 " + str(rounds) + " 次\n")
+        for j in range(rounds):
+            print("========== 表 " + table_name + " 第 " + str(j + 1) + "/" + str(rounds) + " 次============")
+            user_list = []
+            begin = datetime.datetime.now()
 
-        print(str(begin) + " 开始生成模拟数据...")
-        user_list.extend(generate_user(count_of_a_round, 1000))
-        print('')
-        end = datetime.datetime.now()
-        print(str(end) + " 生成结束, 共花费时间: " + str(end - begin))
+            print(str(begin) + " 开始生成模拟数据...")
+            user_list.extend(generate_user(count_of_a_round, 1000))
+            print('')
+            end = datetime.datetime.now()
+            print(str(end) + " 生成结束, 共花费时间: " + str(end - begin))
 
-        print(str(datetime.datetime.now()) + " 开始写入...")
-        sql = generate_insert_sql(user_list, table_name)
-        run_sql(sql)
-        print(str(datetime.datetime.now()) + " 写入完成.\n")
+            print(str(datetime.datetime.now()) + " 开始写入...")
+            sql = generate_insert_sql(user_list, table_name)
+            run_sql(sql)
+            print(str(datetime.datetime.now()) + " 写入完成.\n")

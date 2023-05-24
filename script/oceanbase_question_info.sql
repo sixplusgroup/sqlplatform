@@ -24,12 +24,12 @@ id为该表主键。
 该表包含用户的编号、姓名、邮箱、性别、密码、生日、所在省份
 ```
 
-现因业务需要，存在一个查询任务：查出在1980-01-01到2000-01-01之间出生的，且邮箱以字母 c 开头的用户的全部信息，查询结果以邮箱排序（升序），邮箱相同的用户按生日排序（升序）。
+现因业务需要，存在一个查询任务：查出在1980-01-01到2000-01-01之间出生的，且邮箱以字母 c 开头的用户的id、姓名、邮箱和生日，查询结果以邮箱排序（升序），邮箱相同的用户按生日排序（升序）。
 
 开发人员编写了如下SQL查询语句
 
 ```
-SELECT * FROM index_test.app_user au
+SELECT au.id, au.name, au.email, au.birthday FROM index_test.app_user au
 WHERE au.email LIKE "c%"
 	AND au.birthday BETWEEN "1980-01-01" AND "2000-01-01"
 ORDER BY au.email, au.birthday;
@@ -45,5 +45,5 @@ SET @main_id := (SELECT id
 # 在sub_question表中插入小题信息，其中answer字段用来存需要被优化的查询语句
 insert into sqlexercise.sub_question(main_id, description, answer, created_at, updated_at, difficulty, ordered)
 VALUES (@main_id, '请在app_user表上创建合适的索引，使题目中的查询语句的性能提升至少5倍。只需编写create index xxx语句。',
-        'SELECT * FROM index_test.app_user au WHERE au.email LIKE "c%" AND au.birthday BETWEEN "1980-01-01" AND "2000-01-01" ORDER BY au.email, au.birthday;',
+        'SELECT au.id, au.name, au.email, au.birthday FROM index_test.app_user au WHERE au.email LIKE "c%" AND au.birthday BETWEEN "1980-01-01" AND "2000-01-01" ORDER BY au.email, au.birthday;',
         now(), now(), 1, 0);

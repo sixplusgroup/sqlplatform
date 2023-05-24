@@ -33,14 +33,14 @@ sqlexercise:
   database:
     mysql:
       need: true  # 表示是否运行时需要启动，下同
-      recreate: true  # 表示每次启动时是否需要重新创建，下同
+      recreate: false  # 表示每次启动时是否需要重新创建，下同
     oceanbase:
-      need: false
+      need: true
       recreate: false
       # 题目中使用的app_user表的个数
-      table-duplicate-num: 3
+      table-duplicate-num: 15
   # 运行docker的主机和端口
   docker:
-    host: localhost
-#    host: 172.29.4.46
+#    host: localhost
+    host: 172.29.4.60
     port: 2375
