@@ -276,7 +276,7 @@ public class BatchServiceImpl implements BatchService {
      */
     private Map<String, String> executeBatchForOceanbase(Batch batch, String sqlText) {
         // 根据用户id的hashCode取模，得到该用户操作的表的编号
-        int targetTableNum = batch.getUserId().hashCode() % ymlProperties.getOceanbaseTableDuplicateNum();
+        int targetTableNum = Math.abs(batch.getUserId().hashCode() % ymlProperties.getOceanbaseTableDuplicateNum());
         // 替换创建索引的SQL语句中的表名
         String createIndexSql = sqlText.replaceAll("app_user", "app_user_" + targetTableNum);
         String querySql = questionService.getSubQuestionBySubId(batch.getSubId()).getAnswer()
