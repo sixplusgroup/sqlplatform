@@ -9,14 +9,22 @@ import java.util.Map;
 
 public interface SqlDatabaseService {
 
-    Object runSqlTask(int mainId, String driver, String sqlText, Map options);
+    /**
+     * 执行MySQL任务
+     */
+    Object runMysqlTask(int mainId, String driver, String sqlText, Map<String, Object> options);
+
+    /**
+     * 执行OceanBase任务
+     */
+    Map<String, String> runOceanbaseTask(String createIndexSql, String querySql, int targetTableNum);
 
     ResultOfTask getStandardAnswer(int subId, String driver);
 
-    ResultOfTask runTaskOfGettingSchemaInfo(int mainId, String driver);
-
-    ArrayList<ResultOfTask> runTaskOfUpdatingSchemaInfo(int mainId, String driver);
-
-    ArrayList<ResultOfTask> runTaskOfCleaningSchema(int mainId, String driver);
+//    ResultOfTask runTaskOfGettingSchemaInfo(int mainId, String driver);
+//
+//    ArrayList<ResultOfTask> runTaskOfUpdatingSchemaInfo(int mainId, String driver);
+//
+//    ArrayList<ResultOfTask> runTaskOfCleaningSchema(int mainId, String driver);
 
 }

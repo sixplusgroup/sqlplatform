@@ -1,5 +1,11 @@
 package com.example.sqlexercise.lib;
 
+import com.example.sqlexercise.config.YmlProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,14 +54,6 @@ public class Constants {
         public static final String MYSQL_IMAGE = MYSQL_IMAGE_NAME + ":" + MYSQL_IMAGE_TAG;
         public static final int MYSQL_CONTAINER_DEFAULT_PORT = 3310;
         /**
-         * Redis docker image     的名称、版本号
-         * docker container 的默认端口
-         */
-        public static final String REDIS_IMAGE_NAME = "redis";
-        public static final String REDIS_IMAGE_TAG = "7.0";
-        public static final String REDIS_IMAGE = REDIS_IMAGE_NAME + ":" + REDIS_IMAGE_TAG;
-        public static final int REDIS_CONTAINER_DEFAULT_PORT = 6379;
-        /**
          * OceanBase docker image
          * oceanbase-ce 的默认端口
          * warning: 在docker中启动OceanBase-ce需要至少8G以上的内存
@@ -65,6 +63,13 @@ public class Constants {
         public static final String OCEANBASE_IMAGE = OCEANBASE_IMAGE_NAME + ":" + OCEANBASE_IMAGE_TAG;
         public static final int OCEANBASE_CONTAINER_DEFAULT_PORT = 2881;
         public static final String OCEANBASE = "oceanbase";
+        /**
+         * 数据库容器类型，用于在应用启动时，自动检查和创建不同类型的数据库容器
+         */
+        public enum DATABASE_CONTAINER_TYPE {
+            MySQL,
+            OceanBase
+        }
     }
 
     /**

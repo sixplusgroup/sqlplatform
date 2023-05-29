@@ -3,6 +3,7 @@ package com.example.sqlexercise.serviceImpl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.example.sqlexercise.config.RabbitMQConfig;
+import com.example.sqlexercise.config.YmlProperties;
 import com.example.sqlexercise.data.AnswerSetMapper;
 import com.example.sqlexercise.data.BatchMapper;
 import com.example.sqlexercise.data.PassRecordMapper;
@@ -16,12 +17,12 @@ import com.example.sqlexercise.po.QuestionState;
 import com.example.sqlexercise.service.BatchService;
 import com.example.sqlexercise.service.QuestionService;
 import com.example.sqlexercise.service.ScoreService;
+import com.example.sqlexercise.service.SqlDatabaseService;
 import com.example.sqlexercise.vo.BatchVO;
 import com.example.sqlexercise.vo.DraftVO;
 import com.example.sqlexercise.vo.GetScoreVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -37,22 +38,25 @@ import java.util.*;
 @Service
 public class BatchServiceImpl implements BatchService {
 
-    private final SqlDatabaseServiceImpl sqlDatabaseService;
     private final boolean useMessageQueue;
+    private final RabbitTemplate rabbitTemplate;
 
+    private final SqlDatabaseService sqlDatabaseService;
     private final ScoreService scoreService;
+    private final QuestionService questionService;
+
     private final AnswerSetMapper answerSetMapper;
-    private PassRecordMapper passRecordMapper;
-    private BatchMapper batchMapper;
-    private QuestionStateMapper questionStateMapper;
-    private QuestionService questionService;
-    private RabbitTemplate rabbitTemplate;
+    private final PassRecordMapper passRecordMapper;
+    private final BatchMapper batchMapper;
+    private final QuestionStateMapper questionStateMapper;
+
+    private final YmlProperties ymlProperties;
 
     @Autowired
-    public BatchServiceImpl(SqlDatabaseServiceImpl sqlDatabaseService, ScoreService scoreService,
+    public BatchServiceImpl(SqlDatabaseService sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
                             BatchMapper batchMapper, QuestionStateMapper questionStateMapper,
-                            QuestionService questionService, RabbitTemplate rabbitTemplate) {
+                            QuestionService questionService, RabbitTemplate rabbitTemplate, YmlProperties ymlProperties) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
@@ -60,13 +64,14 @@ public class BatchServiceImpl implements BatchService {
         this.answerSetMapper = answerSetMapper;
         this.questionStateMapper = questionStateMapper;
         this.questionService = questionService;
-        this.useMessageQueue = true;
+        this.ymlProperties = ymlProperties;
+        this.useMessageQueue = false;
         this.rabbitTemplate = rabbitTemplate;
         this.rabbitTemplate.setReplyTimeout(10000); // 超时时间10s
     }
 
     @Override
-    public String processBatch(BatchVO batchVO, String processSqlMode) {
+    public Object processBatch(BatchVO batchVO, String processSqlMode) {
         if (useMessageQueue) {
             return processBatchAsync(batchVO, processSqlMode);
         } else {
@@ -134,7 +139,7 @@ public class BatchServiceImpl implements BatchService {
     }
 
     @RabbitListener(queues = {RabbitMQConfig.DirectQueue})
-    public String batchMessageConsumer(Message message) {
+    public Object batchMessageConsumer(Message message) {
         String byteMessage = new String(message.getBody(), StandardCharsets.UTF_8);
         JSONObject messageObject = JSON.parseObject(byteMessage);
         BatchVO batchVO = JSON.parseObject(messageObject.getString("batchVO"), BatchVO.class);
@@ -147,7 +152,7 @@ public class BatchServiceImpl implements BatchService {
         return processBatchSync(batchVO, processSqlMode, id);
     }
 
-    private String processBatchSync(BatchVO batchVO, String processSqlMode, String id) {
+    private Object processBatchSync(BatchVO batchVO, String processSqlMode, String id) {
         String driver = batchVO.getDriver();
         Batch batch = new Batch();
         BeanUtils.copyProperties(batchVO, batch);
@@ -159,12 +164,11 @@ public class BatchServiceImpl implements BatchService {
         } else {
             batch.setId(id);
         }
-        // 只有submit时，才将该条batch入库，并保存草稿
+        // 只有submit时，才将该条batch写入数据库，并保存草稿
         if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
-            // batch入库
+            // batch写入数据库
             batchMapper.insert(batch);
-
-            // 保存草稿
+            // 保存草稿，写入数据库
             DraftVO draftVO = new DraftVO(
                     batchVO.getUserId(),
                     batchVO.getMainId(),
@@ -174,18 +178,23 @@ public class BatchServiceImpl implements BatchService {
             );
             questionService.saveDraft(draftVO);
         }
-        // 执行
         log.info("batch " + batch.getId() + " is running.");
 
         // 执行SQL前，用空格替换用户提交的SQL中的\n和\t
-        String batchText = batchVO.getBatchText();
-        batchVO.setBatchText(batchText.replaceAll("\n", " ").replaceAll("\t", " "));
+        String batchText = batchVO.getBatchText().replaceAll("\n", " ").replaceAll("\t", " ");
 
-        String res = executeBatch(batch, batch.getMainId(), batch.getSubId(), driver, batchVO.getBatchText(), processSqlMode);
+        Object res = null;
+        // 执行
+        if (driver.equals("mysql")) {
+            res = executeBatchForMysql(batch, driver, batchText, processSqlMode);
+        } else if (driver.equals("oceanbase")) {
+            res = executeBatchForOceanbase(batch, batchText);
+        }
+
         return res;
     }
 
-    private String processBatchSync(BatchVO batchVO, String processSqlMode) {
+    private Object processBatchSync(BatchVO batchVO, String processSqlMode) {
         return processBatchSync(batchVO, processSqlMode, null);
     }
 
@@ -194,37 +203,43 @@ public class BatchServiceImpl implements BatchService {
         return batchMapper.selectById(batchId);
     }
 
-    private String executeBatch(Batch batch, int main_id, int sub_id, String driver, String sqlText, String processSqlMode) {
-        // 现在的判分是先运行一次标准答案，然后与结果比对
-        // TODO 引入redis对频繁使用的标准结果集进行多级缓存
-        ResultOfTask answer = sqlDatabaseService.getStandardAnswer(sub_id, driver);
+    /**
+     * 该方法目前只执行用户在MySQL题目中提交的代码
+     *
+     * @param sqlText 用户提交的select语句
+     */
+    private String executeBatchForMysql(Batch batch, String driver, String sqlText, String processSqlMode) {
+        // 获取本题标准结果集
+        ResultOfTask answer = sqlDatabaseService.getStandardAnswer(batch.getSubId(), driver);
         Map<String, Object> options = new HashMap<>();
+        // 设置 执行preTask方法，忽略postTask方法
         options.put("skipPre", false);
-        ResultOfTask queryResult = (ResultOfTask) sqlDatabaseService.runSqlTask(main_id, driver, sqlText, options);
+        options.put("skipPost", true);
+        ResultOfTask queryResult = (ResultOfTask) sqlDatabaseService.runMysqlTask(batch.getMainId(), driver, sqlText, options);
 
         if (isPass(queryResult, answer)) {
-            // 如果通过且是submit就将记录入库，并修改该题目对于该用户的相关状态
+            // 只有submit时，才将记录入库，并修改该题目对于该用户的相关状态
             if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
-                PassRecord passRecord = new PassRecord();
-                passRecord.setBatchId(batch.getId());
-                passRecord.setMainId(main_id);
-                passRecord.setSubId(sub_id);
-                passRecord.setUserId(batch.getUserId());
-                passRecord.setCreatedAt(new Date());
-                passRecord.setUpdatedAt(new Date());
-                passRecord.setPoint(100);
+                PassRecord passRecord = new PassRecord(
+                        batch.getUserId(),
+                        batch.getMainId(),
+                        batch.getSubId(),
+                        batch.getId(),
+                        100,
+                        new Date(),
+                        new Date()
+                );
                 passRecordMapper.insert(passRecord);
                 updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.PASSED);
             }
-            // 如果是run则只返回结果
             log.info("batch " + batch.getId() + " passed.");
             // 如果静态分析得到的评分非满分，需要将其加入答案集
-            GetScoreVO getScoreVO = new GetScoreVO(main_id, sub_id, sqlText, 100f);
+            GetScoreVO getScoreVO = new GetScoreVO(batch.getMainId(), batch.getSubId(), sqlText, 100f);
             float score = scoreService.getScore(getScoreVO);
             if (score < 100f) {
                 AnswerSet stuAnswer = new AnswerSet();
-                stuAnswer.setMainId(main_id);
-                stuAnswer.setSubId(sub_id);
+                stuAnswer.setMainId(batch.getMainId());
+                stuAnswer.setSubId(batch.getSubId());
                 stuAnswer.setAnswer(sqlText);
                 AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
                 if (ans == null) {
@@ -240,6 +255,7 @@ public class BatchServiceImpl implements BatchService {
         } else {
             // 如果是提交，才会修改题目状态；运行则不会
             if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
+                // 修改题目状态
                 updateQuestionState(batch.getUserId(), batch.getMainId(), batch.getSubId(), Constants.QuestionState.SUBMITTED_BUT_NOT_PASS);
             }
             log.info("batch " + batch.getId() + " didn't pass.");
@@ -247,21 +263,60 @@ public class BatchServiceImpl implements BatchService {
         }
     }
 
+    /**
+     * 目前系统中涉及到OceanBase的题目只有一道索引相关的。因为该题目重点在于体验索引对于查询性能的提升效果，
+     * 且数据量较大，故此处代码实现逻辑有所不同，单独写成一个方法
+     *
+     * @param sqlText 用户提交的create index语句
+     * @return String，包含
+     *              无索引查询耗时 queryTimeWithoutIndex，
+     *              创建索引耗时 createIndexTime，
+     *              创建索引后的查询耗时 queryTimeAfterIndexCreation
+     *         约定格式为 xxx:123,xxx:123,xxx:123
+     */
+    private Map<String, String> executeBatchForOceanbase(Batch batch, String sqlText) {
+        // 根据用户id的hashCode取模，得到该用户操作的表的编号
+        int targetTableNum = Math.abs(batch.getUserId().hashCode() % ymlProperties.getOceanbaseTableDuplicateNum());
+        // 替换创建索引的SQL语句中的表名
+        String createIndexSql = sqlText.replaceAll("app_user", "app_user_" + targetTableNum);
+        String querySql = questionService.getSubQuestionBySubId(batch.getSubId()).getAnswer()
+                .replaceAll("app_user", "app_user_" + targetTableNum);
+        // 执行任务
+        Map<String, String> times = sqlDatabaseService.runOceanbaseTask(createIndexSql, querySql, targetTableNum);
+        if (times == null) {
+            // 执行失败
+            return null;
+        }
+        return times;
+//        StringBuilder result = new StringBuilder();
+//        for (String item : times.keySet()) {
+//            result.append(item).append(":").append(times.get(item)).append(",");
+//        }
+//        result.deleteCharAt(result.length() - 1);
+//        return result.toString();
+    }
+
+    /**
+     * 更新题目状态
+     *
+     * @param toState 将该题对于该用户的状态设为toState
+     */
     private void updateQuestionState(String userId, int mainId, int subId, int toState) {
         QuestionState questionState = questionStateMapper.select(userId, mainId, subId);
         if (questionState == null) {
             questionState = new QuestionState(userId, mainId, subId, false, toState);
             questionStateMapper.insert(questionState);
         } else {
-            // 未开始-0 => 提交未通过-1 => 已通过-2
-            // questionState只会单向变化
+            // questionState只会单向变化: 未开始-0 => 提交未通过-1 => 已通过-2
             if (questionState.getState() < toState) {
                 questionStateMapper.updateState(userId, mainId, subId, toState);
             }
         }
     }
 
-    //针对标准结果集和sql运行得到的结果集进行打分
+    /**
+     * 将sql运行得到的结果集 和 标准结果集进行比对，判分
+     */
     private boolean isPass(ResultOfTask queryResult, ResultOfTask standard) {
         //首先确保运行不出错
         if (queryResult.error != null) {

@@ -16,6 +16,7 @@ const getters = {
   totalMainQuestionNum: state => state.question.totalMainQuestionNum,
 
   hint: state => state.batch.hint,
+  oceanBaseRes: state => state.batch.oceanBaseRes,
 
 };
 

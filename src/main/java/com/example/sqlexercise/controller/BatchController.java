@@ -26,7 +26,10 @@ public class BatchController {
      */
     @PostMapping("/api/batch/submit")
     public ResponseVO submitBatch(@RequestBody BatchVO batchVO) {
-        String res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
+        Object res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.SUBMIT);
+        if (res instanceof String) {
+            return ResponseVO.success(((String) res));
+        }
         return ResponseVO.success(res);
     }
 
@@ -37,7 +40,10 @@ public class BatchController {
      */
     @PostMapping("/api/batch/run")
     public ResponseVO runBatch(@RequestBody BatchVO batchVO) {
-        String res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+        Object res = batchService.processBatch(batchVO, Constants.ProcessSqlMode.RUN);
+        if (res instanceof String) {
+            return ResponseVO.success(((String) res));
+        }
         return ResponseVO.success(res);
     }
 

@@ -1,5 +1,5 @@
 {
-  "name": "SQL Platform",
+  "name": "sqlplatform",
   "version": "1.0.0",
   "description": "A Vue.js project",
   "author": "wangxinyi",
@@ -14,7 +14,7 @@
     "ant-design-vue": "^1.7.4",
     "axios": "^0.21.1",
     "codemirror": "^5.46.0",
-    "echarts": "^5.3.2",
+    "echarts": "^5.4.1",
     "js-cookie": "^2.2.1",
     "less": "^3.13.1",
     "less-loader": "^5.0.0",

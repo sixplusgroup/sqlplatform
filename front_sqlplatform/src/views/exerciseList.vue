@@ -67,18 +67,19 @@
             <a-icon type="edit"/>&nbsp去做题</a>
         </span>
 
-        <span slot="progress" slot-scope="text, record">
+        <span slot="progress" slot-scope="text, record" v-if="record.mainId!==126">
           <a-progress
+
             :percent="(record.passedNum)/record.subCount*100"
             size="small"
           />
         </span>
 
-        <span slot="passedNum" slot-scope="text, record">
+        <span slot="passedNum" slot-scope="text, record" v-if="record.mainId!==126">
           {{ text + ' / ' + record.subCount }}
         </span>
 
-        <span slot="submittedButNotPassNum" slot-scope="text, record">
+        <span slot="submittedButNotPassNum" slot-scope="text, record" v-if="record.mainId!==126">
           {{ text + ' / ' + record.subCount }}
 
         </span>

@@ -26,9 +26,8 @@ public class SqlServer {
 
     /**
      * 查找一个远端服务器上的可用端口（存在监听可以建立连接）
-     * 当 autoRelease 为 false 时，查找到的端口不会自动解锁，需要手动释放
-     * 检测范围为 portFrom 到 portTo
      *
+     * @param autoRelease 当 autoRelease 为 false 时，查找到的端口不会自动解锁，需要手动释放检测范围为 portFrom 到 portTo
      * @throws Exception 如果在 portFrom 和 portTo 之间没有可用端口，则抛出异常
      * @returns 可用端口
      */

@@ -1,5 +1,6 @@
 package com.example.sqlexercise;
 
+import com.example.sqlexercise.config.YmlProperties;
 import com.example.sqlexercise.lib.*;
 import com.example.sqlexercise.serviceImpl.MyAsyncService;
 import com.fasterxml.uuid.Generators;
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
@@ -18,6 +20,7 @@ import java.util.*;
 
 @Slf4j(topic = "com.example.sqlexercise.CreateEnvForSqlExercise")
 @Component
+@PropertySource(value = "classpath:application.yml")
 public class CreateEnvForSqlExercise implements ApplicationRunner {
 
     private final SqlDatabasePool pool;
@@ -25,15 +28,18 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
     private final String NAMESPACE_URL = "6ba7b811-9dad-11d1-80b4-00c04fd430c8";
     private final String SALT = "sqlexercise";
 
+    private YmlProperties ymlProperties;
+
     @Autowired
-    public CreateEnvForSqlExercise(SqlDatabasePool pool, MyAsyncService myAsyncService) {
+    public CreateEnvForSqlExercise(SqlDatabasePool pool, MyAsyncService myAsyncService, YmlProperties ymlProperties) {
         this.pool = pool;
         this.myAsyncService = myAsyncService;
+        this.ymlProperties = ymlProperties;
     }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        log.info("ApplicationRunner接口" );
+        log.info("ApplicationRunner接口");
         /*
         SqlDatabaseConfig config = new SqlDatabaseConfig();
         config.tags = new HashMap<>();
@@ -62,22 +68,22 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             // do nothing, 因为会确保部署时所需文件被一并上传
         }
         // 配置远端服务器的Docker，初始化sql的运行环境
-        createEnv(true);
+        createEnv();
         // Container mysql-1-0 uses password 77d3bc2d-d446-5b79-b64e-95cfa00dfd5c
         // Container mysql-1-1 uses password 33b60f2b-1dbb-5fe0-81a0-98252b6414bb
-        // Container redis-1-0 uses password d5a32b3e-c535-58ba-aa30-57a677fbee74
+        // Container oceanbase-1-0 uses password 7e603b2c-8944-52f9-b754-f8b84f8c84dc
     }
 
     /**
      * 创建运行所需的docker容器
-     *
-     * @param recreate 是否要重新创建容器
      */
-    private void createEnv(boolean recreate) throws Exception {
+    private void createEnv() throws Exception {
         ArrayList<DockerServer> dockerServerArrayList = this.pool.getDockerServers();
         for (DockerServer dockerServer : dockerServerArrayList) {
+
             SqlServer server = new SqlServer(dockerServer.getHost());
             dockerServer.connectDocker();
+
             // 检查 MySQL 镜像
             Image image = dockerServer.getDockerImageByReference(Constants.DockerRelated.MYSQL_IMAGE);
             if (image == null) {
@@ -89,31 +95,25 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
                 dockerServer.pullImageByRepository(Constants.DockerRelated.OCEANBASE_IMAGE_NAME, Constants.DockerRelated.OCEANBASE_IMAGE_TAG);
             }
             log.info("After checking, image " + Constants.DockerRelated.OCEANBASE_IMAGE + " exists.");
-            // 检查 Redis 镜像
-//            image = dockerServer.getDockerImageByReference(Constants.DockerRelated.REDIS_IMAGE);
-//            if (image == null) {
-//                dockerServer.pullImageByRepository(Constants.DockerRelated.REDIS_IMAGE_NAME, Constants.DockerRelated.REDIS_IMAGE_TAG);
-//            }
-//            log.info("After checking, image " + Constants.DockerRelated.REDIS_IMAGE + " exists.");
+
             // 若生成容器信息
             UUID namespace = Generators.nameBasedGenerator(UUID.fromString(NAMESPACE_URL)).generate(SALT);
-            List<DockerContainer> dockerMysqlContainers =
-                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.MYSQL_IMAGE_NAME,
+            List<DockerContainer> dockerMysqlContainers = createContainerInfos(dockerServer, namespace, Constants.DockerRelated.MYSQL_IMAGE_NAME,
                             Constants.DockerRelated.MYSQL_CONTAINER_DEFAULT_PORT, 1);
-            List<DockerContainer> dockerOceanbaseContainers =
-                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.OCEANBASE,
+            List<DockerContainer> dockerOceanbaseContainers = createContainerInfos(dockerServer, namespace, Constants.DockerRelated.OCEANBASE,
                             Constants.DockerRelated.OCEANBASE_CONTAINER_DEFAULT_PORT, 1);
-//            List<DockerContainer> dockerRedisContainers =
-//                    createContainerInfos(dockerServer, namespace, Constants.DockerRelated.REDIS_IMAGE_NAME,
-//                            Constants.DockerRelated.REDIS_CONTAINER_DEFAULT_PORT, 1);
-            // 检查dockerServer中现有容器实例情况
-            checkExistingContainerInstance(dockerMysqlContainers, dockerServer, recreate);
-            checkExistingContainerInstance(dockerOceanbaseContainers, dockerServer, recreate);
-//            checkExistingContainerInstance(dockerRedisContainers, dockerServer, recreate);
-            // 根据容器信息创建容器实例
-            createMysqlContainerInstance(dockerMysqlContainers, dockerServer, server);
-            createOceanbaseContainerInstance(dockerOceanbaseContainers, dockerServer, server);
-//            createRedisContainerInstance(dockerRedisContainers, dockerServer, server);
+
+            // 准备docker中的数据库容器实例
+            // 对于MySQL容器，每次启动都重新创建
+            if (ymlProperties.isNeedMysql()) {
+                prepareDatabaseContainerInstance(dockerMysqlContainers, dockerServer, ymlProperties.isRecreateMysql(), server,
+                        Constants.DockerRelated.DATABASE_CONTAINER_TYPE.MySQL);
+            }
+            // 对于OceanBase容器，因为其数据量较大，不宜重新创建
+            if (ymlProperties.isNeedOceanbase()) {
+                prepareDatabaseContainerInstance(dockerOceanbaseContainers, dockerServer, ymlProperties.isRecreateOceanbase(), server,
+                        Constants.DockerRelated.DATABASE_CONTAINER_TYPE.OceanBase);
+            }
         }
     }
 
@@ -130,35 +130,52 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
         return result;
     }
 
-    private void checkExistingContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer, boolean recreate) {
+    /**
+     * 准备好数据库容器实例。包括检查容器是否已存在，重新创建容器，启动容器并初始化
+     *
+     * @param recreate              为true表示需要重新创建，false表示不需要
+     * @param databaseContainerType 数据库容器类型，目前包括MySQL和OceanBase
+     */
+    private void prepareDatabaseContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
+                                                  boolean recreate, SqlServer server,
+                                                  Constants.DockerRelated.DATABASE_CONTAINER_TYPE databaseContainerType) throws Exception {
         // 根据容器信息，为每个容器创建环境
         for (DockerContainer container : containerList) {
             // 获取同名容器
             Container container1 = dockerServer.getDockerContainerByName(container.getName());
-            // 同名容器存在，且无需删除，即无需重新创建
-            if (container1 != null && !recreate) {
-                if (container1.getState().toLowerCase().equals("running")) {
-                    log.info("Container " + container.getName() + " already exists and it's running.");
-                    continue;
-                }
-            }
-            // 同名容器存在，且需要删除，即需要重新创建
-            if (container1 != null) {
-                if ((container1.getState() == null && container1.getStatus().toLowerCase().startsWith("up")) ||
-                        (container1.getState() != null && container1.getState().toLowerCase().equals("running"))) {
-                    dockerServer.stopDockerContainerById(container1.getId());
-                }
-                dockerServer.removeDockerContainerById(container1.getId());
-                log.info("Container " + container.getName() + " has been removed.");
-            } else {
-                //同名容器不存在
+            // 判断同名容器是否存在
+            if (container1 == null) {
+                // 同名容器不存在
                 log.info("Container " + container.getName() + " does not exist.");
+                createDatabaseContainerInstance(containerList, dockerServer, server, databaseContainerType);
+            } else {
+                // 同名容器存在，则判断是否需要删除后重新创建
+                if (recreate) {
+                    // 需要重新创建
+                    // 1.停止该容器
+                    if ((container1.getState() == null && container1.getStatus().toLowerCase().startsWith("up")) ||
+                            (container1.getState() != null && container1.getState().toLowerCase().equals("running"))) {
+                        dockerServer.stopDockerContainerById(container1.getId());
+                    }
+                    // 2.删除该容器
+                    dockerServer.removeDockerContainerById(container1.getId());
+                    log.info("Container " + container.getName() + " has been removed.");
+                    // 3.重新创建
+                    createDatabaseContainerInstance(containerList, dockerServer, server, databaseContainerType);
+                } else {
+                    // 不需要重新创建
+                    if (!container1.getState().toLowerCase().equals("running")) {
+                        // 若容器未启动，则启动容器
+                        dockerServer.startDockerContainer(container.getName());
+                    }
+                    log.info("Container " + container.getName() + " already exists and it's running.");
+                }
             }
         }
     }
 
-    private void createMysqlContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
-                                              SqlServer server) throws Exception {
+    private void createDatabaseContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer, SqlServer server,
+                                                 Constants.DockerRelated.DATABASE_CONTAINER_TYPE databaseContainerType) throws Exception {
         for (DockerContainer container : containerList) {
             // 检查可用端口
             try {
@@ -166,58 +183,20 @@ public class CreateEnvForSqlExercise implements ApplicationRunner {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            dockerServer.createDockerContainerForMysql57(container.getName(), container.getPassword(), container.getPort());
-            //以下部分已改成Spring异步执行，不阻塞主线程
-            SqlDatabase sqlDatabase =
-                    this.pool.getSqlDatabase("", "mysql", dockerServer.getId(), container.getIndex());
-            myAsyncService.asyncInitMysqlContainer(dockerServer, container, sqlDatabase);
-        }
-    }
-
-    private void createOceanbaseContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
-                                                  SqlServer server) throws Exception {
-        for (DockerContainer container : containerList) {
-            // 检查可用端口
-            try {
-                server.detectServerPort(true, container.getPort(), container.getPort());
-            }catch (Exception e) {
-                e.printStackTrace();
+            // 创建容器
+            SqlDatabase sqlDatabase;
+            switch (databaseContainerType) {
+                case MySQL:
+                    dockerServer.createDockerContainerForMysql57(container.getName(), container.getPassword(), container.getPort());
+                    sqlDatabase = this.pool.getSqlDatabase("", "mysql", dockerServer.getId(), container.getIndex());
+                    myAsyncService.asyncInitMysqlContainer(dockerServer, container, sqlDatabase);
+                    break;
+                case OceanBase:
+                    dockerServer.createDockerContainerForOceanbase(container.getName(), container.getPassword(), container.getPort());
+                    sqlDatabase = this.pool.getSqlDatabase("", "oceanbase", dockerServer.getId(), container.getIndex());
+                    myAsyncService.asyncInitOceanbaseContainer(dockerServer, container, sqlDatabase);
+                    break;
             }
-            dockerServer.createDockerContainerForOceanbase(container.getName(), container.getPassword(), container.getPort());
-            //使用Spring异步执行，不阻塞主线程
-            SqlDatabase sqlDatabase =
-                    this.pool.getSqlDatabase("", "oceanbase", dockerServer.getId(), container.getIndex());
-            myAsyncService.asyncInitOceanbaseContainer(dockerServer, container, sqlDatabase);
         }
     }
-
-    private void createRedisContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
-                                              SqlServer server) {
-        for (DockerContainer container : containerList) {
-            // 检查可用端口
-            try {
-                server.detectServerPort(true, container.getPort(), container.getPort());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            dockerServer.createDockerContainerForRedis(container.getName(), container.getPassword(), container.getPort());
-            // 启动 Redis container
-            dockerServer.startDockerContainer(container.getName());
-        }
-    }
-//    private void createRedisContainerInstance(List<DockerContainer> containerList, DockerServer dockerServer,
-//                                              SqlServer server) {
-//        for (DockerContainer container : containerList) {
-//            // 检查可用端口
-//            try {
-//                server.detectServerPort(true, container.getPort(), container.getPort());
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            dockerServer.createDockerContainerForRedis(container.getName(), container.getPassword(), container.getPort());
-//            // 启动 Redis container
-//            dockerServer.startDockerContainer(container.getName());
-//        }
-//    }
-
 }
