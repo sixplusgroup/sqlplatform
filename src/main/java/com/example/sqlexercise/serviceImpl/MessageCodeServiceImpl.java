@@ -35,12 +35,11 @@ public class MessageCodeServiceImpl implements MessageCodeService {
         properties.put("mail.transport.protocol", "smtp");      // 协议
         properties.put("mail.smtp.host", "smtp.qq.com");        // QQ邮件服务器地址
         properties.put("mail.smtp.auth", "true");               // 需要请求认证
-        properties.put("mail.smtp.port", "25");                // 端口号
-        properties.put("mail.smtp.ssl.enable", "true");
+        properties.put("mail.smtp.port", "587");                // 端口号
         //SSL 安全认证
-        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        properties.put("mail.smtp.socketFactory.fallback", "false");
-        properties.put("mail.smtp.socketFactory.port", "465");
+//        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+//        properties.put("mail.smtp.socketFactory.fallback", "false");
+//        properties.put("mail.smtp.socketFactory.port", "465");
         //创建会话对象
         Session session = Session.getDefaultInstance(properties, new Authenticator() {
             @Override
