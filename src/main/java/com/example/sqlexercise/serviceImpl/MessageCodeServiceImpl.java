@@ -28,6 +28,11 @@ public class MessageCodeServiceImpl implements MessageCodeService {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    //TODO：上次提交后在服务器上引入了不安全的修改，关闭了Java11的一些安全机制
+    // java.security中jdk.tls.disabledAlgorithms=……删除了SSLv3参数，然后注释了该句子
+    // 请检查将javax.mail改为1.6.3版本是否能解决该问题
+    // 如果有效请将java.security还原
+    // 参考https://stackoverflow.com/questions/67899129/postfix-and-openjdk-11-no-appropriate-protocol-protocol-is-disabled-or-cipher
     @Override
     public ResponseVO sendMessageCode(String email, String code) {
         Properties properties = new Properties();
