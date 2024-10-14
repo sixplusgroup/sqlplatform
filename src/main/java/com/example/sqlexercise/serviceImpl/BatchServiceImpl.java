@@ -234,23 +234,23 @@ public class BatchServiceImpl implements BatchService {
             }
             log.info("batch " + batch.getId() + " passed.");
             // 如果静态分析得到的评分非满分，需要将其加入答案集
-            GetScoreVO getScoreVO = new GetScoreVO(batch.getMainId(), batch.getSubId(), sqlText, 100f);
-            float score = scoreService.getScore(getScoreVO);
-            if (score < 100f) {
-                AnswerSet stuAnswer = new AnswerSet();
-                stuAnswer.setMainId(batch.getMainId());
-                stuAnswer.setSubId(batch.getSubId());
-                stuAnswer.setAnswer(sqlText);
-                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
-                if (ans == null) {
-                    stuAnswer.setCreatedAt(new Date());
-                    stuAnswer.setUpdatedAt(new Date());
-                    answerSetMapper.create(stuAnswer);
-                } else if (ans.getState() == 1) {
-                    stuAnswer.setUpdatedAt(new Date());
-                    answerSetMapper.updateStatus(stuAnswer);
-                }
-            }
+//            GetScoreVO getScoreVO = new GetScoreVO(batch.getMainId(), batch.getSubId(), sqlText, 100f);
+//            float score = scoreService.getScore(getScoreVO);
+//            if (score < 100f) {
+//                AnswerSet stuAnswer = new AnswerSet();
+//                stuAnswer.setMainId(batch.getMainId());
+//                stuAnswer.setSubId(batch.getSubId());
+//                stuAnswer.setAnswer(sqlText);
+//                AnswerSet ans = answerSetMapper.getByAnswer(stuAnswer);
+//                if (ans == null) {
+//                    stuAnswer.setCreatedAt(new Date());
+//                    stuAnswer.setUpdatedAt(new Date());
+//                    answerSetMapper.create(stuAnswer);
+//                } else if (ans.getState() == 1) {
+//                    stuAnswer.setUpdatedAt(new Date());
+//                    answerSetMapper.updateStatus(stuAnswer);
+//                }
+//            }
             return Constants.Message.PASSED;
         } else {
             // 如果是提交，才会修改题目状态；运行则不会
@@ -343,7 +343,16 @@ public class BatchServiceImpl implements BatchService {
 
     private boolean compareRow(ArrayList<String> row, ArrayList<String> standard) {
         for (int k = 0; k < row.size(); k++) {
-            if (!row.get(k).equals(standard.get(k))) {
+//            if (!row.get(k).equals(standard.get(k))) {
+//                return false;
+//            }
+            if (row.get(k) == null && standard.get(k) == null){
+                continue;
+            }
+            else if ((row.get(k) == null && standard.get(k) != null) || row.get(k)!=null && standard.get(k) == null){
+                return false;
+            }
+            else if (!row.get(k).equals(standard.get(k))){
                 return false;
             }
         }
