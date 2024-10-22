@@ -180,8 +180,8 @@ public class BatchServiceImpl implements BatchService {
         }
         log.info("batch " + batch.getId() + " is running.");
 
-        // 执行SQL前，用空格替换用户提交的SQL中的\n和\t
-        String batchText = batchVO.getBatchText().replaceAll("\n", " ").replaceAll("\t", " ");
+        // 执行用户的SQL语句之前，先进行预处理
+        String batchText = preprocess(batchVO.getBatchText());
 
         Object res = null;
         // 执行
@@ -192,6 +192,25 @@ public class BatchServiceImpl implements BatchService {
         }
 
         return res;
+    }
+
+    /**
+     * 执行用户的SQL语句之前，先进行预处理
+     * 1 去除所有单行注释
+     * 2 用空格替换\n和\t
+     * @param batchText 用户的原始SQL语句
+     * @return 预处理后的SQL语句
+     */
+    private String preprocess(String batchText) {
+        String[] lines = batchText.split("\n");
+        StringBuilder result = new StringBuilder();
+        for (String line : lines) {
+            if (!(line.trim().startsWith("--") || line.trim().startsWith("#"))) {
+                result.append(line);
+                result.append(' ');
+            }
+        }
+        return result.toString().replaceAll("\t", " ");
     }
 
     private Object processBatchSync(BatchVO batchVO, String processSqlMode) {
