@@ -362,7 +362,16 @@ public class BatchServiceImpl implements BatchService {
 
     private boolean compareRow(ArrayList<String> row, ArrayList<String> standard) {
         for (int k = 0; k < row.size(); k++) {
-            if (!row.get(k).equals(standard.get(k))) {
+//            if (!row.get(k).equals(standard.get(k))) {
+//                return false;
+//            }
+            if (row.get(k) == null && standard.get(k) == null){
+                continue;
+            }
+            else if ((row.get(k) == null && standard.get(k) != null) || row.get(k)!=null && standard.get(k) == null){
+                return false;
+            }
+            else if (!row.get(k).equals(standard.get(k))){
                 return false;
             }
         }
