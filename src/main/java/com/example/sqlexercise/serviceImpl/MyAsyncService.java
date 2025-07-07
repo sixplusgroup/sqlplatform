@@ -5,6 +5,7 @@ import com.example.sqlexercise.lib.Constants;
 import com.example.sqlexercise.lib.DockerContainer;
 import com.example.sqlexercise.lib.DockerServer;
 import com.example.sqlexercise.lib.SqlDatabase;
+import com.example.sqlexercise.service.AsyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,7 +16,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class MyAsyncService {
+public class MyAsyncService implements AsyncService {
 
     private YmlProperties ymlProperties;
 

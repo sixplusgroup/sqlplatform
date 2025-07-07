@@ -50,7 +50,7 @@ public class Constants {
          * docker container 的默认端口
          */
         public static final String MYSQL_IMAGE_NAME = "mysql";
-        public static final String MYSQL_IMAGE_TAG = "5.7";
+        public static final String MYSQL_IMAGE_TAG = "8.0";
         public static final String MYSQL_IMAGE = MYSQL_IMAGE_NAME + ":" + MYSQL_IMAGE_TAG;
         public static final int MYSQL_CONTAINER_DEFAULT_PORT = 3310;
         /**

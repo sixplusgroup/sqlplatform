@@ -33,6 +33,10 @@ import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j(topic = "com.example.sqlexercise.serviceImpl.BatchServiceImpl")
 @Service
@@ -52,11 +56,13 @@ public class BatchServiceImpl implements BatchService {
 
     private final YmlProperties ymlProperties;
 
+    private final BatchAsyncService batchAsyncService;
+
     @Autowired
     public BatchServiceImpl(SqlDatabaseService sqlDatabaseService, ScoreService scoreService,
                             AnswerSetMapper answerSetMapper, PassRecordMapper passRecordMapper,
                             BatchMapper batchMapper, QuestionStateMapper questionStateMapper,
-                            QuestionService questionService, RabbitTemplate rabbitTemplate, YmlProperties ymlProperties) {
+                            QuestionService questionService, RabbitTemplate rabbitTemplate, YmlProperties ymlProperties, BatchAsyncService batchAsyncService) {
         this.sqlDatabaseService = sqlDatabaseService;
         this.passRecordMapper = passRecordMapper;
         this.batchMapper = batchMapper;
@@ -65,6 +71,7 @@ public class BatchServiceImpl implements BatchService {
         this.questionStateMapper = questionStateMapper;
         this.questionService = questionService;
         this.ymlProperties = ymlProperties;
+        this.batchAsyncService = batchAsyncService;
         this.useMessageQueue = false;
         this.rabbitTemplate = rabbitTemplate;
         this.rabbitTemplate.setReplyTimeout(10000); // 超时时间10s
@@ -229,14 +236,29 @@ public class BatchServiceImpl implements BatchService {
      */
     private String executeBatchForMysql(Batch batch, String driver, String sqlText, String processSqlMode) {
         // 获取本题标准结果集
-        ResultOfTask answer = sqlDatabaseService.getStandardAnswer(batch.getSubId(), driver);
+        CompletableFuture<ResultOfTask> standardFuture = batchAsyncService.getStandardAnswer(batch, driver);
+
         Map<String, Object> options = new HashMap<>();
         // 设置 执行preTask方法，忽略postTask方法
         options.put("skipPre", false);
         options.put("skipPost", true);
-        ResultOfTask queryResult = (ResultOfTask) sqlDatabaseService.runMysqlTask(batch.getMainId(), driver, sqlText, options);
 
-        if (isPass(queryResult, answer)) {
+        // 获取用户SQL语句结果
+        CompletableFuture<ResultOfTask> userFuture = batchAsyncService.getUserAnswer(batch, driver, sqlText, options);
+
+        // 等待 getStandardAnswer 和 getUserAnswer 都完成，然后执行 isPass
+        CompletableFuture<Boolean> combinedFuture = userFuture.thenCombine(standardFuture, this::isPass);
+
+        // 阻塞等待所有任务完成
+        boolean isPassed = false;
+        try {
+            // CompletableFuture的get()方法是阻塞的，使用的话，需要添加超时时间，否则可能会导致主线程一直等待，无法执行其他任务。
+            isPassed = combinedFuture.get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (isPassed) {
             // 只有submit时，才将记录入库，并修改该题目对于该用户的相关状态
             if (processSqlMode.equals(Constants.ProcessSqlMode.SUBMIT)) {
                 PassRecord passRecord = new PassRecord(
